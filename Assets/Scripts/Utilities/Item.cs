@@ -7,6 +7,8 @@ public class Item : MonoBehaviour
     [Header("Item Properties")]
     public ItemClass itemClass;
 
+    public bool isSorted = false;
+
     public enum ItemClass
     {
         Сheap,
