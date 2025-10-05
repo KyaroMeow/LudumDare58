@@ -83,10 +83,9 @@ public class GameManager : MonoBehaviour
         Destroy(currentItem);
         SpawnItem();
     }
-    private void WrongSort()
+    public void WrongSort()
     {
         playerInteract.DropItem();
-        
         currentMistakes++;
         Destroy(currentItem);
         SpawnItem();

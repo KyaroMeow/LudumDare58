@@ -13,6 +13,7 @@ public class PlayerInteract : MonoBehaviour
     
     [Header("Inspect Settings")]
     public float inspectRotationSpeed = 20f;
+    public float rotationSpeedLimit = 500f;
     
     private Item heldItem;
     
@@ -22,6 +23,7 @@ public class PlayerInteract : MonoBehaviour
     private Transform originalItemParent;
     private Vector2 lastMousePosition;
     private PlayerView playerView;
+    private bool isItemRotating = false;
 
 
     private void Start()
@@ -57,14 +59,22 @@ public class PlayerInteract : MonoBehaviour
         if (heldItem != null)
         {
             
+            
             if (Input.GetMouseButton(0))
             {
                 Vector2 currentMousePosition = Input.mousePosition;
                 Vector2 mouseDelta = currentMousePosition - lastMousePosition;
-                
+
+                float rotationSpeed = mouseDelta.magnitude / Time.deltaTime;
+
+                if (rotationSpeed > rotationSpeedLimit && isItemRotating == true)
+                {
+                    DestroyItem(); 
+                }
+
                 heldItem.transform.Rotate(playerCamera.transform.up, -mouseDelta.x * inspectRotationSpeed * Time.deltaTime, Space.World);
                 heldItem.transform.Rotate(playerCamera.transform.right, mouseDelta.y * inspectRotationSpeed * Time.deltaTime, Space.World);
-                
+                isItemRotating = true;
                 lastMousePosition = currentMousePosition;
             }
             else
@@ -88,7 +98,10 @@ public class PlayerInteract : MonoBehaviour
             }
         }
     }
-    
+    private void DestroyItem()
+    {
+        GameManager.Instance.WrongSort();
+    }
     private void PickupItem(Item item)
     {
         playerView.canRotate = false;
@@ -127,6 +140,7 @@ public class PlayerInteract : MonoBehaviour
 
             heldItem = null;
         }
+        isItemRotating = false;
         playerView.canRotate = true;
         scaner.SetActive(false);
         HUD.SetActive(false);
