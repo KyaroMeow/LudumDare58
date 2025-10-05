@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
     public PlayerInteract playerInteract;
     public ScanUI scanUI;
     public GameObject scaner;
+    public Lights lights;
 
     private void Awake()
     {
@@ -79,12 +80,14 @@ public class GameManager : MonoBehaviour
     }
     private void CorrectSort()
     {
+        lights.ChangeColorGreen();
         itemsSorted++;
         Destroy(currentItem);
         SpawnItem();
     }
     public void WrongSort()
     {
+        lights.ChangeColorRed();
         playerInteract.DropItem();
         currentMistakes++;
         Destroy(currentItem);
