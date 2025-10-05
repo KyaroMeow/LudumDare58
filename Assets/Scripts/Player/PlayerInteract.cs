@@ -8,7 +8,8 @@ public class PlayerInteract : MonoBehaviour
     public Transform holdPosition;
     public LayerMask interactableLayer;
     public GameObject HUD;
-     public UVLighter uVLighter;
+    public UVLighter uVLighter;
+    public GameObject scaner;
     
     [Header("Inspect Settings")]
     public float inspectRotationSpeed = 20f;
@@ -127,6 +128,7 @@ public class PlayerInteract : MonoBehaviour
             heldItem = null;
         }
         playerView.canRotate = true;
+        scaner.SetActive(false);
         HUD.SetActive(false);
         uVLighter.ToggleLighterOff();
     }

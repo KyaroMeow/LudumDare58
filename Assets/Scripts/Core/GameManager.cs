@@ -21,6 +21,8 @@ public class GameManager : MonoBehaviour
     public ItemSpawner itemSpawner;
     public Conveyor conveyor;
     public PlayerInteract playerInteract;
+    public ScanUI scanUI;
+    public GameObject scaner;
 
     private void Awake()
     {
@@ -53,6 +55,10 @@ public class GameManager : MonoBehaviour
             WrongSort();
         }
     }
+    public void ToggleScaner()
+    {
+        scaner.SetActive(!scaner.activeSelf);
+    }
     public void SortItem(bool selectedVariant)
     {
         if (currentItem == null) return;
@@ -66,6 +72,10 @@ public class GameManager : MonoBehaviour
         {
             WrongSort();
         }
+    }
+    public void ShowScanResult(bool result)
+    {
+        scanUI.ShowResult(result);
     }
     private void CorrectSort()
     {
