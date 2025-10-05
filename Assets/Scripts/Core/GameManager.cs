@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
 
     public ItemSpawner itemSpawner;
     public Conveyor conveyor;
+    public PlayerInteract playerInteract;
 
     private void Awake()
     {
@@ -52,12 +53,12 @@ public class GameManager : MonoBehaviour
             WrongSort();
         }
     }
-    public void SortItem(Item.ItemClass selectedClass)
+    public void SortItem(bool selectedVariant)
     {
         if (currentItem == null) return;
         totalItemsProcessed++;
-        Item.ItemClass curItemClass = currentItem.GetComponent<Item>().itemClass;
-        if (selectedClass == curItemClass)
+        bool itemVariant = currentItem.GetComponent<Item>().isDefective;
+        if (selectedVariant == itemVariant)
         {
             CorrectSort();
         }
@@ -74,6 +75,8 @@ public class GameManager : MonoBehaviour
     }
     private void WrongSort()
     {
+        playerInteract.DropItem();
+        
         currentMistakes++;
         Destroy(currentItem);
         SpawnItem();

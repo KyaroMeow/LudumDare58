@@ -7,6 +7,8 @@ public class PlayerInteract : MonoBehaviour
     [Header("Interaction Settings")]
     public Transform holdPosition;
     public LayerMask interactableLayer;
+    public GameObject HUD;
+     public UVLighter uVLighter;
     
     [Header("Inspect Settings")]
     public float inspectRotationSpeed = 20f;
@@ -19,6 +21,7 @@ public class PlayerInteract : MonoBehaviour
     private Transform originalItemParent;
     private Vector2 lastMousePosition;
     private PlayerView playerView;
+
 
     private void Start()
     {
@@ -52,7 +55,7 @@ public class PlayerInteract : MonoBehaviour
     {
         if (heldItem != null)
         {
-            // Item rotation
+            
             if (Input.GetMouseButton(0))
             {
                 Vector2 currentMousePosition = Input.mousePosition;
@@ -88,6 +91,7 @@ public class PlayerInteract : MonoBehaviour
     private void PickupItem(Item item)
     {
         playerView.canRotate = false;
+        HUD.SetActive(true);
         heldItem = item;
         
         // Save item position
@@ -105,12 +109,11 @@ public class PlayerInteract : MonoBehaviour
             rb.isKinematic = true;
         }
     }
-    
-    private void DropItem()
+
+    public void DropItem()
     {
         if (heldItem != null)
         {
-            // Return item position
             heldItem.transform.SetParent(originalItemParent);
             heldItem.transform.position = originalItemPosition;
             heldItem.transform.rotation = originalItemRotation;
@@ -122,8 +125,10 @@ public class PlayerInteract : MonoBehaviour
             }
 
             heldItem = null;
-            playerView.canRotate = true;
         }
+        playerView.canRotate = true;
+        HUD.SetActive(false);
+        uVLighter.ToggleLighterOff();
     }
     
 

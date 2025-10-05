@@ -5,16 +5,19 @@ using UnityEngine;
 public class Item : MonoBehaviour
 {
     [Header("Item Properties")]
-    public ItemClass itemClass;
-
+    public bool isDefective = false;
     public bool isSorted = false;
 
-    public enum ItemClass
+    [Header("UV Properties")]
+    public bool hasUVStain = false;
+    public Renderer stainRenderer;
+
+    public void SetUVVisibility(bool isVisible)
     {
-        Сheap,
-        Normal,
-        Valuable,
-        Anomaly
+        if (stainRenderer != null)
+        {
+            stainRenderer.enabled = isVisible;
+        }
     }
     
 }

@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class Conveyor : MonoBehaviour
 {
+    [Header("Conveyor Settings")]
+    public float conveyorSpeed = -2f;
     public bool canMove = true;
-    public float speed;
     Rigidbody rb;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
     }
-
 
     void FixedUpdate()
     {
@@ -23,7 +23,7 @@ public class Conveyor : MonoBehaviour
     private void Move()
     {
         Vector3 pos = rb.position;
-        rb.position += Vector3.back * speed * Time.fixedDeltaTime;
+        rb.position += Vector3.back * conveyorSpeed * Time.fixedDeltaTime;
         rb.MovePosition(pos);
     }
 }
