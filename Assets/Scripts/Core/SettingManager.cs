@@ -8,10 +8,10 @@ public class SettingManager : MonoBehaviour
 {
     public static SettingManager Instance;
     public float volumeValue = 1f;
-    public float timePerItem = 20f;
+    public float timePerItem = 60f;
     public int maxMistakes = 5;
-    public float defectChance = 0.4f;
-    public float stainChance = 0.6f;
+    public float defectChance = 0.5f;
+    public float stainChance = 0.5f;
     public bool timer = true;
     private void Awake()
     {

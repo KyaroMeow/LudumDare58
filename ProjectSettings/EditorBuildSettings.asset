@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Menu.unity
+    guid: 764ec35a3ebfaec4aa64e1872aa21216
+  - enabled: 1
     path: Assets/Scenes/KyaroTestZone.unity
     guid: ac776205be15ab444935402b7fa6e1bf
   m_configObjects: {}

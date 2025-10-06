@@ -101,7 +101,10 @@ public class PlayerInteract : MonoBehaviour
     }
     private void DestroyItem()
     {
-        particle.Play();
+        if (particle != null)
+        {
+         particle.Play();
+        }
         GameManager.Instance.WrongSort();
     }
     private void PickupItem(Item item)

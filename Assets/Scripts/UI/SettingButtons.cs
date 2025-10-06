@@ -16,7 +16,7 @@ public class SettingButtons : MonoBehaviour
 
     public void NextDiff()
     {
-        if (currentDiffIndex > 0)
+        if (currentDiffIndex < difficulties.Length - 1)
         {
             currentDiffIndex++;
             UpdateDisplay();
@@ -24,7 +24,7 @@ public class SettingButtons : MonoBehaviour
     }
     public void LastDiff()
     {
-        if (currentDiffIndex < difficulties.Length - 1)
+        if (currentDiffIndex > 0)
         {
             currentDiffIndex--;
             UpdateDisplay();
@@ -32,7 +32,7 @@ public class SettingButtons : MonoBehaviour
     }
     public void Nexttimer()
     {
-        if (currentTimerIndex > 0)
+        if (currentTimerIndex < timerState.Length - 1)
         {
             currentTimerIndex++;
             UpdateDisplay();
@@ -40,7 +40,7 @@ public class SettingButtons : MonoBehaviour
     }
     public void LastTimer()
     {
-        if (currentTimerIndex < timerState.Length - 1)
+        if (currentTimerIndex > 0)
         {
             currentTimerIndex--;
             UpdateDisplay();
