@@ -1,14 +1,13 @@
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
     [Header("Game Settings")]
-    public float timePerItem = 20f;
-    public int maxMistakes = 5;
-    public int itemsToWin = 10;
+
 
     [Header("Current Game State")]
     public GameObject currentItem;
@@ -24,13 +23,13 @@ public class GameManager : MonoBehaviour
     public ScanUI scanUI;
     public GameObject scaner;
     public Lights lights;
+    public Slider volumeSlider;
 
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -55,6 +54,10 @@ public class GameManager : MonoBehaviour
         {
             WrongSort();
         }
+    }
+    public void SetVolume()
+    {
+        AudioListener.volume = volumeSlider.value;
     }
     public void ToggleScaner()
     {
@@ -96,7 +99,7 @@ public class GameManager : MonoBehaviour
     public void SpawnItem()
     {
         itemSpawner.SpawnItem();
-        currentTime = timePerItem;
+        currentTime = SettingManager.Instance.timePerItem;
     }
     public void PauseGame()
     {

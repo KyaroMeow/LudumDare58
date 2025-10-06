@@ -17,8 +17,10 @@ public class PlayerView : MonoBehaviour
     public Transform cameraTransform; 
     
     [HideInInspector] public bool canRotate = true;
+    public GameObject pauseMenuUI;
     
     private bool isRotating = false;
+    private bool isPaused = false;
     private float rotationProgress = 0f;
     private Quaternion startRotation;
     private Quaternion targetRotation;
@@ -36,34 +38,46 @@ public class PlayerView : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            TogglePause();
+        }
+        
         if (canRotate)
         {
             HandleCameraLook();
             HandleRotation();
         }
     }
+    private void TogglePause()
+    {
+        isPaused = !isPaused;
+        pauseMenuUI.SetActive(isPaused);
+        Time.timeScale = isPaused ? 0f : 1f;
+        AudioListener.pause = isPaused;
+    }
     
     private void HandleCameraLook()
     {
         if (cameraTransform == null) return;
-        
+
         Vector2 mouseScreenPos = new Vector2(
             (Input.mousePosition.x / Screen.width) * 2 - 1,
             (Input.mousePosition.y / Screen.height) * 2 - 1
         );
-        
+
         Vector2 targetRotation = new Vector2(
-            -mouseScreenPos.y * maxCameraAngle, 
-            mouseScreenPos.x * maxCameraAngle  
+            -mouseScreenPos.y * maxCameraAngle,
+            mouseScreenPos.x * maxCameraAngle
         );
-        
+
         currentCameraRotation = Vector2.Lerp(
-            currentCameraRotation, 
-            targetRotation, 
+            currentCameraRotation,
+            targetRotation,
             cameraLookSpeed * Time.deltaTime
         );
-        
-        Quaternion newRotation = cameraStartLocalRotation * 
+
+        Quaternion newRotation = cameraStartLocalRotation *
             Quaternion.Euler(currentCameraRotation.x, currentCameraRotation.y, 0);
         cameraTransform.localRotation = newRotation;
     }

@@ -10,6 +10,7 @@ public class PlayerInteract : MonoBehaviour
     public GameObject HUD;
     public UVLighter uVLighter;
     public GameObject scaner;
+    public ParticleSystem particle;
     
     [Header("Inspect Settings")]
     public float inspectRotationSpeed = 20f;
@@ -100,6 +101,7 @@ public class PlayerInteract : MonoBehaviour
     }
     private void DestroyItem()
     {
+        particle.Play();
         GameManager.Instance.WrongSort();
     }
     private void PickupItem(Item item)
