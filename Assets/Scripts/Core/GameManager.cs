@@ -1,5 +1,7 @@
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -70,7 +72,7 @@ public class GameManager : MonoBehaviour
     }
     public void SetVolume()
     {
-        AudioListener.volume = volumeSlider.value;
+        SettingManager.Instance.volumeValue = volumeSlider.value;
     }
     public void ToggleScaner()
     {
@@ -96,6 +98,7 @@ public class GameManager : MonoBehaviour
     }
     private void CorrectSort()
     {
+        AudioManager.Instance.PlayAgree();
         lights.ChangeColorGreen();
         itemsSorted++;
         Destroy(currentItem);
@@ -103,9 +106,13 @@ public class GameManager : MonoBehaviour
     }
     public void WrongSort()
     {
+        AudioManager.Instance.PlayDisAgree();
         lights.ChangeColorRed();
         playerInteract.DropItem();
         currentMistakes++;
+        if (currentMistakes >= SettingManager.Instance.maxMistakes) {
+            GameOver();
+        }
         Destroy(currentItem);
         SpawnItem();
     }
@@ -128,6 +135,10 @@ public class GameManager : MonoBehaviour
     public void StopConveyor()
     {
         conveyor.canMove = false;
+    }
+    private void GameOver()
+    {
+        SceneManager.LoadScene(0);
     }
     public void StartConveyor()
     {

@@ -26,6 +26,10 @@ public class SettingManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    void Update()
+    {
+        AudioListener.volume = volumeValue;
+    }
     public void SetDifficult(string diffName)
     {
         switch (diffName)
@@ -45,7 +49,7 @@ public class SettingManager : MonoBehaviour
                 maxMistakes = 5;
                 break;
             case "Hard":
-                wrongBarcodeChance = 0.9f;
+                wrongBarcodeChance = 0.7f;
                 defectChance = 0.6f;
                 noBarcodeChance = 0.3f;
                 timePerItem = 30f;
