@@ -10,6 +10,7 @@ public class Item : MonoBehaviour
 
     [Header("UV Properties")]
     public bool hasUVStain = false;
+    public List<GameObject> stainSpots = new List<GameObject>();
     public Renderer stainRenderer;
 
     public void SetUVVisibility(bool isVisible)

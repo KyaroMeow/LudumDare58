@@ -5236,6 +5236,10 @@ MonoBehaviour:
   anomalyItem: {fileID: 0}
   bomb: {fileID: 6569175202388017190, guid: 394f80c016aaf9240aa2b81051b368a2, type: 3}
   uvStainPrefab: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+  maxPlacementAttempts: 10
+  itemLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!1 &1959665712
 GameObject:
   m_ObjectHideFlags: 0

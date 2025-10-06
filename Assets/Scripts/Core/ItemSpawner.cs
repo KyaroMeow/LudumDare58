@@ -60,38 +60,15 @@ public class ItemSpawner : MonoBehaviour
 
     private void AddUVStainToItem(Item item)
     {
-        if (uvStainPrefab == null) return;
+        if (item.stainSpots.Count < 1) return;
 
         item.hasUVStain = true;
-
-        GameObject stain = Instantiate(uvStainPrefab);
-        stain.transform.SetParent(item.transform);
-
-        PlaceStainOnSurface(stain, item.gameObject);
-
-        item.stainRenderer = stain.GetComponent<Renderer>();
+        GameObject randomStain = item.stainSpots[Random.Range(0, item.stainSpots.Count)];
+        randomStain.SetActive(true);
+        item.stainRenderer = randomStain.GetComponent<Renderer>();
         item.SetUVVisibility(false);
 
     }
-    
-    private void PlaceStainOnSurface(GameObject stain, GameObject item)
-    {
-        Renderer itemRenderer = item.GetComponent<Renderer>();
-        if (itemRenderer == null) return;
-
-        Bounds bounds = itemRenderer.bounds;
-
-        Vector3 surfacePoint = new Vector3(
-            Random.Range(bounds.min.x, bounds.max.x),
-            bounds.max.y + 0.02f,
-            Random.Range(bounds.min.z, bounds.max.z)
-        );
-
-        stain.transform.position = surfacePoint;
-        stain.transform.rotation = Quaternion.Euler(90, 0, 0);
-
-        float randomScale = Random.Range(0.1f, 0.3f);
-        stain.transform.localScale = Vector3.one * randomScale;
-        stain.transform.Rotate(0, 0, Random.Range(0, 360), Space.Self);
-    }
 }
+    
+
