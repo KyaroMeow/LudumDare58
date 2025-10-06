@@ -17,6 +17,7 @@ public class ItemSpawner : MonoBehaviour
         GameObject itemToSpawn = Instantiate(anomalyItem, transform.position, Quaternion.identity);
         GameManager.Instance.currentItem = itemToSpawn;
     }
+    
     public void SpawnItem()
     {
         if (itemPrefabs.Length == 0)
@@ -29,11 +30,7 @@ public class ItemSpawner : MonoBehaviour
         GameObject itemToSpawn = Instantiate(itemPrefabs[randomIndex], transform.position, Quaternion.identity);
 
         SetupItem(itemToSpawn);
-
         GameManager.Instance.currentItem = itemToSpawn;
-
-        Item item = itemToSpawn.GetComponent<Item>();
-        Debug.Log($"Spawned item - Defective: {item.isDefective}, UV Stain: {item.hasUVStain}");
     }
 
     private void SetupItem(GameObject itemObject)
@@ -41,34 +38,27 @@ public class ItemSpawner : MonoBehaviour
         Item item = itemObject.GetComponent<Item>();
         if (item == null) return;
 
-        bool isDefective = Random.Range(0f, 1f) <= SettingManager.Instance.defectChance;
-        item.isDefective = isDefective;
+        // 1. Определяем есть ли пятно (главный дефект)
+        bool hasStain = Random.Range(0f, 1f) <= SettingManager.Instance.defectChance;
+        
+        // 2. Определяем есть ли штрихкод
+        bool hasBarcode = Random.Range(0f, 1f) > SettingManager.Instance.noBarcodeChance;
+        
+        // 3. Определяем что показывает штрихкод
+        bool barcodeShowsGood = true;
+        if (hasBarcode)
+        {
+            // Штрихкод может показывать неверную информацию
+            barcodeShowsGood = Random.Range(0f, 1f) > SettingManager.Instance.wrongBarcodeChance;
+        }
 
-        if (isDefective)
-        {
-            bool hasStain = Random.Range(0f, 1f) <= SettingManager.Instance.stainChance;
-            if (hasStain && uvStainPrefab != null)
-            {
-                AddUVStainToItem(item);
-            }
-        }
-        else
-        {
-            item.hasUVStain = false;
-        }
+        // 4. Определяем общий статус defective
+        // Предмет считается defective если у него есть пятно ИЛИ штрихкод врет
+        bool isDefective = hasStain || (hasBarcode && !barcodeShowsGood);
+
+        item.InitializeItem(isDefective, hasBarcode, barcodeShowsGood, hasStain);
     }
 
-    private void AddUVStainToItem(Item item)
-    {
-        if (item.stainSpots.Count < 1) return;
-
-        item.hasUVStain = true;
-        GameObject randomStain = item.stainSpots[Random.Range(0, item.stainSpots.Count)];
-        randomStain.SetActive(true);
-        item.stainRenderer = randomStain.GetComponent<Renderer>();
-        item.SetUVVisibility(false);
-
-    }
 }
     
 

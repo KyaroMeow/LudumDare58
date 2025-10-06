@@ -6,11 +6,13 @@ public class PlayerInteract : MonoBehaviour
 {
     [Header("Interaction Settings")]
     public Transform holdPosition;
+    public Transform TabletHoldPosition;
     public LayerMask interactableLayer;
     public GameObject HUD;
     public UVLighter uVLighter;
     public GameObject scaner;
     public ParticleSystem particle;
+    public Tablet tablet;
     
     [Header("Inspect Settings")]
     public float inspectRotationSpeed = 20f;
@@ -25,6 +27,7 @@ public class PlayerInteract : MonoBehaviour
     private Vector2 lastMousePosition;
     private PlayerView playerView;
     private bool isItemRotating = false;
+    private bool holdTablet = false;
 
 
     private void Start()
@@ -57,10 +60,8 @@ public class PlayerInteract : MonoBehaviour
     
     private void HandleInspect()
     {
-        if (heldItem != null)
+        if (heldItem != null && !holdTablet)
         {
-            
-            
             if (Input.GetMouseButton(0))
             {
                 Vector2 currentMousePosition = Input.mousePosition;
@@ -88,21 +89,46 @@ public class PlayerInteract : MonoBehaviour
     private void TryPickupItem()
     {
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-        
-        if (Physics.Raycast(ray, 10f, interactableLayer))
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit, 10f, interactableLayer))
         {
-            Item item = GameManager.Instance.currentItem.GetComponent<Item>();
-            if (item != null)
+            if (hit.collider.CompareTag("Item"))
             {
-                PickupItem(item);
+                Item item = GameManager.Instance.currentItem.GetComponent<Item>();
+                if (item != null)
+                {
+                    PickupItem(item);
+                }
+            }
+            else if (hit.collider.CompareTag("Tablet") && !holdTablet)
+            {
+                {
+                    PickupTablet();
+                }
             }
         }
+    }
+    private void PickupTablet()
+    {
+        playerView.canRotate = false;
+        holdTablet = true;
+        
+        // Save tablet position
+        originalItemPosition = tablet.transform.position;
+        originalItemRotation = tablet.transform.rotation;
+        originalItemParent = tablet.transform.parent;
+        
+        // Move tablet to hold position
+        tablet.transform.SetParent(TabletHoldPosition);
+        tablet.transform.localPosition = Vector3.zero;
+        tablet.transform.localRotation = Quaternion.identity;
     }
     private void DestroyItem()
     {
         if (particle != null)
         {
-         particle.Play();
+            particle.Play();
         }
         GameManager.Instance.WrongSort();
     }
@@ -130,25 +156,35 @@ public class PlayerInteract : MonoBehaviour
 
     public void DropItem()
     {
-        if (heldItem != null)
+        if (!holdTablet)
         {
-            heldItem.transform.SetParent(originalItemParent);
-            heldItem.transform.position = originalItemPosition;
-            heldItem.transform.rotation = originalItemRotation;
-
-            Rigidbody rb = heldItem.GetComponent<Rigidbody>();
-            if (rb != null)
+            if (heldItem != null)
             {
-                rb.isKinematic = false;
-            }
+                heldItem.transform.SetParent(originalItemParent);
+                heldItem.transform.position = originalItemPosition;
+                heldItem.transform.rotation = originalItemRotation;
 
-            heldItem = null;
+                Rigidbody rb = heldItem.GetComponent<Rigidbody>();
+                if (rb != null)
+                {
+                    rb.isKinematic = false;
+                }
+
+                heldItem = null;
+            }
+            isItemRotating = false;
+            scaner.SetActive(false);
+            HUD.SetActive(false);
+            uVLighter.ToggleLighterOff();
         }
-        isItemRotating = false;
+        else
+        {
+            tablet.transform.SetParent(originalItemParent);
+            tablet.transform.position = originalItemPosition;
+            tablet.transform.rotation = originalItemRotation;
+            holdTablet = false;
+        }
         playerView.canRotate = true;
-        scaner.SetActive(false);
-        HUD.SetActive(false);
-        uVLighter.ToggleLighterOff();
     }
     
 

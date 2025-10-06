@@ -14,8 +14,10 @@ public class GameManager : MonoBehaviour
     public int currentMistakes = 0;
     public int itemsSorted = 0;
     public int totalItemsProcessed = 0;
-    public float currentTime;
+    public float currentTime = 0;
     public bool isGameActive = true;
+    public bool isGameStarted = false;
+    public bool isTimerWork = false;
 
     public ItemSpawner itemSpawner;
     public Conveyor conveyor;
@@ -38,21 +40,32 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
-        SpawnItem();
+       
     }
     void Update()
     {
-        UpdateTimer();
+        if (isGameStarted)
+        {
+            UpdateTimer();
+        }
+    }
+    public void StartGame()
+    {
+        isGameStarted = true;
+        SpawnItem();
     }
     private void UpdateTimer()
     {
-        if (currentTime > 0)
+        if (isTimerWork && SettingManager.Instance.timer)
         {
-            currentTime -= Time.deltaTime;
-        }
-        else
-        {
-            WrongSort();
+            if (currentTime > 0)
+            {
+                currentTime -= Time.deltaTime;
+            }
+            else
+            {
+                WrongSort();
+            }
         }
     }
     public void SetVolume()
@@ -77,9 +90,9 @@ public class GameManager : MonoBehaviour
             WrongSort();
         }
     }
-    public void ShowScanResult(bool result)
+    public void ShowScanResult()
     {
-        scanUI.ShowResult(result);
+        scanUI.ShowResult(currentItem.GetComponent<Item>().barcodeShowsGood);
     }
     private void CorrectSort()
     {

@@ -15,12 +15,12 @@ public class Scaner : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(transform.position, transform.up, out hit, 3f))
         {
-            if (hit.collider.isTrigger && hit.collider.CompareTag("code"))
+            if (hit.collider.isTrigger && hit.collider.CompareTag("Code"))
             {
                 Item item = GameManager.Instance.currentItem.GetComponent<Item>();
                 if (item != null)
                 {
-                    GameManager.Instance.ShowScanResult(!item.isDefective);
+                    GameManager.Instance.ShowScanResult();
                     parent.SetActive(false);
                 }
             }
