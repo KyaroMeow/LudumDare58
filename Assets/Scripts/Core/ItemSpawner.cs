@@ -4,13 +4,10 @@ using UnityEngine;
 
 public class ItemSpawner : MonoBehaviour
 {
-    [Header("Spawn Settings")]
-    [SerializeField] private float defectChance = 0.3f;
-    [SerializeField] private float stainChance = 0.6f;
-
     [Header("Item Prefabs")]
     [SerializeField] private GameObject[] itemPrefabs;
     [SerializeField] private GameObject anomalyItem;
+    [SerializeField] private GameObject bomb;
 
     [Header("UV Stain Prefab")]
     [SerializeField] private GameObject uvStainPrefab;
@@ -44,12 +41,12 @@ public class ItemSpawner : MonoBehaviour
         Item item = itemObject.GetComponent<Item>();
         if (item == null) return;
 
-        bool isDefective = Random.Range(0f, 1f) <= defectChance;
+        bool isDefective = Random.Range(0f, 1f) <= SettingManager.Instance.defectChance;
         item.isDefective = isDefective;
 
         if (isDefective)
         {
-            bool hasStain = Random.Range(0f, 1f) <= stainChance;
+            bool hasStain = Random.Range(0f, 1f) <= SettingManager.Instance.stainChance;
             if (hasStain && uvStainPrefab != null)
             {
                 AddUVStainToItem(item);
@@ -76,24 +73,25 @@ public class ItemSpawner : MonoBehaviour
         item.SetUVVisibility(false);
 
     }
+    
     private void PlaceStainOnSurface(GameObject stain, GameObject item)
     {
-    Renderer itemRenderer = item.GetComponent<Renderer>();
-    if (itemRenderer == null) return;
-    
-    Bounds bounds = itemRenderer.bounds;
-    
-    Vector3 surfacePoint = new Vector3(
-        Random.Range(bounds.min.x, bounds.max.x),
-        bounds.max.y + 0.02f, 
-        Random.Range(bounds.min.z, bounds.max.z)
-    );
-    
-    stain.transform.position = surfacePoint;
-    stain.transform.rotation = Quaternion.Euler(90, 0, 0); 
-    
-    float randomScale = Random.Range(0.1f, 0.3f);
-    stain.transform.localScale = Vector3.one * randomScale;
-    stain.transform.Rotate(0, 0, Random.Range(0, 360), Space.Self);
+        Renderer itemRenderer = item.GetComponent<Renderer>();
+        if (itemRenderer == null) return;
+
+        Bounds bounds = itemRenderer.bounds;
+
+        Vector3 surfacePoint = new Vector3(
+            Random.Range(bounds.min.x, bounds.max.x),
+            bounds.max.y + 0.02f,
+            Random.Range(bounds.min.z, bounds.max.z)
+        );
+
+        stain.transform.position = surfacePoint;
+        stain.transform.rotation = Quaternion.Euler(90, 0, 0);
+
+        float randomScale = Random.Range(0.1f, 0.3f);
+        stain.transform.localScale = Vector3.one * randomScale;
+        stain.transform.Rotate(0, 0, Random.Range(0, 360), Space.Self);
     }
 }

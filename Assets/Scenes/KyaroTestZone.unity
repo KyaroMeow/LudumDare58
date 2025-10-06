@@ -5222,14 +5222,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fbcb96dee5e56d4295a3ccd0d662eab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defectChance: 0.3
-  stainChance: 0.6
   itemPrefabs:
-  - {fileID: 6349331756605164851, guid: 4b336b2de27d64d4981bf1de9eff7b18, type: 3}
-  - {fileID: 4162194627767542250, guid: 22c083950fd656045b012ec2eaa6af25, type: 3}
-  - {fileID: 3292821490020308576, guid: c34ae69c2eafb1348a425b9d40f2a34a, type: 3}
-  - {fileID: 2543926587601968354, guid: 985f5add9cbfbb44f9e6a2aa4a7cb765, type: 3}
+  - {fileID: 7416303175354781649, guid: 27fcfcefbc0a7ec41a28c1f219fd75f8, type: 3}
+  - {fileID: 5676201900636867172, guid: 1178ace2c0b38444f9ed4e1135c102bd, type: 3}
+  - {fileID: 8750317507915971984, guid: 3bd3f42311a46b944a6c2cac8e9d80f3, type: 3}
+  - {fileID: 3462556844712864225, guid: 7495bf7ffafab384ba763d864c76d322, type: 3}
+  - {fileID: 2071571188851197091, guid: e7158aee5cf33424dbe82e01fb6fe707, type: 3}
+  - {fileID: 8542740545509734821, guid: 7f39ad46f5d2c9f4eb3fe78fccd855d8, type: 3}
+  - {fileID: 4487105028965910130, guid: a495cfd353694cd46b10ae851e4bf292, type: 3}
+  - {fileID: 1851531806991297895, guid: 60c5be1f44f1b88408b1205e7ebad7e0, type: 3}
+  - {fileID: 7689349695844391938, guid: 1ffe6bc6c7cbd354b9ed16e9f10f7a07, type: 3}
+  - {fileID: 5937775343396541588, guid: cac9c853d83f3884faf4a38343f006a2, type: 3}
   anomalyItem: {fileID: 0}
+  bomb: {fileID: 6569175202388017190, guid: 394f80c016aaf9240aa2b81051b368a2, type: 3}
   uvStainPrefab: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
 --- !u!1 &1959665712
 GameObject:
@@ -5266,7 +5271,7 @@ MonoBehaviour:
   - {fileID: 1678792696}
   - {fileID: 387215736}
   - {fileID: 1833836685}
-  anomallyObject: {fileID: 0}
+  anomallyObject: {fileID: 1227295596}
 --- !u!4 &1959665714
 Transform:
   m_ObjectHideFlags: 0

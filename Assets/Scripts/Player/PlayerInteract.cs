@@ -88,11 +88,10 @@ public class PlayerInteract : MonoBehaviour
     private void TryPickupItem()
     {
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
         
-        if (Physics.Raycast(ray, out hit, 10f, interactableLayer))
+        if (Physics.Raycast(ray, 10f, interactableLayer))
         {
-            Item item = hit.collider.GetComponent<Item>();
+            Item item = GameManager.Instance.currentItem.GetComponent<Item>();
             if (item != null)
             {
                 PickupItem(item);

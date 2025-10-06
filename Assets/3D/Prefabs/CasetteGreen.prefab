@@ -10,10 +10,11 @@ GameObject:
   m_Component:
   - component: {fileID: 7334477029648819180}
   - component: {fileID: -3809808797046942398}
+  - component: {fileID: 1743712397233841224}
   m_Layer: 6
   m_Name: CasetteGreen
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 7422848464349959988, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -26,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 8750317507915971984}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: 1.627, y: 2.028, z: -8.968}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -60,6 +61,22 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1743712397233841224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8750317507915971984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31f6bf2cab4bfb148ad7047908ed5fb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDefective: 0
+  isSorted: 0
+  hasUVStain: 0
+  stainRenderer: {fileID: 0}
 --- !u!1001 &6642443009252374984
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -82,11 +99,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6deefbf6e4e0a1445828fb1cc468b9f7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.383
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6deefbf6e4e0a1445828fb1cc468b9f7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.828
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6deefbf6e4e0a1445828fb1cc468b9f7, type: 3}
       propertyPath: m_LocalPosition.z
