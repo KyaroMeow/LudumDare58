@@ -9,9 +9,6 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private GameObject anomalyItem;
     [SerializeField] private GameObject bomb;
 
-    [Header("UV Stain Prefab")]
-    [SerializeField] private GameObject uvStainPrefab;
-
     public void SpawnAnomalyItem()
     {
         GameObject itemToSpawn = Instantiate(anomalyItem, transform.position, Quaternion.identity);

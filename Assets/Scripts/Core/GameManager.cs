@@ -54,6 +54,7 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         isGameStarted = true;
+        isTimerWork = true;
         SpawnItem();
     }
     private void UpdateTimer()

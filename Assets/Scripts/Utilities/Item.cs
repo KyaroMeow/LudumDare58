@@ -40,6 +40,7 @@ public class Item : MonoBehaviour
                 if (stainSpots[i] != null)
                 {
                     stainSpots[i].SetActive(i == randomIndex);
+                    stainRenderer = stainSpots[randomIndex].GetComponent<Renderer>();
                 }
             }
         }
