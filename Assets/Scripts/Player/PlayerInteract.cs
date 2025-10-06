@@ -91,20 +91,20 @@ public class PlayerInteract : MonoBehaviour
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, 10f, interactableLayer))
+        if (Physics.Raycast(ray, out hit, 10f, interactableLayer)&& !holdTablet)
         {
-            if (hit.collider.CompareTag("Item"))
+            if (hit.collider.CompareTag("Tablet"))
+            {
+                {
+                    PickupTablet();
+                }
+            }
+            else
             {
                 Item item = GameManager.Instance.currentItem.GetComponent<Item>();
                 if (item != null)
                 {
                     PickupItem(item);
-                }
-            }
-            else if (hit.collider.CompareTag("Tablet") && !holdTablet)
-            {
-                {
-                    PickupTablet();
                 }
             }
         }
@@ -118,7 +118,6 @@ public class PlayerInteract : MonoBehaviour
         originalItemPosition = tablet.transform.position;
         originalItemRotation = tablet.transform.rotation;
         originalItemParent = tablet.transform.parent;
-        
         // Move tablet to hold position
         tablet.transform.SetParent(TabletHoldPosition);
         tablet.transform.localPosition = Vector3.zero;
