@@ -7,6 +7,7 @@ public class AnomallyController : MonoBehaviour
     [SerializeField] private GameObject[] anomallyBalls;
     [SerializeField] private GameObject cube;
     [SerializeField] private GameObject sphere;
+    [SerializeField] private GameObject endCube;
 
     private int positionId = 0;
 
@@ -36,6 +37,10 @@ public class AnomallyController : MonoBehaviour
     {
         anomallyBalls[positionId].SetActive(false);
         positionId++;
+        if (positionId == 2) {
+            cube.SetActive(false);
+            endCube.SetActive(true);
+        }
         anomallyBalls[positionId].SetActive(true);
     }
 }

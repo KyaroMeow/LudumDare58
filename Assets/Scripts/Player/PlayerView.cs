@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class PlayerView : MonoBehaviour
 {
+    public static PlayerView Instance;
     [Header("Rotation Settings")]
     public float rotationDuration = 0.3f;
     public float rotationAngle = 90f; 
@@ -17,6 +18,7 @@ public class PlayerView : MonoBehaviour
     public Transform cameraTransform; 
     
     [HideInInspector] public bool canRotate = true;
+    [HideInInspector] public bool canLook = true;
     public GameObject pauseMenuUI;
     
     private bool isRotating = false;
@@ -26,7 +28,17 @@ public class PlayerView : MonoBehaviour
     private Quaternion targetRotation;
     private Quaternion cameraStartLocalRotation;
     private Vector2 currentCameraRotation; 
-
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
     private void Start()
     {
         if (cameraTransform != null)
@@ -35,22 +47,11 @@ public class PlayerView : MonoBehaviour
             currentCameraRotation = Vector2.zero;
         }
     }
-
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            TogglePause();
-        }
-        
-        if (canRotate)
-        {
-            HandleCameraLook();
-            HandleRotation();
-        }
-    }
-    public void AnomallyView()
-    {
+        if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
+        if (canLook) HandleCameraLook();
+        if (canRotate) HandleRotation();
         
     }
     private void TogglePause()

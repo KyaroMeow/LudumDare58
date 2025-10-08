@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
     }
     void Start()
     {
-       
+        CutSceneManager.Instance.StartInitialCutScene();
     }
     void Update()
     {
@@ -83,6 +83,11 @@ public class GameManager : MonoBehaviour
         scaner.SetActive(!scaner.activeSelf);
         scanerOnTable.SetActive(!scaner.activeSelf);
     }
+    public void ToggleScanerOff()
+    {
+        scaner.SetActive(false);
+        scanerOnTable.SetActive(true);
+    }
     public void SortItem(bool selectedVariant)
     {
         if (currentItem == null) return;
@@ -101,12 +106,12 @@ public class GameManager : MonoBehaviour
     {
         scanUI.ShowResult(currentItem.GetComponent<Item>().barcodeShowsGood);
     }
-    private void CorrectSort()
+    public void CorrectSort()
     {
         AudioManager.Instance.PlayAgree();
         lights.ChangeColorGreen();
         itemsSorted++;
-        Destroy(currentItem);
+        if (currentItem!= null)Destroy(currentItem);
         SpawnItem();
     }
     public void WrongSort()
@@ -123,7 +128,7 @@ public class GameManager : MonoBehaviour
     }
     public void BadEnd()
     {
-        
+        CutSceneManager.Instance.StartLooseCutScene();
     }
     public void SpawnItem()
     {

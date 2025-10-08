@@ -12,7 +12,7 @@ public class ReplicaSettings
 }
 
 // ИЗМЕНИТЕ ИМЯ КЛАССА НА DialogSystem
-public class DialogSystem : MonoBehaviour
+public class Dialogstem : MonoBehaviour
 {
     [Header("Настройки реплик")]
     [SerializeField] private List<ReplicaSettings> replicaSettings = new List<ReplicaSettings>

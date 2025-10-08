@@ -10,7 +10,6 @@ public class PlayerInteract : MonoBehaviour
     public LayerMask interactableLayer;
     public GameObject HUD;
     public UVLighter uVLighter;
-    public GameObject scaner;
     public ParticleSystem particle;
     public Tablet tablet;
     
@@ -120,6 +119,7 @@ public class PlayerInteract : MonoBehaviour
     private void PickupTablet()
     {
         playerView.canRotate = false;
+        playerView.canLook = false;
         holdTablet = true;
         
         // Save tablet position
@@ -142,6 +142,7 @@ public class PlayerInteract : MonoBehaviour
     private void PickupItem(Item item)
     {
         playerView.canRotate = false;
+        playerView.canLook = false;
         HUD.SetActive(true);
         heldItem = item;
         
@@ -180,9 +181,10 @@ public class PlayerInteract : MonoBehaviour
                 heldItem = null;
             }
             isItemRotating = false;
-            scaner.SetActive(false);
+            GameManager.Instance.ToggleScanerOff();
             HUD.SetActive(false);
             uVLighter.ToggleLighterOff();
+
         }
         else
         {
@@ -192,6 +194,7 @@ public class PlayerInteract : MonoBehaviour
             holdTablet = false;
         }
         playerView.canRotate = true;
+        playerView.canLook = true;
     }
     
 
