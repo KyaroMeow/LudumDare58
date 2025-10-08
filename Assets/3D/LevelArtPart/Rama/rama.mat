@@ -25,7 +25,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: c76e97fee8ceb584eb1ebdd70738798a, type: 3}
+        m_Texture: {fileID: 2800000, guid: 71924ac21ba18b34d93276132df91335, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -45,7 +45,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2cc284ca7afb73f4fadbfd424df1c201, type: 3}
+        m_Texture: {fileID: 2800000, guid: d47a5d21200822147b64b819f300a987, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -53,7 +53,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
-        m_Texture: {fileID: 2800000, guid: f65cafcd21972914592d984f6e1081d9, type: 3}
+        m_Texture: {fileID: 2800000, guid: 2b5242471cb6d3c4ab9d52d64960aac0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
@@ -67,9 +67,9 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _GlossMapScale: 1
-    - _Glossiness: 0.5
+    - _Glossiness: 0.374
     - _GlossyReflections: 1
-    - _Metallic: 0.22
+    - _Metallic: 0.712
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -79,7 +79,7 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 0.7494758, g: 0.8830954, b: 0.899371, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
