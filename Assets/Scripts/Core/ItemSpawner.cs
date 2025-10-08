@@ -11,8 +11,7 @@ public class ItemSpawner : MonoBehaviour
 
     public void SpawnAnomalyItem()
     {
-        GameObject itemToSpawn = Instantiate(anomalyItem, transform.position, Quaternion.identity);
-        GameManager.Instance.currentItem = itemToSpawn;
+        Instantiate(anomalyItem, transform.position, Quaternion.identity);
     }
     
     public void SpawnItem()

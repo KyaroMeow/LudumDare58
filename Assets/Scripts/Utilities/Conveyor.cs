@@ -8,6 +8,7 @@ public class Conveyor : MonoBehaviour
     public float conveyorSpeed = -2f;
     public float conveyorVisualSpeed = 1f;
     public bool canMove = true;
+    public bool visualMoveFlip = false;
     Rigidbody rb;
     void Start()
     {
@@ -23,9 +24,21 @@ public class Conveyor : MonoBehaviour
     }
     private void Move()
     {
-        Vector3 pos = rb.position;
-        rb.position += Vector3.back * conveyorSpeed * Time.fixedDeltaTime;
-        rb.MovePosition(pos);
-        GetComponent<Renderer>().material.mainTextureOffset += new Vector2(conveyorVisualSpeed * Time.fixedDeltaTime, 0);
+        if (rb != null)
+        {
+            Vector3 pos = rb.position;
+            rb.position += Vector3.back * conveyorSpeed * Time.fixedDeltaTime;
+            rb.MovePosition(pos);
+        }
+        
+        if (visualMoveFlip)
+        {
+            GetComponent<Renderer>().material.mainTextureOffset += new Vector2(0, conveyorVisualSpeed * Time.fixedDeltaTime);
+        }
+        else
+        {
+            GetComponent<Renderer>().material.mainTextureOffset += new Vector2(conveyorVisualSpeed * Time.fixedDeltaTime, 0);
+        }
+        
     }
 }

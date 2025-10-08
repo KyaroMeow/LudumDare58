@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     public GameObject scaner;
     public Lights lights;
     public Slider volumeSlider;
+    public AnomallyController anomallyController;
 
     private void Awake()
     {
@@ -56,6 +57,10 @@ public class GameManager : MonoBehaviour
         isGameStarted = true;
         isTimerWork = true;
         SpawnItem();
+    }
+    public void StartAnomally()
+    {
+        anomallyController.StartAnomally();
     }
     private void UpdateTimer()
     {
@@ -119,8 +124,15 @@ public class GameManager : MonoBehaviour
     }
     public void SpawnItem()
     {
+        if (totalItemsProcessed == SettingManager.Instance.anomalyItemNum)
+        {
+            itemSpawner.SpawnAnomalyItem();
+        }
+        else
+        {
         itemSpawner.SpawnItem();
-        currentTime = SettingManager.Instance.timePerItem;
+        currentTime = SettingManager.Instance.timePerItem;    
+        }
     }
     public void PauseGame()
     {

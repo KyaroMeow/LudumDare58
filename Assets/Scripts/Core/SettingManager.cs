@@ -10,6 +10,7 @@ public class SettingManager : MonoBehaviour
     public float volumeValue = 1f;
     public float timePerItem = 60f;
     public int maxMistakes = 5;
+    public int anomalyItemNum = 10;
     public float noBarcodeChance = 0.2f;
     public float wrongBarcodeChance = 0.4f;
     public float defectChance = 0.5f;
@@ -38,6 +39,7 @@ public class SettingManager : MonoBehaviour
                 wrongBarcodeChance = 0.2f;
                 defectChance = 0.4f;
                 noBarcodeChance = 0.4f;
+                anomalyItemNum = 10;
                 timePerItem = 90f;
                 maxMistakes = 6;
                 break;
@@ -45,6 +47,7 @@ public class SettingManager : MonoBehaviour
                 wrongBarcodeChance = 0.4f;
                 defectChance = 0.5f;
                 noBarcodeChance = 0.3f;
+                anomalyItemNum = 20;
                 timePerItem = 60f;
                 maxMistakes = 5;
                 break;
@@ -52,6 +55,7 @@ public class SettingManager : MonoBehaviour
                 wrongBarcodeChance = 0.7f;
                 defectChance = 0.6f;
                 noBarcodeChance = 0.3f;
+                anomalyItemNum = 30;
                 timePerItem = 30f;
                 maxMistakes = 3;
                 break;

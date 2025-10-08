@@ -5,7 +5,9 @@ using UnityEngine;
 public class AnomallyController : MonoBehaviour
 {
     [SerializeField] private GameObject[] anomallyBalls;
-    [SerializeField] private GameObject anomallyObject;
+    [SerializeField] private GameObject cube;
+    [SerializeField] private GameObject sphere;
+
     private int positionId = 0;
 
     public void ClickOnBall()
@@ -22,13 +24,13 @@ public class AnomallyController : MonoBehaviour
     public void StartAnomally()
     {
         anomallyBalls[positionId].SetActive(true);
-        anomallyObject.SetActive(true);
+        cube.SetActive(true);
     }
     private void EndAnomally()
     {
         anomallyBalls[positionId].SetActive(false);
         positionId = 0;
-        
+        sphere.SetActive(true);
     }
     private void GoToNextPosition()
     {

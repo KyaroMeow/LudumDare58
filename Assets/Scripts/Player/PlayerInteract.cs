@@ -95,9 +95,12 @@ public class PlayerInteract : MonoBehaviour
         {
             if (hit.collider.CompareTag("Tablet"))
             {
-                {
-                    PickupTablet();
-                }
+              PickupTablet();
+            }
+            else if (hit.collider.CompareTag("Anomally"))
+            {
+                Destroy(hit.collider.gameObject);
+                GameManager.Instance.StartAnomally();
             }
             else
             {
