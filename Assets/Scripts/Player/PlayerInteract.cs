@@ -102,6 +102,11 @@ public class PlayerInteract : MonoBehaviour
                 Destroy(hit.collider.gameObject);
                 GameManager.Instance.StartAnomally();
             }
+            else if (hit.collider.CompareTag("Bomb"))
+            {
+                Destroy(hit.collider.gameObject);
+                GameManager.Instance.BadEnd();
+            }
             else
             {
                 Item item = GameManager.Instance.currentItem.GetComponent<Item>();

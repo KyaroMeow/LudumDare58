@@ -13,7 +13,10 @@ public class ItemSpawner : MonoBehaviour
     {
         Instantiate(anomalyItem, transform.position, Quaternion.identity);
     }
-    
+    public void SpawnBomb()
+    {
+        Instantiate(bomb, transform.position, Quaternion.identity);
+    }
     public void SpawnItem()
     {
         if (itemPrefabs.Length == 0)

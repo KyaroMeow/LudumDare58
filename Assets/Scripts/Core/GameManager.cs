@@ -8,9 +8,6 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    [Header("Game Settings")]
-
-
     [Header("Current Game State")]
     public GameObject currentItem;
     public int currentMistakes = 0;
@@ -26,6 +23,7 @@ public class GameManager : MonoBehaviour
     public PlayerInteract playerInteract;
     public ScanUI scanUI;
     public GameObject scaner;
+    public GameObject scanerOnTable;
     public Lights lights;
     public Slider volumeSlider;
     public AnomallyController anomallyController;
@@ -83,6 +81,7 @@ public class GameManager : MonoBehaviour
     public void ToggleScaner()
     {
         scaner.SetActive(!scaner.activeSelf);
+        scanerOnTable.SetActive(!scaner.activeSelf);
     }
     public void SortItem(bool selectedVariant)
     {
@@ -122,16 +121,24 @@ public class GameManager : MonoBehaviour
         Destroy(currentItem);
         SpawnItem();
     }
+    public void BadEnd()
+    {
+        
+    }
     public void SpawnItem()
     {
         if (totalItemsProcessed == SettingManager.Instance.anomalyItemNum)
         {
             itemSpawner.SpawnAnomalyItem();
         }
+        else if (totalItemsProcessed == SettingManager.Instance.BombNum)
+        {
+            itemSpawner.SpawnBomb();
+        }
         else
         {
-        itemSpawner.SpawnItem();
-        currentTime = SettingManager.Instance.timePerItem;    
+            itemSpawner.SpawnItem();
+            currentTime = SettingManager.Instance.timePerItem;
         }
     }
     public void PauseGame()

@@ -49,6 +49,10 @@ public class PlayerView : MonoBehaviour
             HandleRotation();
         }
     }
+    public void AnomallyView()
+    {
+        
+    }
     private void TogglePause()
     {
         isPaused = !isPaused;
@@ -62,8 +66,8 @@ public class PlayerView : MonoBehaviour
         if (cameraTransform == null) return;
 
         Vector2 mouseScreenPos = new Vector2(
-            (Input.mousePosition.x / Screen.width) * 2 - 1,
-            (Input.mousePosition.y / Screen.height) * 2 - 1
+            Input.mousePosition.x / Screen.width * 2 - 1,
+            Input.mousePosition.y / Screen.height * 2 - 1
         );
 
         Vector2 targetRotation = new Vector2(
