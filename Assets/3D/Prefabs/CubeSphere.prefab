@@ -157,7 +157,7 @@ PrefabInstance:
     - target: {fileID: -1233815045969728814, guid: 39b904a76642b72459ffd55eaa8c0b5e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: f8157891f86bc744cb32d243c0b5d4ff, type: 2}
+      objectReference: {fileID: 2100000, guid: 32a76832b79e84347ad9df08b12709c3, type: 2}
     - target: {fileID: 919132149155446097, guid: 39b904a76642b72459ffd55eaa8c0b5e, type: 3}
       propertyPath: m_Name
       value: cubee
