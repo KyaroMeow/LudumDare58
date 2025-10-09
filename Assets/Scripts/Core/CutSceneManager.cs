@@ -22,7 +22,7 @@ public class CutSceneManager : MonoBehaviour
     }
     public void StartInitialCutScene()
     {
-
+        startCanvas.SetActive(true);
     }
     public void StartLooseCutScene()
     {

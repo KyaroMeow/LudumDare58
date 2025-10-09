@@ -3,28 +3,45 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
-public class SimpleCutscene : MonoBehaviour
+public class StartCutscene : MonoBehaviour
 {
+    [System.Serializable]
+    public class CutsceneSlide
+    {
+        public Sprite slide;
+        public float duration = 3f;
+    }
+
     [Header("CUTSCENE SETTINGS")]
-    public Sprite[] slides;
-    public float slideDuration = 3f;
+    public CutsceneSlide[] slides;
+    
+    [Header("AUDIO SETTINGS")]
+    public AudioClip firstAudioClip;
+    public AudioClip secondAudioClip;
+    public int firstSoundStartSlide = 0;
+    public int secondSoundStartSlide = 0;
+    
     public float fadeDuration = 1f;
 
     [Header("REFERENCES")]
     public Image displayImage;
+    public AudioSource audioSource;
 
     [Header("ON CUTSCENE END")]
     public UnityEvent onCutsceneEnd;
+    
     private int currentSlide = 0;
+    private bool firstSoundPlayed = false;
+    private bool secondSoundPlayed = false;
 
     void Start()
     {
-        StartCoroutine(PlayCutscene());
+            audioSource = gameObject.AddComponent<AudioSource>();
+            StartCoroutine(PlayCutscene());
     }
 
     void Update()
     {
-        // Пропуск по клику мыши
         if (Input.GetMouseButtonDown(0))
         {
             SkipToNext();
@@ -33,90 +50,124 @@ public class SimpleCutscene : MonoBehaviour
 
     private IEnumerator PlayCutscene()
     {
+        // Начинаем с черного экрана
+        displayImage.color = Color.black;
+        displayImage.sprite = null;
+
         // Показываем все слайды по порядку
         for (int i = 0; i < slides.Length; i++)
         {
-            yield return StartCoroutine(ShowSlide(slides[i]));
-            yield return new WaitForSeconds(slideDuration);
+            // Плавный переход от черного к слайду
+            yield return StartCoroutine(FadeFromBlackToSlide(slides[i].slide));
             
-            // Плавно скрываем слайд (кроме последнего)
+            // Проверяем нужно ли начать проигрывать первый звук
+            if (!firstSoundPlayed && i >= firstSoundStartSlide)
+            {
+                PlayFirstSound();
+                firstSoundPlayed = true;
+            }
+            
+            // Проверяем нужно ли начать проигрывать второй звук
+            if (!secondSoundPlayed && i >= secondSoundStartSlide)
+            {
+                PlaySecondSound();
+                secondSoundPlayed = true;
+            }
+            
+            // Ждем указанное для этого слайда время
+            yield return new WaitForSeconds(slides[i].duration);
+            
+            // Плавный переход к черному (кроме последнего слайда)
             if (i < slides.Length - 1)
             {
-                yield return StartCoroutine(FadeOut());
+                yield return StartCoroutine(FadeToBlack());
             }
         }
 
-        // Затемнение в конце
+        // Финальный переход к черному в конце
         yield return StartCoroutine(FadeToBlack());
         yield return new WaitForSeconds(0.5f);
         
-        // Разтемнение
-        yield return StartCoroutine(FadeFromBlack());
+        // Разтемнение к прозрачному
+        yield return StartCoroutine(FadeFromBlackToClear());
 
         // Вызываем действие после катсцены
         onCutsceneEnd?.Invoke();
     }
 
-    private IEnumerator ShowSlide(Sprite slide)
+    // Плавный переход от черного к слайду
+    private IEnumerator FadeFromBlackToSlide(Sprite slide)
     {
-        // Устанавливаем новое изображение
+        // Устанавливаем новое изображение (пока черное)
         displayImage.sprite = slide;
-        displayImage.color = new Color(1, 1, 1, 0);
+        displayImage.color = Color.black;
 
-        // Плавное появление
+        // Плавное появление слайда из черного
         float timer = 0f;
         while (timer < fadeDuration)
         {
             timer += Time.deltaTime;
-            float alpha = timer / fadeDuration;
-            displayImage.color = new Color(1, 1, 1, alpha);
+            float progress = timer / fadeDuration;
+            // Плавно меняем от черного к белому (полная видимость слайда)
+            displayImage.color = Color.Lerp(Color.black, Color.white, progress);
             yield return null;
         }
 
         displayImage.color = Color.white;
     }
 
-    private IEnumerator FadeOut()
-    {
-        // Плавное исчезновение
-        float timer = 0f;
-        while (timer < fadeDuration)
-        {
-            timer += Time.deltaTime;
-            float alpha = 1 - (timer / fadeDuration);
-            displayImage.color = new Color(1, 1, 1, alpha);
-            yield return null;
-        }
-    }
-
+    // Плавный переход от слайда к черному
     private IEnumerator FadeToBlack()
     {
-        // Плавное затемнение к черному
         float timer = 0f;
+        Color startColor = displayImage.color;
+        
         while (timer < fadeDuration)
         {
             timer += Time.deltaTime;
-            float alpha = timer / fadeDuration;
-            displayImage.color = new Color(0, 0, 0, alpha);
+            float progress = timer / fadeDuration;
+            // Плавно меняем к черному
+            displayImage.color = Color.Lerp(startColor, Color.black, progress);
             yield return null;
         }
 
         displayImage.color = Color.black;
     }
 
-    private IEnumerator FadeFromBlack()
+    // Плавный переход от черного к прозрачному (в самом конце)
+    private IEnumerator FadeFromBlackToClear()
     {
-        // Плавное разтемнение от черного
+        displayImage.color = Color.black;
+        displayImage.sprite = null;
+
         float timer = 0f;
         while (timer < fadeDuration)
         {
             timer += Time.deltaTime;
-            float alpha = 1 - (timer / fadeDuration);
-            displayImage.color = new Color(0, 0, 0, alpha);
+            float progress = timer / fadeDuration;
+            // Плавно меняем от черного к прозрачному
+            displayImage.color = new Color(0, 0, 0, 1 - progress);
             yield return null;
         }
 
         displayImage.color = new Color(0, 0, 0, 0);
+    }
+
+    private void PlayFirstSound()
+    {
+        if (firstAudioClip != null && audioSource != null)
+        {
+                audioSource.PlayOneShot(firstAudioClip);
+        }
+    }
+
+    private void PlaySecondSound()
+    {
+        if (secondAudioClip != null && audioSource != null)
+        {
+            audioSource.Stop();
+            audioSource.PlayOneShot(secondAudioClip);
+        }
     }
 
     private void SkipToNext()
@@ -127,8 +178,12 @@ public class SimpleCutscene : MonoBehaviour
         
         if (currentSlide < slides.Length)
         {
-            // Показываем следующий слайд
-            StartCoroutine(ShowSlide(slides[currentSlide]));
+            // Показываем следующий слайд с черным переходом
+            StartCoroutine(FadeFromBlackToSlide(slides[currentSlide].slide));
+            
+            // Проверяем нужно ли начать звуки
+            CheckAndPlaySounds();
+            
             StartCoroutine(WaitAndContinue());
         }
         else
@@ -138,16 +193,39 @@ public class SimpleCutscene : MonoBehaviour
         }
     }
 
+    private void CheckAndPlaySounds()
+    {
+        // Проверяем первый звук
+        if (!firstSoundPlayed && currentSlide >= firstSoundStartSlide)
+        {
+            PlayFirstSound();
+            firstSoundPlayed = true;
+        }
+        
+        // Проверяем второй звук
+        if (!secondSoundPlayed && currentSlide >= secondSoundStartSlide)
+        {
+            PlaySecondSound();
+            secondSoundPlayed = true;
+        }
+    }
+
     private IEnumerator WaitAndContinue()
     {
-        yield return new WaitForSeconds(slideDuration);
+        // Ждем указанное для текущего слайда время
+        yield return new WaitForSeconds(slides[currentSlide].duration);
         
         currentSlide++;
         
         if (currentSlide < slides.Length)
         {
-            yield return StartCoroutine(FadeOut());
-            yield return StartCoroutine(ShowSlide(slides[currentSlide]));
+            // Переход к черному и затем к следующему слайду
+            yield return StartCoroutine(FadeToBlack());
+            yield return StartCoroutine(FadeFromBlackToSlide(slides[currentSlide].slide));
+            
+            // Проверяем нужно ли начать звуки
+            CheckAndPlaySounds();
+            
             StartCoroutine(WaitAndContinue());
         }
         else
@@ -162,10 +240,24 @@ public class SimpleCutscene : MonoBehaviour
         yield return StartCoroutine(FadeToBlack());
         yield return new WaitForSeconds(0.5f);
         
-        // Разтемнение
-        yield return StartCoroutine(FadeFromBlack());
+        // Разтемнение к прозрачному
+        yield return StartCoroutine(FadeFromBlackToClear());
 
         // Вызываем действие после катсцены
+        onCutsceneEnd?.Invoke();
+    }
+
+    public void StopCutscene()
+    {
+        StopAllCoroutines();
+        
+        // Останавливаем все AudioSource
+        AudioSource[] allAudioSources = GetComponents<AudioSource>();
+        foreach (AudioSource source in allAudioSources)
+        {
+            source.Stop();
+        }
+        
         onCutsceneEnd?.Invoke();
     }
 }

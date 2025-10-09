@@ -36,6 +36,7 @@ public class DialogSystem : MonoBehaviour
 
     public void StartDialogue(string[] dialogueLines, System.Action onEnd = null)
     {
+        dialogueCanvas.SetActive(true);
         currentDialogue = dialogueLines;
         currentLine = 0;
         onDialogueEnd = onEnd;

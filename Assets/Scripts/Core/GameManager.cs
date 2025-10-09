@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.XR;
 
 public class GameManager : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class GameManager : MonoBehaviour
     public bool isTimerWork = false;
 
     public ItemSpawner itemSpawner;
+    public Hands hands;
     public Conveyor conveyor;
     public PlayerInteract playerInteract;
     public ScanUI scanUI;
@@ -91,6 +93,7 @@ public class GameManager : MonoBehaviour
     public void SortItem(bool selectedVariant)
     {
         if (currentItem == null) return;
+        hands.PlayPressButton();
         totalItemsProcessed++;
         bool itemVariant = currentItem.GetComponent<Item>().isDefective;
         if (selectedVariant == itemVariant)
@@ -120,11 +123,35 @@ public class GameManager : MonoBehaviour
         lights.ChangeColorRed();
         playerInteract.DropItem();
         currentMistakes++;
-        if (currentMistakes >= SettingManager.Instance.maxMistakes) {
+        CheckForDamage();
+        if (currentMistakes > SettingManager.Instance.maxMistakes)
+        {
             GameOver();
         }
         Destroy(currentItem);
         SpawnItem();
+    }
+    private void CheckForDamage()
+    {
+        int mistakesPerDamage = GetMistakesPerDamage();
+        if (currentMistakes % mistakesPerDamage == 0)
+        {
+            hands.PlayTakeDamage();
+        }
+    }
+    private int GetMistakesPerDamage()
+    {
+        switch (SettingManager.Instance.currentDifficulty)
+        {
+            case "Easy":
+                return 3;
+            case "Normal":
+                return 2;
+            case "Hard":
+                return 1;
+            default:
+                return 3;
+        }
     }
     public void BadEnd()
     {

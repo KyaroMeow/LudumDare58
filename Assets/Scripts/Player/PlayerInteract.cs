@@ -92,9 +92,10 @@ public class PlayerInteract : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit, 10f, interactableLayer)&& !holdTablet)
         {
+            GameManager.Instance.hands.PlayTakeItem();
             if (hit.collider.CompareTag("Tablet"))
             {
-              PickupTablet();
+                PickupTablet();
             }
             else if (hit.collider.CompareTag("Anomally"))
             {

@@ -110,7 +110,7 @@ public class PrefabSpawningSystem : MonoBehaviour
             spawnPoint.position,
             spawnPoint.rotation
         );
-
+        newInstance.layer = 0;
         // Уничтожаем объект через заданное время
         Destroy(newInstance, destroyAfterSeconds);
 

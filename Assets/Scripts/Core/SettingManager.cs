@@ -7,15 +7,16 @@ using UnityEngine;
 public class SettingManager : MonoBehaviour
 {
     public static SettingManager Instance;
-    public float volumeValue = 1f;
-    public float timePerItem = 60f;
-    public int maxMistakes = 5;
-    public int anomalyItemNum = 10;
-    public int BombNum = 20;
-    public float noBarcodeChance = 0.2f;
-    public float wrongBarcodeChance = 0.4f;
-    public float defectChance = 0.5f;
-    public bool timer = true;
+    public float volumeValue;
+    public float timePerItem;
+    public int maxMistakes;
+    public int anomalyItemNum;
+    public int BombNum;
+    public float noBarcodeChance;
+    public float wrongBarcodeChance;
+    public float defectChance;
+    public bool timer;
+    public string currentDifficulty;
     private void Awake()
     {
         if (Instance == null)
@@ -28,6 +29,10 @@ public class SettingManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    void Start()
+    {
+        SetDifficult("Normal");
+    }
     void Update()
     {
         AudioListener.volume = volumeValue;
@@ -37,31 +42,34 @@ public class SettingManager : MonoBehaviour
         switch (diffName)
         {
             case "Easy":
+                currentDifficulty = "Easy";
                 wrongBarcodeChance = 0.2f;
                 defectChance = 0.4f;
                 noBarcodeChance = 0.4f;
                 anomalyItemNum = 10;
                 BombNum = 20;
                 timePerItem = 90f;
-                maxMistakes = 6;
+                maxMistakes = 15;
                 break;
             case "Normal":
+                currentDifficulty = "Normal";
                 wrongBarcodeChance = 0.4f;
                 defectChance = 0.5f;
                 noBarcodeChance = 0.3f;
                 anomalyItemNum = 20;
                 BombNum = 40;
                 timePerItem = 60f;
-                maxMistakes = 5;
+                maxMistakes = 10;
                 break;
             case "Hard":
+                currentDifficulty = "Hard";
                 wrongBarcodeChance = 0.7f;
                 defectChance = 0.6f;
                 noBarcodeChance = 0.3f;
                 anomalyItemNum = 30;
                 BombNum = 50;
                 timePerItem = 30f;
-                maxMistakes = 3;
+                maxMistakes = 5;
                 break;
         }
     }
