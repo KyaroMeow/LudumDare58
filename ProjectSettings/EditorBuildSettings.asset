@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/KyaroTestZone.unity
     guid: ac776205be15ab444935402b7fa6e1bf
+  - enabled: 1
+    path: Assets/Scenes/Titrs.unity
+    guid: badae35a6dc7f4a418a12dc5fbb0caac
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
