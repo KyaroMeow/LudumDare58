@@ -23,14 +23,13 @@ public class Scaner : MonoBehaviour
     }
     
     private void ScanItem()
-{
+    {
     Collider[] hitColliders = Physics.OverlapBox(
         transform.position + transform.forward * scanDistance * 0.5f,
         scanSize * 0.5f,
         transform.rotation,
         scanLayerMask
     );
-
     foreach (Collider collider in hitColliders)
     {
         if (collider.isTrigger && collider.CompareTag("Code"))
@@ -39,7 +38,7 @@ public class Scaner : MonoBehaviour
             if (item != null)
             {
                 GameManager.Instance.ShowScanResult();
-                gameObject.SetActive(false);
+                GameManager.Instance.ToggleScanerOff();
                 return;
             }
         }
