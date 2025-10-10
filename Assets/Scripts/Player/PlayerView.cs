@@ -47,12 +47,17 @@ public class PlayerView : MonoBehaviour
             currentCameraRotation = Vector2.zero;
         }
     }
+    public void UnlockMovement()
+    {
+        canRotate = true;
+        canLook = true;
+    }
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
         if (canLook) HandleCameraLook();
         if (canRotate) HandleRotation();
-        
+
     }
     private void TogglePause()
     {

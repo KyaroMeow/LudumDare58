@@ -3,15 +3,13 @@ using System.Collections;
 
 public class Hands : MonoBehaviour
 {
-    [SerializeField] private GameObject[] hands;
-    private int handID = 5;
-    private Animator animator;
+    [SerializeField] private SkinnedMeshRenderer hand;
+    [SerializeField] private Material burnFinger;
+    [SerializeField] private Animator animator;
+    [SerializeField] private AudioSource audioSource;
+    private int[] fingersNum = {3, 0, 2, 4, 5};
+    private int fingerID = 0;
 
-    void Start()
-    {
-        GetAnimator();
-    }
-    
     public void PlayTakeItem()
     {
         animator.SetTrigger("TakeItem");
@@ -24,31 +22,16 @@ public class Hands : MonoBehaviour
 
     public void PlayTakeDamage()
     {
+        StartCoroutine(StartTakeDamageCorutine());
+    }
+    private IEnumerator StartTakeDamageCorutine()
+    {
+        Material[] currentMaterials = hand.materials;
         animator.SetTrigger("TakeDamage");
-        StartCoroutine(WaitForTakeDamageAnimation());
-    }
-
-    private IEnumerator WaitForTakeDamageAnimation()
-    {
-        yield return null;
-        float animationLength = animator.GetCurrentAnimatorStateInfo(0).length;
-        yield return new WaitForSeconds(animationLength);
-        SwapHand();
-    }
-
-    public void GetAnimator()
-    {
-        animator = hands[handID].GetComponent<Animator>();
-    }
-    
-    private void SwapHand()
-    {
-        if (handID > 0)
-        {
-            hands[handID].SetActive(false);
-            handID--;
-            hands[handID].SetActive(true);
-            GetAnimator();
-        }
+        currentMaterials[fingersNum[fingerID]] = burnFinger;
+        hand.materials = currentMaterials;
+        fingerID++;
+        yield return new WaitForSeconds(2f);
+        audioSource.Play();
     }
 }

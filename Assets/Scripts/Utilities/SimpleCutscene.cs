@@ -169,21 +169,22 @@ public class StartCutscene : MonoBehaviour
             audioSource.PlayOneShot(secondAudioClip);
         }
     }
+    
 
     private void SkipToNext()
     {
         StopAllCoroutines();
-        
+
         currentSlide++;
-        
+
         if (currentSlide < slides.Length)
         {
             // Показываем следующий слайд с черным переходом
             StartCoroutine(FadeFromBlackToSlide(slides[currentSlide].slide));
-            
+
             // Проверяем нужно ли начать звуки
             CheckAndPlaySounds();
-            
+
             StartCoroutine(WaitAndContinue());
         }
         else

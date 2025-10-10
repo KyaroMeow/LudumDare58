@@ -8,6 +8,7 @@ public class AnomallyController : MonoBehaviour
     [SerializeField] private GameObject cube;
     [SerializeField] private GameObject sphere;
     [SerializeField] private GameObject endCube;
+    [SerializeField] private BeglecAnim beglec;
 
     private int positionId = 0;
 
@@ -25,13 +26,13 @@ public class AnomallyController : MonoBehaviour
     public void StartAnomally()
     {
         anomallyBalls[positionId].SetActive(true);
+        GameManager.Instance.isTimerWork = false;
         cube.SetActive(true);
     }
     private void EndAnomally()
     {
-        anomallyBalls[positionId].SetActive(false);
-        positionId = 0;
-        sphere.SetActive(true);
+        beglec.HandOut();
+        CutSceneManager.Instance.StartChoiseCutScene();
     }
     private void GoToNextPosition()
     {

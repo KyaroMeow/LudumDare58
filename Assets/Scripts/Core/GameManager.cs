@@ -1,9 +1,7 @@
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using UnityEngine.XR;
+
 
 public class GameManager : MonoBehaviour
 {
@@ -51,6 +49,10 @@ public class GameManager : MonoBehaviour
         {
             UpdateTimer();
         }
+    }
+    public void StartTimer()
+    {
+        isTimerWork = true;
     }
     public void StartGame()
     {
