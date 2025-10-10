@@ -8775,6 +8775,9 @@ MonoBehaviour:
   - {fileID: 1851531806991297895, guid: 60c5be1f44f1b88408b1205e7ebad7e0, type: 3}
   - {fileID: 7689349695844391938, guid: 1ffe6bc6c7cbd354b9ed16e9f10f7a07, type: 3}
   - {fileID: 5937775343396541588, guid: cac9c853d83f3884faf4a38343f006a2, type: 3}
+  - {fileID: 8276714917557295432, guid: 3da6685381be06144b2e852a5fee05a0, type: 3}
+  - {fileID: 4617799990593791548, guid: ed9c0241e6f8cf94db674e1423d3a26a, type: 3}
+  - {fileID: 1368190957947975466, guid: 62bbca7b9b5e32c40a7b830beab1c60d, type: 3}
   anomalyItem: {fileID: 8554604064987432285, guid: b31bc64bd6442f744b19c721194641ec, type: 3}
   bomb: {fileID: 6569175202388017190, guid: 394f80c016aaf9240aa2b81051b368a2, type: 3}
 --- !u!1 &1938956796

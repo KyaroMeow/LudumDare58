@@ -64,6 +64,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sharps
       objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -82,6 +90,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5430892603712568454}
     m_Modifications:
+    - target: {fileID: 5181634227590079602, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6933019918345776960, guid: 915802c497e38774a90ccae987c14864, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.004
@@ -139,6 +151,10 @@ PrefabInstance:
       value: UVStain
       objectReference: {fileID: 0}
     - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -165,6 +181,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5430892603712568454}
     m_Modifications:
+    - target: {fileID: 5181634227590079602, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6933019918345776960, guid: 915802c497e38774a90ccae987c14864, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.01
@@ -222,6 +242,10 @@ PrefabInstance:
       value: UVStain (1)
       objectReference: {fileID: 0}
     - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -248,6 +272,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5430892603712568454}
     m_Modifications:
+    - target: {fileID: 5886882094753367988, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 6933019918345776960, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
       propertyPath: m_LocalScale.x
       value: 0.002
@@ -303,6 +331,10 @@ PrefabInstance:
     - target: {fileID: 7542422661356136379, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
       propertyPath: m_Name
       value: BarCode
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
+      propertyPath: m_Layer
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7542422661356136379, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
       propertyPath: m_IsActive
@@ -387,6 +419,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sharps (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -464,6 +504,14 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 62002bcd0c3399b44b0979ee33c7b82c, type: 3}
       propertyPath: m_Name
       value: Canistre
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 62002bcd0c3399b44b0979ee33c7b82c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 62002bcd0c3399b44b0979ee33c7b82c, type: 3}
+      propertyPath: m_TagString
+      value: Item
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

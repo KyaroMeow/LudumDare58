@@ -22,7 +22,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.009141
+      value: 5.715775
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalPosition.y
@@ -30,23 +30,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -10.010711
+      value: -8.540434
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.49992123
+      value: 0.00000295043
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.5000786
+      value: 0.0000011026859
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.49991858
+      value: 0.70699346
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.5000816
+      value: 0.70722014
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 90.018
+      value: 180
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -67,6 +67,14 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
       propertyPath: m_Name
       value: Gitara
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 71d2719aa9db30648a7bbe478ac5775f, type: 3}
+      propertyPath: m_TagString
+      value: Item
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -248,6 +256,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: UVStain (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -327,6 +343,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sharps (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -345,6 +369,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 692422737403183418}
     m_Modifications:
+    - target: {fileID: 5886882094753367988, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 6933019918345776960, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
       propertyPath: m_LocalScale.x
       value: 11
@@ -400,6 +428,14 @@ PrefabInstance:
     - target: {fileID: 7542422661356136379, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
       propertyPath: m_Name
       value: BarCode
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
+      propertyPath: m_Layer
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 2aedd865edd8f374a8a96fb5493d8d1a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -480,6 +516,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: UVStain
       objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -558,6 +602,14 @@ PrefabInstance:
     - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
       propertyPath: m_Name
       value: UVStain (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 915802c497e38774a90ccae987c14864, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -638,6 +690,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sharps
       objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -711,6 +771,14 @@ PrefabInstance:
     - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
       propertyPath: m_Name
       value: Sharps (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7542422661356136379, guid: 1559cd391d01b4346b393654183589ac, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
