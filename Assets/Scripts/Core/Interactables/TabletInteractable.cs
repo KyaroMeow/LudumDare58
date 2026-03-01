@@ -45,10 +45,30 @@ public class TabletInteractable : MonoBehaviour, IInteractable
             pages[currentPageId].SetActive(false);
             currentPageId = 0;
             pages[currentPageId].SetActive(true);
-            if (GameManager.Instance.isGameStarted == false)
-            {
-                GameManager.Instance.StartGame();
-            }
         }
-    } 
+    }
+
+    public void PreviousPage()
+    {
+        if (currentPageId > 1)
+        {
+            pages[currentPageId].SetActive(false);
+            currentPageId--;
+            pages[currentPageId].SetActive(true);
+        }
+        else
+        {
+            pages[currentPageId].SetActive(false);
+            currentPageId = pages.Length - 1;
+            pages[currentPageId].SetActive(true);
+        }
+    }
+
+    public void StartGame()
+    {
+        if (GameManager.Instance.isGameStarted == false)
+        {
+            GameManager.Instance.StartGame();
+        }
+    }
 }
