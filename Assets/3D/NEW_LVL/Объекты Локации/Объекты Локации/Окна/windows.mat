@@ -114,9 +114,13 @@ Material:
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
     - _GlossMapScale: 1
-    - _Glossiness: 0.337
+    - _Glossiness: 0.392
     - _GlossyReflections: 1
+<<<<<<< Updated upstream
     - _Metallic: 0.801
+=======
+    - _Metallic: 0.325
+>>>>>>> Stashed changes
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
