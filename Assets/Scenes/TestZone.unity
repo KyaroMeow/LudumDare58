@@ -31883,14 +31883,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemPrefabs:
-  - {fileID: 7416303175354781649, guid: 27fcfcefbc0a7ec41a28c1f219fd75f8, type: 3}
-  - {fileID: 5676201900636867172, guid: 1178ace2c0b38444f9ed4e1135c102bd, type: 3}
-  - {fileID: 8750317507915971984, guid: 3bd3f42311a46b944a6c2cac8e9d80f3, type: 3}
-  - {fileID: 3462556844712864225, guid: 7495bf7ffafab384ba763d864c76d322, type: 3}
-  - {fileID: 2071571188851197091, guid: e7158aee5cf33424dbe82e01fb6fe707, type: 3}
-  - {fileID: 7689349695844391938, guid: 1ffe6bc6c7cbd354b9ed16e9f10f7a07, type: 3}
-  - {fileID: 5937775343396541588, guid: cac9c853d83f3884faf4a38343f006a2, type: 3}
-  - {fileID: 1368190957947975466, guid: 62bbca7b9b5e32c40a7b830beab1c60d, type: 3}
+  - {fileID: 567019906308528093, guid: 1ec88c27077db6a41bf46b0822821837, type: 3}
+  - {fileID: 5176641080151196691, guid: e8eb0ec730619b2469c9c41e1c08048c, type: 3}
+  - {fileID: 8929354770883436383, guid: cac9c853d83f3884faf4a38343f006a2, type: 3}
+  - {fileID: 12873735323465909, guid: 39f05fd8f0a4c844c91669d736032cfc, type: 3}
+  - {fileID: 6338559390289689997, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
+  - {fileID: 762366456301422993, guid: 323e1397169e57a43814a203006ba551, type: 3}
+  - {fileID: 6788298872375677185, guid: 7afccfa8694a4db4992c65c14fc7189f, type: 3}
+  - {fileID: 8840865448692158591, guid: 62bbca7b9b5e32c40a7b830beab1c60d, type: 3}
+  - {fileID: 582707003820331064, guid: d212b5643ff2d5d48b911c3ec9f5c0cb, type: 3}
   anomalyItem: {fileID: 8554604064987432285, guid: b31bc64bd6442f744b19c721194641ec, type: 3}
   bomb: {fileID: 6569175202388017190, guid: 394f80c016aaf9240aa2b81051b368a2, type: 3}
 --- !u!1001 &1937137989
