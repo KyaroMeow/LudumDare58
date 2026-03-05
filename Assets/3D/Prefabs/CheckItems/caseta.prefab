@@ -13,9 +13,10 @@ GameObject:
   - component: {fileID: 946841481395708300}
   - component: {fileID: 9109040605916883682}
   - component: {fileID: 5329508815204335728}
+  - component: {fileID: 699376391620862485}
   m_Layer: 0
   m_Name: caseta
-  m_TagString: Untagged
+  m_TagString: Interactable
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -137,6 +138,24 @@ MonoBehaviour:
   - {fileID: 7744293067258306511}
   stainRenderer: {fileID: 0}
   barcode: {fileID: 2246732792223211751}
+--- !u!114 &699376391620862485
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567019906308528093}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutlineEffect
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 5
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1001 &276215950545434740
 PrefabInstance:
   m_ObjectHideFlags: 0

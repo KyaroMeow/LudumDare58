@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 4033970543099909320}
   - component: {fileID: 7510651116225305991}
   - component: {fileID: 5013866018112348666}
+  - component: {fileID: -4610457137059906464}
   m_Layer: 0
   m_Name: shurupokrut
-  m_TagString: Untagged
+  m_TagString: Interactable
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -112,6 +113,24 @@ MonoBehaviour:
   - {fileID: 2947970681408798457}
   stainRenderer: {fileID: 0}
   barcode: {fileID: 4502249267154011518}
+--- !u!114 &-4610457137059906464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6338559390289689997}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutlineEffect
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 5
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1001 &780481128333661008
 PrefabInstance:
   m_ObjectHideFlags: 0

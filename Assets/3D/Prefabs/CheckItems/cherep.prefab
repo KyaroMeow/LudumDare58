@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 674710578357764833}
   - component: {fileID: 6097307321084302235}
   - component: {fileID: 2497899393603969726}
+  - component: {fileID: 5329398585011182258}
   m_Layer: 0
   m_Name: cherep
-  m_TagString: Untagged
+  m_TagString: Interactable
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -114,6 +115,24 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5981815, y: 0.5366536, z: 0.4522664}
   m_Center: {x: 0.01192677, y: 0.10783747, z: -0.018090904}
+--- !u!114 &5329398585011182258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 582707003820331064}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutlineEffect
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 5
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1 &8908694353879782156
 GameObject:
   m_ObjectHideFlags: 0

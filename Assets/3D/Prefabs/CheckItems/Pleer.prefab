@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 6299825803125766608}
   - component: {fileID: 8670782319472048761}
   - component: {fileID: 1672358502491097927}
+  - component: {fileID: 437770996072639255}
   m_Layer: 0
   m_Name: pleer
-  m_TagString: Untagged
+  m_TagString: Interactable
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -114,6 +115,24 @@ MonoBehaviour:
   - {fileID: 4380221844192800189}
   stainRenderer: {fileID: 0}
   barcode: {fileID: 8459304855918595470}
+--- !u!114 &437770996072639255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8929354770883436383}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutlineEffect
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 5
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1001 &321761873061377362
 PrefabInstance:
   m_ObjectHideFlags: 0

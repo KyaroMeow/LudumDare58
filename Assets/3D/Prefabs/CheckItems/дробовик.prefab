@@ -12,9 +12,10 @@ GameObject:
   - component: {fileID: 3652209622551342430}
   - component: {fileID: 4745086168954749698}
   - component: {fileID: 3699044861813303519}
+  - component: {fileID: -6778691643998399422}
   m_Layer: 0
   m_Name: "\u0434\u0440\u043E\u0431\u043E\u0432\u0438\u043A"
-  m_TagString: Untagged
+  m_TagString: Interactable
   m_Icon: {fileID: -5938655980376293919, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -114,6 +115,24 @@ MonoBehaviour:
   - {fileID: 2009474637054397812}
   stainRenderer: {fileID: 0}
   barcode: {fileID: 973055492400339822}
+--- !u!114 &-6778691643998399422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6788298872375677185}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::OutlineEffect
+  outlineMode: 1
+  outlineColor: {r: 1, g: 1, b: 1, a: 1}
+  outlineWidth: 5
+  precomputeOutline: 0
+  bakeKeys: []
+  bakeValues: []
 --- !u!1001 &2334033934366752754
 PrefabInstance:
   m_ObjectHideFlags: 0
