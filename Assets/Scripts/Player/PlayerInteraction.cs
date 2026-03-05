@@ -11,6 +11,7 @@ public class PlayerInteraction : MonoBehaviour
     public float interactionDistance = 10f;
 
     private IInteractable _currentInteractable;
+    private OutlineEffect _currentInteractableOutLine;
 
     private void Awake()
     {
@@ -20,10 +21,8 @@ public class PlayerInteraction : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            HandleInteraction();
-        }
+
+        HandleInteraction();
 
         if (Input.GetKeyDown(KeyCode.E) && _currentInteractable != null)
         {
@@ -40,10 +39,36 @@ public class PlayerInteraction : MonoBehaviour
         {
             if (hit.collider.TryGetComponent<IInteractable>(out var interactable) && _currentInteractable == null)
             {
-                _currentInteractable = interactable;
-                _currentInteractable.Interact(holdPosition);
-                hands.PlayTakeItem();
+                if (hit.collider.TryGetComponent<OutlineEffect>(out OutlineEffect outline) && _currentInteractableOutLine == null)
+                {
+                    _currentInteractableOutLine = outline;
+                    _currentInteractableOutLine.enabled = true;
+                }
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    _currentInteractable = interactable;
+                    _currentInteractable.Interact(holdPosition);
+                    hands.PlayTakeItem();
+                }
             }
+            else
+            {
+                disableOutline();
+            }
+        }
+        else
+        {
+            disableOutline();
+        }
+    }
+
+    private void disableOutline()
+    {
+        if(_currentInteractableOutLine != null)
+        {
+        _currentInteractableOutLine.enabled = false;
+        _currentInteractableOutLine = null;
         }
     }
 
