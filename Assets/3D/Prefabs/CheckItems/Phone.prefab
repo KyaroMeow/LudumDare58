@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: -365763044580839665}
   - component: {fileID: 5072961400956401109}
   - component: {fileID: 6855234694489723519}
+  - component: {fileID: 3062139971444233529}
   m_Layer: 6
   m_Name: Phone
   m_TagString: Interactable
@@ -131,6 +132,18 @@ MonoBehaviour:
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
+--- !u!114 &3062139971444233529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7689349695844391938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
 --- !u!1001 &1048336696874774509
 PrefabInstance:
   m_ObjectHideFlags: 0

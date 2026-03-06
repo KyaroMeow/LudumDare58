@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6457918804796859290}
   - component: {fileID: 6959557115231434539}
   - component: {fileID: -3199202074904146388}
+  - component: {fileID: 5299779579232106944}
   m_Layer: 0
   m_Name: labuba
   m_TagString: Interactable
@@ -133,6 +134,18 @@ MonoBehaviour:
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
+--- !u!114 &5299779579232106944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5176641080151196691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
 --- !u!1001 &1013832294415565398
 PrefabInstance:
   m_ObjectHideFlags: 0

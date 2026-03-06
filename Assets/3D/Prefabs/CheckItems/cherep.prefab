@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6097307321084302235}
   - component: {fileID: 2497899393603969726}
   - component: {fileID: 5329398585011182258}
+  - component: {fileID: 5869238942559996269}
   m_Layer: 0
   m_Name: cherep
   m_TagString: Interactable
@@ -133,6 +134,18 @@ MonoBehaviour:
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
+--- !u!114 &5869238942559996269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 582707003820331064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
 --- !u!1 &8908694353879782156
 GameObject:
   m_ObjectHideFlags: 0

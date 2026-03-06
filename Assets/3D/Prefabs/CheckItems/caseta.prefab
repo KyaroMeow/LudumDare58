@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 9109040605916883682}
   - component: {fileID: 5329508815204335728}
   - component: {fileID: 699376391620862485}
+  - component: {fileID: -7126911919042934595}
   m_Layer: 0
   m_Name: caseta
   m_TagString: Interactable
@@ -156,6 +157,18 @@ MonoBehaviour:
   precomputeOutline: 0
   bakeKeys: []
   bakeValues: []
+--- !u!114 &-7126911919042934595
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 567019906308528093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
 --- !u!1001 &276215950545434740
 PrefabInstance:
   m_ObjectHideFlags: 0
