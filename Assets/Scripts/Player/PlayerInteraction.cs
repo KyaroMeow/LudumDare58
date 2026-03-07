@@ -12,6 +12,7 @@ public class PlayerInteraction : MonoBehaviour
 
     private IInteractable _currentInteractable;
     private OutlineEffect _currentInteractableOutLine;
+    private ToolType currentTool = ToolType.None;
 
     private void Awake()
     {
@@ -39,17 +40,13 @@ public class PlayerInteraction : MonoBehaviour
         {
             if (hit.collider.TryGetComponent<IInteractable>(out var interactable) && _currentInteractable == null)
             {
-                if (hit.collider.TryGetComponent<OutlineEffect>(out OutlineEffect outline) && _currentInteractableOutLine == null)
-                {
-                    _currentInteractableOutLine = outline;
-                    _currentInteractableOutLine.enabled = true;
-                }
+                // Включаем outline
+                HandleOutline(hit);
 
+                // Обрабатываем клик
                 if (Input.GetMouseButtonDown(0))
                 {
-                    _currentInteractable = interactable;
-                    _currentInteractable.Interact(holdPosition);
-                    hands.PlayTakeItem();
+                    HandleInteractionClick(interactable);
                 }
             }
             else
@@ -62,6 +59,52 @@ public class PlayerInteraction : MonoBehaviour
             disableOutline();
         }
     }
+    private void HandleInteractionClick(IInteractable interactable)
+    {
+        // Проверка на инструмент
+        if (interactable is Instrument tool)
+        {
+            HandleToolInteraction(tool);
+        }
+        else
+        {
+            HandleOtherInteraction(interactable);
+        }
+    }
+
+    private void HandleToolInteraction(Instrument tool)
+    {
+        if (currentTool == 0) // Если нет активного инструмента
+        {
+            tool.Interact(holdPosition);
+            hands.PlayTakeItem();
+
+            // Устанавливаем тип инструмента
+            currentTool = tool.toolType; 
+
+            Debug.Log($"Поднят инструмент: {tool.toolType}");
+        }
+        else
+        {
+            
+        }
+    }
+
+    private void HandleOtherInteraction(IInteractable interactable)
+    {
+        // Логика для других интерактивных объектов
+        _currentInteractable = interactable;
+        _currentInteractable.Interact(holdPosition);
+    }
+
+    private void HandleOutline(RaycastHit hit)
+    {
+        if (hit.collider.TryGetComponent<OutlineEffect>(out OutlineEffect outline) && _currentInteractableOutLine == null)
+        {
+            _currentInteractableOutLine = outline;
+            _currentInteractableOutLine.enabled = true;
+        }
+    }
 
     private void disableOutline()
     {
@@ -71,6 +114,8 @@ public class PlayerInteraction : MonoBehaviour
         _currentInteractableOutLine = null;
         }
     }
+
+    
 
     public void HandleStopInteraction()
     {

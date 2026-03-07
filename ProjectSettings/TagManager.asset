@@ -10,6 +10,7 @@ TagManager:
   - Anomally
   - Bomb
   - Interactable
+  - instrument
   layers:
   - Default
   - TransparentFX

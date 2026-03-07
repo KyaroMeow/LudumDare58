@@ -9370,6 +9370,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3270779567828481564, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
+      propertyPath: material
+      value: 
+      objectReference: {fileID: 2100000, guid: 3945c3088a761a843951f313846074f9, type: 2}
+    - target: {fileID: 3270779567828481564, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
+      propertyPath: toolType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3270779567828481564, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
+      propertyPath: opaqueMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 3945c3088a761a843951f313846074f9, type: 2}
+    - target: {fileID: 3270779567828481564, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
+      propertyPath: transparentMaterial
+      value: 
+      objectReference: {fileID: 2100000, guid: 53ec1d295a235844ca37fc5ce7aa08be, type: 2}
     - target: {fileID: 5965789256179500416, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 4.0672164
@@ -9414,8 +9430,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: shurupokrut
       objectReference: {fileID: 0}
+    - target: {fileID: 6338559390289689997, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
+      propertyPath: m_TagString
+      value: instrument
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5394991480132406393, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4b6692cb1f25f9b4e8de0601ce89b36c, type: 3}
@@ -11220,14 +11241,14 @@ MonoBehaviour:
       m_Calls: []
   m_text: Button
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 0}
-  m_sharedMaterial: {fileID: 0}
+  m_fontAsset: {fileID: 11400000, guid: 7cc63051d68252b41870db899867be97, type: 2}
+  m_sharedMaterial: {fileID: -857184400890992257, guid: 7cc63051d68252b41870db899867be97, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4281479730
   m_fontColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -11240,7 +11261,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2

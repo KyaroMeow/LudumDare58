@@ -2,23 +2,50 @@ using UnityEngine;
 
 public class Instrument : MonoBehaviour, IInteractable
 {
-    [SerializeField] GameObject visibleModel;
-    [SerializeField] GameObject noVisibleModel;
+    public ToolType toolType;
+    [SerializeField] private Material transparentMaterial;
+    private Material originalMaterial;
+    private Renderer[] renderers;
+    private bool isPicked;
+
+    void Start()
+    {
+        renderers = GetComponentsInChildren<Renderer>();
+        if (renderers.Length > 0)
+        {
+            originalMaterial = renderers[0].material;
+        }
+    }
+
     public void Interact(Transform holdPosition)
     {
-        if (visibleModel != null && noVisibleModel != null)
+        if (isPicked)
         {
-            visibleModel.SetActive(false);
-            noVisibleModel.SetActive(true);
+            StopInteract();
+            return;
+        }
+        if (transparentMaterial != null)
+        {
+            SetTransparent(true);
+            isPicked = true;
         }
     }
     
     public void StopInteract()
     {
-        if (visibleModel != null && noVisibleModel != null)
+        if (transparentMaterial != null)
         {
-            visibleModel.SetActive(true);
-            noVisibleModel.SetActive(false);
+            SetTransparent(false);
+            isPicked = false;
+        }
+    }
+    public void SetTransparent(bool transparent)
+    {
+        Material targetMaterial = transparent ? transparentMaterial : originalMaterial;
+
+        foreach (Renderer renderer in renderers)
+        {
+            renderer.material = targetMaterial;
         }
     }
 }
