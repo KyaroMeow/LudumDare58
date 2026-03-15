@@ -66,10 +66,18 @@ public class PlayerInteraction : MonoBehaviour
         {
             HandleToolInteraction(tool);
         }
+        else if(interactable is TableScaner || interactable is TableFlashlight )
+        {
+            HandleScanerInteraction(interactable);
+        }
         else
         {
             HandleOtherInteraction(interactable);
         }
+    }
+    private void HandleScanerInteraction(IInteractable interactable)
+    {
+        interactable.Interact(holdPosition);
     }
 
     private void HandleToolInteraction(Instrument tool)

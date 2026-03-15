@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class MassShaderReplacer : EditorWindow
 {
     private Shader targetShader;
-    private string oldShaderName = "Standard";
+    
 
     [MenuItem("Tools/Mass Shader Replacer")]
     public static void ShowWindow()
