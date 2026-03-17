@@ -50,12 +50,13 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     {
        if(toolTypeForDisassemble == toolType)
        {
-            Instantiate(detail, transform.position, Quaternion.identity);
-            
+            if(detail != null)
+                Instantiate(detail, transform.position, Quaternion.identity); 
        }
        else
        {
-            Instantiate(trash, transform.position, Quaternion.identity);
+            if (trash != null)
+                Instantiate(trash, transform.position, Quaternion.identity);
             
        }
         Destroy(gameObject);

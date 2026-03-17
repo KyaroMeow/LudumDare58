@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6853244042114411975}
-  - component: {fileID: 3259582406899364600}
   - component: {fileID: 946841481395708300}
   - component: {fileID: 9109040605916883682}
   - component: {fileID: 5329508815204335728}
@@ -43,28 +42,6 @@ Transform:
   - {fileID: 1708806008654506012}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3259582406899364600
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 567019906308528093}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31f6bf2cab4bfb148ad7047908ed5fb1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Item
-  isDefective: 0
-  isSorted: 0
-  hasBarcode: 1
-  hasScratches: 1
-  barcodeShowsGood: 1
-  hasUVStain: 0
-  stainSpots: []
-  scratches: []
-  stainRenderer: {fileID: 0}
-  barcode: {fileID: 0}
 --- !u!65 &946841481395708300
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -169,6 +146,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
+  toolTypeForDisassemble: 0
+  detail: {fileID: 0}
+  trash: {fileID: 0}
 --- !u!1001 &276215950545434740
 PrefabInstance:
   m_ObjectHideFlags: 0
