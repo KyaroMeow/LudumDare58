@@ -77,7 +77,10 @@ public class PlayerInteraction : MonoBehaviour
     }
     private void HandleScanerInteraction(IInteractable interactable)
     {
+        if(_currentInteractable != null)
+        {
         interactable.Interact(holdPosition);
+        }
     }
 
     private void HandleToolInteraction(Instrument tool)

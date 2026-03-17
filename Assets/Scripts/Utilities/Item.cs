@@ -4,19 +4,17 @@ using UnityEngine;
 
 public class Item : MonoBehaviour
 {
-    [Header("Item Properties")]
-    public bool isDefective = false;
-    public bool isSorted = false;
-    [Header("Features")]
-    public bool hasBarcode = true; 
-    public bool hasScratches = true; 
-    public bool barcodeShowsGood = true; 
-    public bool hasUVStain = false;
+    [HideInInspector] public bool isDefective = false;
+    [HideInInspector] public bool isSorted = false;
+    [HideInInspector] public bool hasBarcode = true;
+    [HideInInspector] public bool hasScratches = true;
+    [HideInInspector] public bool barcodeShowsGood = true;
+    [HideInInspector] public bool hasUVStain = false;
 
     [Header("UV Properties")]
     public List<GameObject> stainSpots = new List<GameObject>();
     public GameObject[] scratches;
-    public Renderer stainRenderer;
+    [HideInInspector] public Renderer stainRenderer;
     public GameObject barcode;
     public void InitializeItem(bool defective, bool barcode, bool barcodeGood, bool stain, bool Scratches)
     {
@@ -81,5 +79,5 @@ public class Item : MonoBehaviour
     {
         return !hasUVStain && hasBarcode && barcodeShowsGood;
     }
-    
+
 }

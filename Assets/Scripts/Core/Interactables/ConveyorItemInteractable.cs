@@ -3,10 +3,14 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 {
+    public ToolType toolTypeForDisassemble = ToolType.None;//если стоит "none" предмет не разборный
+
+    [SerializeField] private GameObject detail; // то что игрок получит при удачном разборе
+    [SerializeField] private GameObject trash;//  то что игрок получит при неправильном разборе
+
     private Vector3 _originalPosition;
     private Quaternion _originalRotation;
     private Transform _originalParent;
-    
     public void Interact(Transform holdPosition)
     {
         PlayerView.Instance.BlockMovement();
@@ -40,5 +44,20 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         GameManager.Instance.ToggleScanerOff();
         HUDManager.Instance.hideItemScanHUD();
         PlayerItemInspection.Instance.EndInspection();
+    }
+
+    public void TryDisassemble(ToolType toolType)
+    {
+       if(toolTypeForDisassemble == toolType)
+       {
+            Instantiate(detail, transform.position, Quaternion.identity);
+            
+       }
+       else
+       {
+            Instantiate(trash, transform.position, Quaternion.identity);
+            
+       }
+        Destroy(gameObject);
     }
 }
