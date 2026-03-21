@@ -66,7 +66,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: f882cb902d757e846bde7238a23649b4, type: 2}
     - target: {fileID: 919132149155446097, guid: b6ce49af03a2c934a9061d5d485102f2, type: 3}
       propertyPath: m_Name
-      value: "\u0444\u043E\u043D\u0430\u0440\u0438\u043A (1)"
+      value: UF_Flashlight
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4600324420925291101}
   m_Layer: 0
-  m_Name: canistra
+  m_Name: Cane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
