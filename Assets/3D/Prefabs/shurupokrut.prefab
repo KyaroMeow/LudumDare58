@@ -87,8 +87,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 794daa814432cb2468d7ae63fdcceadb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Instrument
-  visibleModel: {fileID: 438461746306641409}
-  noVisibleModel: {fileID: 5394991480132406393}
+  toolType: 0
+  transparentMaterial: {fileID: 0}
 --- !u!1001 &780481128333661008
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -156,7 +156,7 @@ PrefabInstance:
     - target: {fileID: 157325038086643774, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 3945c3088a761a843951f313846074f9, type: 2}
+      objectReference: {fileID: 2100000, guid: efe2cab537c1f9244ad1e99c05d1b0d2, type: 2}
     - target: {fileID: 919132149155446097, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
       propertyPath: m_Name
       value: Shurup
@@ -174,11 +174,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
---- !u!1 &438461746306641409 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
-  m_PrefabInstance: {fileID: 780481128333661008}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &963323978775278779 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
@@ -272,10 +267,5 @@ PrefabInstance:
 --- !u!4 &4725697154889111235 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
-  m_PrefabInstance: {fileID: 5052957397505552680}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &5394991480132406393 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: c7a63d5428ac58c4a914031f98042e32, type: 3}
   m_PrefabInstance: {fileID: 5052957397505552680}
   m_PrefabAsset: {fileID: 0}
