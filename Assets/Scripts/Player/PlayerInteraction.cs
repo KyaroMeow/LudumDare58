@@ -4,46 +4,45 @@ using UnityEngine;
 public class PlayerInteraction : MonoBehaviour
 {
     public static PlayerInteraction Instance;
-    
+
     public Camera playerCamera;
     public Hands hands;
     public Transform holdPosition;
     public float interactionDistance = 10f;
 
-    private IInteractable _currentInteractable;
-    private OutlineEffect _currentInteractableOutLine;
+    private IInteractable currentInteractable;
+    private OutlineEffect currentInteractableOutline;
     private ToolType currentTool = ToolType.None;
+    private Instrument currentInstrument;
 
     private void Awake()
     {
         if (Instance == null)
+        {
             Instance = this;
+        }
     }
 
     private void Update()
     {
-
         HandleInteraction();
 
-        if (Input.GetKeyDown(KeyCode.E) && _currentInteractable != null)
+        if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
         {
             HandleStopInteraction();
         }
     }
 
-
     private void HandleInteraction()
     {
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out var hit, interactionDistance))
+        if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance))
         {
-            if (hit.collider.TryGetComponent<IInteractable>(out var interactable) && _currentInteractable == null)
+            if (hit.collider.TryGetComponent(out IInteractable interactable) && currentInteractable == null)
             {
-                // Включаем outline
                 HandleOutline(hit);
 
-                // Обрабатываем клик
                 if (Input.GetMouseButtonDown(0))
                 {
                     HandleInteractionClick(interactable);
@@ -51,22 +50,22 @@ public class PlayerInteraction : MonoBehaviour
             }
             else
             {
-                disableOutline();
+                DisableOutline();
             }
         }
         else
         {
-            disableOutline();
+            DisableOutline();
         }
     }
+
     private void HandleInteractionClick(IInteractable interactable)
     {
-        // Проверка на инструмент
         if (interactable is Instrument tool)
         {
             HandleToolInteraction(tool);
         }
-        else if(interactable is TableScaner || interactable is TableFlashlight )
+        else if (interactable is TableScaner || interactable is TableFlashlight)
         {
             HandleScanerInteraction(interactable);
         }
@@ -75,62 +74,86 @@ public class PlayerInteraction : MonoBehaviour
             HandleOtherInteraction(interactable);
         }
     }
+
     private void HandleScanerInteraction(IInteractable interactable)
     {
-        if(_currentInteractable != null)
+        if (currentInteractable != null)
         {
-        interactable.Interact(holdPosition);
+            interactable.Interact(holdPosition);
         }
     }
 
     private void HandleToolInteraction(Instrument tool)
     {
-        if (currentTool == 0) // Если нет активного инструмента
+        if (currentInstrument == tool)
         {
-            tool.Interact(holdPosition);
-            hands.PlayTakeItem();
-
-            // Устанавливаем тип инструмента
-            currentTool = tool.toolType; 
-
-            Debug.Log($"Поднят инструмент: {tool.toolType}");
+            tool.StopInteract();
+            currentInstrument = null;
+            currentTool = ToolType.None;
+            return;
         }
-        else
+
+        if (currentInstrument != null)
         {
-            
+            currentInstrument.StopInteract();
+            currentInstrument = null;
+            currentTool = ToolType.None;
+        }
+
+        tool.Interact(holdPosition);
+        if (tool.IsPicked)
+        {
+            hands.PlayTakeItem();
+            currentInstrument = tool;
+            currentTool = tool.toolType;
+            Debug.Log($"Tool selected: {tool.toolType}");
         }
     }
 
     private void HandleOtherInteraction(IInteractable interactable)
     {
-        // Логика для других интерактивных объектов
-        _currentInteractable = interactable;
-        _currentInteractable.Interact(holdPosition);
+        if (currentTool == ToolType.None)
+        {
+            currentInteractable = interactable;
+            currentInteractable.Interact(holdPosition);
+        }
+        else if (interactable is ConveyorItemInteractable item)
+        {
+            item.TryDisassemble(currentTool);
+        }
     }
 
     private void HandleOutline(RaycastHit hit)
     {
-        if (hit.collider.TryGetComponent<OutlineEffect>(out OutlineEffect outline) && _currentInteractableOutLine == null)
+        if (hit.collider.TryGetComponent(out OutlineEffect outline) && currentInteractableOutline == null)
         {
-            _currentInteractableOutLine = outline;
-            _currentInteractableOutLine.enabled = true;
+            currentInteractableOutline = outline;
+            currentInteractableOutline.enabled = true;
         }
     }
 
-    private void disableOutline()
+    private void DisableOutline()
     {
-        if(_currentInteractableOutLine != null)
+        if (currentInteractableOutline != null)
         {
-        _currentInteractableOutLine.enabled = false;
-        _currentInteractableOutLine = null;
+            currentInteractableOutline.enabled = false;
+            currentInteractableOutline = null;
         }
     }
-
-    
 
     public void HandleStopInteraction()
     {
-        _currentInteractable.StopInteract();
-        _currentInteractable = null;
+        if (currentInteractable == null)
+        {
+            return;
+        }
+
+        currentInteractable.StopInteract();
+        currentInteractable = null;
+    }
+
+    public bool IsCurrentInteractable(IInteractable interactable)
+    {
+        return ReferenceEquals(currentInteractable, interactable);
     }
 }

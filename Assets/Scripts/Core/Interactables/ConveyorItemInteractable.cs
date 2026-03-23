@@ -3,30 +3,35 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 {
-    public ToolType toolTypeForDisassemble = ToolType.None;//если стоит "none" предмет не разборный
+    public ToolType toolTypeForDisassemble = ToolType.None;
 
-    [SerializeField] private GameObject detail; // то что игрок получит при удачном разборе
-    [SerializeField] private GameObject trash;//  то что игрок получит при неправильном разборе
+    [SerializeField] private InventoryItemDefinition detailReward;
+    [SerializeField] private InventoryItemDefinition trashReward;
+    [SerializeField] private InventoryItemDefinition stealReward;
+    [SerializeField] private bool canBeStolen = true;
 
-    private Vector3 _originalPosition;
-    private Quaternion _originalRotation;
-    private Transform _originalParent;
+    private Vector3 originalPosition;
+    private Quaternion originalRotation;
+    private Transform originalParent;
+
     public void Interact(Transform holdPosition)
     {
         PlayerView.Instance.BlockMovement();
-        
-        _originalPosition = transform.position;
-        _originalRotation = transform.rotation;
-        _originalParent = transform.parent;
-        
+
+        originalPosition = transform.position;
+        originalRotation = transform.rotation;
+        originalParent = transform.parent;
+
         transform.SetParent(holdPosition);
         transform.localPosition = Vector3.zero;
-        
+
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
+        {
             rb.isKinematic = true;
-        
-        HUDManager.Instance.showItemScanHUD();
+        }
+
+        HUDManager.Instance.showItemScanHUD(GetComponent<Item>());
         PlayerItemInspection.Instance.BeginInspection(gameObject);
     }
 
@@ -34,13 +39,15 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     {
         Rigidbody rb = GetComponent<Rigidbody>();
         if (rb != null)
+        {
             rb.isKinematic = false;
-        
+        }
+
         PlayerView.Instance.UnlockMovement();
-        transform.SetParent(_originalParent);
-        transform.localPosition = _originalPosition;
-        transform.localRotation = _originalRotation;
-        
+        transform.SetParent(originalParent);
+        transform.localPosition = originalPosition;
+        transform.localRotation = originalRotation;
+
         GameManager.Instance.ToggleScanerOff();
         HUDManager.Instance.hideItemScanHUD();
         PlayerItemInspection.Instance.EndInspection();
@@ -48,17 +55,42 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     public void TryDisassemble(ToolType toolType)
     {
-       if(toolTypeForDisassemble == toolType)
-       {
-            if(detail != null)
-                Instantiate(detail, transform.position, Quaternion.identity); 
-       }
-       else
-       {
-            if (trash != null)
-                Instantiate(trash, transform.position, Quaternion.identity);
-            
-       }
+        if (InventorySystem.Instance == null)
+        {
+            Debug.LogWarning("InventorySystem is not present in scene.");
+            return;
+        }
+
+        InventoryItemDefinition reward = null;
+
+        if (toolType == ToolType.Steal)
+        {
+            if (!canBeStolen)
+            {
+                Debug.Log("This item cannot be stolen.");
+                return;
+            }
+
+            reward = stealReward;
+        }
+        else if (toolTypeForDisassemble == toolType)
+        {
+            reward = detailReward;
+        }
+        else
+        {
+            reward = trashReward;
+        }
+
+        if (reward != null && !InventorySystem.Instance.TryAddItem(reward))
+        {
+            Debug.Log("Inventory is full.");
+            return;
+        }
+
+        GameManager.Instance?.securitySystem?.ReportViolation($"Use tool {toolType}");
         Destroy(gameObject);
+        GameManager.Instance.currentItem = null;
+        GameManager.Instance?.SpawnNextItemAfterBypass();
     }
 }

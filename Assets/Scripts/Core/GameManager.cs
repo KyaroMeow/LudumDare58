@@ -2,17 +2,20 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    [Header("Current Game State")] public GameObject currentItem;
+    [Header("Current Game State")]
+    public GameObject currentItem;
     public int currentMistakes = 0;
     public int totalItemsProcessed = 0;
     public float currentTime = 0;
     public bool isGameStarted = false;
     public bool isTimerWork = false;
+    public bool isCameraWorking = true;
+    public int totalMarkerPenalty = 0;
+    public int lastMissedMarkers = 0;
 
     public ItemSpawner itemSpawner;
     public Hands hands;
@@ -22,6 +25,8 @@ public class GameManager : MonoBehaviour
     public Lights lights;
     public Slider volumeSlider;
     public AnomallyController anomallyController;
+    public ItemMarkerUI itemMarkerUI;
+    public SecuritySystem securitySystem;
 
     private void Awake()
     {
@@ -35,7 +40,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void Start()
+    private void Start()
     {
         AudioManager.Instance.Play("DroneSound");
         CutsceneManager.Instance.PlayStartCutscene(() =>
@@ -46,7 +51,7 @@ public class GameManager : MonoBehaviour
         });
     }
 
-    void Update()
+    private void Update()
     {
         if (isGameStarted)
         {
@@ -73,16 +78,18 @@ public class GameManager : MonoBehaviour
 
     private void UpdateTimer()
     {
-        if (isTimerWork && SettingManager.Instance.timer)
+        if (!isTimerWork || !SettingManager.Instance.timer)
         {
-            if (currentTime > 0)
-            {
-                currentTime -= Time.deltaTime;
-            }
-            else
-            {
-                WrongSort();
-            }
+            return;
+        }
+
+        if (currentTime > 0)
+        {
+            currentTime -= Time.deltaTime;
+        }
+        else
+        {
+            WrongSort();
         }
     }
 
@@ -105,16 +112,35 @@ public class GameManager : MonoBehaviour
 
     public void SortItem(bool selectedVariant)
     {
-        if (currentItem == null) return;
+        if (currentItem == null)
+        {
+            return;
+        }
+
         hands.PlayPressButton();
-        bool itemVariant = currentItem.GetComponent<Item>().isDefective;
+        Item item = currentItem.GetComponent<Item>();
+        if (item == null)
+        {
+            return;
+        }
+
+        int missedMarkers = itemMarkerUI != null ? itemMarkerUI.EvaluateCurrentSelection(item) : 0;
+        int markerPenalty = GetMarkerPenalty(missedMarkers);
+        lastMissedMarkers = missedMarkers;
+
+        bool itemVariant = item.isDefective;
         if (selectedVariant == itemVariant)
         {
-            CorrectSort();
+            CorrectSort(markerPenalty);
         }
         else
         {
-            WrongSort();
+            WrongSort(1 + markerPenalty);
+        }
+
+        if (missedMarkers > 0)
+        {
+            Debug.Log($"Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {itemMarkerUI?.BuildSelectionDebugText() ?? "Marker UI not assigned"}");
         }
     }
 
@@ -123,38 +149,45 @@ public class GameManager : MonoBehaviour
         scanUI.ShowResult(currentItem.GetComponent<Item>().barcodeShowsGood);
     }
 
-    public void CorrectSort()
+    public void CorrectSort(int additionalMistakes = 0)
     {
         AudioManager.Instance.Play("CorrectSort");
         lights.ChangeColorGreen();
         totalItemsProcessed++;
-        if (currentItem != null) Destroy(currentItem);
+        securitySystem?.NotifySortingAction();
+
+        if (additionalMistakes > 0)
+        {
+            AddMistakes(additionalMistakes);
+            totalMarkerPenalty += additionalMistakes;
+        }
+
+        CompleteCurrentItem();
         StartTimer();
         SpawnItem();
     }
 
-    public void WrongSort()
+    public void WrongSort(int mistakesToAdd = 1)
     {
         AudioManager.Instance.Play("IncorrectSort");
         lights.ChangeColorRed();
         totalItemsProcessed++;
-        currentMistakes++;
-        CheckForDamage();
-        if (currentMistakes > SettingManager.Instance.currentDifficulty.maxMistakes)
-        {
-            GameOver();
-        }
-
-        Destroy(currentItem);
+        securitySystem?.NotifySortingAction();
+        AddMistakes(mistakesToAdd);
+        CompleteCurrentItem();
         SpawnItem();
     }
 
-    private void CheckForDamage()
+    private void CheckForDamage(int previousMistakeCount)
     {
         int mistakesPerDamage = GetMistakesPerDamage();
-        if (currentMistakes % mistakesPerDamage == 0)
+
+        for (int mistakeIndex = previousMistakeCount + 1; mistakeIndex <= currentMistakes; mistakeIndex++)
         {
-            hands.PlayTakeDamage();
+            if (mistakeIndex % mistakesPerDamage == 0)
+            {
+                hands.PlayTakeDamage();
+            }
         }
     }
 
@@ -201,8 +234,80 @@ public class GameManager : MonoBehaviour
         AudioListener.pause = false;
     }
 
+    public void SpawnNextItemAfterBypass()
+    {
+        if (isGameStarted)
+        {
+            SpawnItem();
+        }
+    }
+
+    public void ApplyPenalty(int mistakesToAdd)
+    {
+        AddMistakes(mistakesToAdd);
+    }
+
+    public void SetCameraState(bool isEnabled)
+    {
+        isCameraWorking = isEnabled;
+    }
+
     private void GameOver()
     {
         SceneManager.LoadScene(0);
+    }
+
+    private void AddMistakes(int mistakesToAdd)
+    {
+        if (mistakesToAdd <= 0)
+        {
+            return;
+        }
+
+        int previousMistakeCount = currentMistakes;
+        currentMistakes += mistakesToAdd;
+        CheckForDamage(previousMistakeCount);
+
+        if (currentMistakes > SettingManager.Instance.currentDifficulty.maxMistakes)
+        {
+            GameOver();
+        }
+    }
+
+    private int GetMarkerPenalty(int missedMarkers)
+    {
+        if (missedMarkers <= 0)
+        {
+            return 0;
+        }
+
+        string difficultyName = SettingManager.Instance.currentDifficulty.difficultyName.ToUpperInvariant();
+        int penaltyPerMarker = difficultyName == "HARD" ? 2 : 1;
+        return missedMarkers * penaltyPerMarker;
+    }
+
+    private void CompleteCurrentItem()
+    {
+        ReleaseHeldCurrentItem();
+
+        if (currentItem != null)
+        {
+            Destroy(currentItem);
+            currentItem = null;
+        }
+    }
+
+    private void ReleaseHeldCurrentItem()
+    {
+        if (currentItem == null || PlayerInteraction.Instance == null)
+        {
+            return;
+        }
+
+        ConveyorItemInteractable interactable = currentItem.GetComponent<ConveyorItemInteractable>();
+        if (interactable != null && PlayerInteraction.Instance.IsCurrentInteractable(interactable))
+        {
+            PlayerInteraction.Instance.HandleStopInteraction();
+        }
     }
 }
