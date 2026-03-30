@@ -1,12 +1,10 @@
-Shader "Custom/TeapotLiquid"
+Shader "Custom/UniversalLiquid"
 {
     Properties
     {
         _DeepColor ("Deep Color", Color) = (0.08, 0.28, 0.70, 1)
         _ShallowColor ("Shallow Color", Color) = (0.40, 0.78, 1, 1)
         _SurfaceColor ("Surface Color", Color) = (0.76, 0.94, 1, 1)
-        _SurfaceLineColor ("Surface Line Color", Color) = (0.95, 0.99, 1, 1)
-        _FoamColor ("Foam Color", Color) = (0.93, 0.99, 1, 1)
         _FillAmount ("Fill Amount", Float) = 0
         _WobbleX ("Wobble X", Range(-0.2, 0.2)) = 0
         _WobbleZ ("Wobble Z", Range(-0.2, 0.2)) = 0
@@ -15,12 +13,10 @@ Shader "Custom/TeapotLiquid"
         _BodyAlpha ("Body Alpha", Range(0, 1)) = 0.82
         _TopAlpha ("Top Alpha", Range(0, 1)) = 0.98
         _SurfaceThickness ("Surface Thickness", Range(0.001, 0.15)) = 0.03
-        _SurfaceLineIntensity ("Surface Line Intensity", Range(0, 4)) = 1.6
-        _RimPower ("Rim Power", Range(0.5, 8)) = 4.2
-        _RimIntensity ("Rim Intensity", Range(0, 1)) = 0.14
         _WaveAmplitude ("Wave Amplitude", Range(0, 0.05)) = 0.0065
         _WaveFrequency ("Wave Frequency", Range(0, 12)) = 3.2
         _WaveSpeed ("Wave Speed", Range(0, 3)) = 0.45
+        _UseWorldSpaceData ("Use World Space Data", Float) = 0
     }
 
     SubShader
@@ -57,16 +53,13 @@ Shader "Custom/TeapotLiquid"
             {
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
-                float3 viewDirWS : TEXCOORD2;
+                float3 positionOS : TEXCOORD1;
             };
 
             CBUFFER_START(UnityPerMaterial)
             float4 _DeepColor;
             float4 _ShallowColor;
             float4 _SurfaceColor;
-            float4 _SurfaceLineColor;
-            float4 _FoamColor;
             float _FillAmount;
             float _WobbleX;
             float _WobbleZ;
@@ -75,32 +68,27 @@ Shader "Custom/TeapotLiquid"
             float _BodyAlpha;
             float _TopAlpha;
             float _SurfaceThickness;
-            float _SurfaceLineIntensity;
-            float _RimPower;
-            float _RimIntensity;
             float _WaveAmplitude;
             float _WaveFrequency;
             float _WaveSpeed;
+            float _UseWorldSpaceData;
             CBUFFER_END
 
             Varyings vert(Attributes input)
             {
                 Varyings output;
                 VertexPositionInputs positionInputs = GetVertexPositionInputs(input.positionOS.xyz);
-                VertexNormalInputs normalInputs = GetVertexNormalInputs(input.normalOS);
                 output.positionCS = positionInputs.positionCS;
                 output.positionWS = positionInputs.positionWS;
-                output.normalWS = normalInputs.normalWS;
-                output.viewDirWS = GetWorldSpaceNormalizeViewDir(positionInputs.positionWS);
+                output.positionOS = input.positionOS.xyz;
                 return output;
             }
 
             half4 frag(Varyings input, half faceSign : VFACE) : SV_Target
             {
-                float3 normalWS = normalize(input.normalWS);
-                float3 viewDirWS = normalize(input.viewDirWS);
-
-                float3 relativePos = input.positionWS - _BoundsCenter.xyz;
+                float3 relativePos = (_UseWorldSpaceData > 0.5f)
+                    ? (input.positionWS - _BoundsCenter.xyz)
+                    : (input.positionOS - _BoundsCenter.xyz);
                 float wobbleOffset = (relativePos.x * _WobbleX) + (relativePos.z * _WobbleZ);
                 float surfaceWave =
                     sin((relativePos.x * _WaveFrequency) + (_Time.y * _WaveSpeed)) +
@@ -111,28 +99,21 @@ Shader "Custom/TeapotLiquid"
                 clip(-surfaceDistance);
 
                 float height01 = saturate((relativePos.y / max(_VolumeHeight, 0.0001)) + 0.5);
-                half rim = pow(1.0h - saturate(dot(normalWS, viewDirWS)), _RimPower) * _RimIntensity;
                 half surfaceBand = 1.0h - smoothstep(0.0h, _SurfaceThickness, abs(surfaceDistance));
-                half surfaceLine = saturate(surfaceBand * _SurfaceLineIntensity);
 
                 bool isFrontFace = faceSign > 0.0h;
                 half3 liquidColor = lerp(_DeepColor.rgb, _ShallowColor.rgb, sqrt(height01));
-                liquidColor = lerp(liquidColor, _SurfaceColor.rgb, height01 * 0.2h);
-                liquidColor += rim * _SurfaceColor.rgb;
+                liquidColor = lerp(liquidColor, _SurfaceColor.rgb, height01 * 0.14h);
 
-                half3 topColor = lerp(_SurfaceColor.rgb, _FoamColor.rgb, surfaceBand);
+                half3 topColor = lerp(liquidColor, _SurfaceColor.rgb, 0.45h + surfaceBand * 0.35h);
 
                 if (isFrontFace)
                 {
-                    liquidColor = lerp(liquidColor, _FoamColor.rgb, surfaceBand * 0.55h);
-                    liquidColor = lerp(liquidColor, _SurfaceLineColor.rgb, surfaceLine);
-                    half liquidAlpha = max(_BodyAlpha, surfaceBand * 0.95h);
-                    return half4(liquidColor, saturate(liquidAlpha));
+                    liquidColor = lerp(liquidColor, _SurfaceColor.rgb, surfaceBand * 0.2h);
+                    return half4(liquidColor, saturate(_BodyAlpha));
                 }
 
-                topColor = lerp(topColor, _SurfaceLineColor.rgb, surfaceLine * 0.8h);
-                half topAlpha = max(_TopAlpha, surfaceBand);
-                return half4(topColor, saturate(topAlpha));
+                return half4(topColor, saturate(_TopAlpha));
             }
             ENDHLSL
         }
