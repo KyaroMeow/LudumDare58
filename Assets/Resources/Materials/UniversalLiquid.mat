@@ -115,8 +115,9 @@ Material:
     - _Surface: 0
     - _SurfaceThickness: 0.03
     - _TopAlpha: 0.98
+    - _UseWorldSpaceData: 0
     - _VolumeHeight: 1
-    - _WaveAmplitude: 0.0065
+    - _WaveAmplitude: 0.13
     - _WaveFrequency: 3.2
     - _WaveSpeed: 0.45
     - _WobbleX: 0
