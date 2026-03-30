@@ -9,11 +9,13 @@ public class ItemSpawner : MonoBehaviour
 
     public void SpawnAnomalyItem()
     {
-        Instantiate(anomalyItem, transform.position, Quaternion.identity);
+        GameObject spawnedItem = Instantiate(anomalyItem, transform.position, Quaternion.identity);
+        GameManager.Instance.currentItem = spawnedItem;
     }
     public void SpawnBomb()
     {
-        Instantiate(bomb, transform.position, Quaternion.identity);
+        GameObject spawnedBomb = Instantiate(bomb, transform.position, Quaternion.identity);
+        GameManager.Instance.currentItem = spawnedBomb;
     }
     public void SpawnItem()
     {
@@ -45,23 +47,23 @@ public class ItemSpawner : MonoBehaviour
         bool barcodeShowsGood = true;
         bool hasScratches = false;
 
-        // Каждый дефект проверяется независимо
+        // РљР°Р¶РґС‹Р№ РґРµС„РµРєС‚ РїСЂРѕРІРµСЂСЏРµС‚СЃСЏ РЅРµР·Р°РІРёСЃРёРјРѕ
         float roll = Random.Range(0f, 1f);
 
-        // Пятно
+        // РџСЏС‚РЅРѕ
         if (roll <= SettingManager.Instance.currentDifficulty.defectChance)
         {
             hasStain = true;
         }
 
-        // Отсутствие штрихкода
+        // РћС‚СЃСѓС‚СЃС‚РІРёРµ С€С‚СЂРёС…РєРѕРґР°
         roll = Random.Range(0f, 1f);
         if (roll <= SettingManager.Instance.currentDifficulty.noBarcodeChance)
         {
             hasBarcode = false;
         }
 
-        // Неправильный штрихкод (только если штрихкод есть)
+        // РќРµРїСЂР°РІРёР»СЊРЅС‹Р№ С€С‚СЂРёС…РєРѕРґ (С‚РѕР»СЊРєРѕ РµСЃР»Рё С€С‚СЂРёС…РєРѕРґ РµСЃС‚СЊ)
         if (hasBarcode)
         {
             roll = Random.Range(0f, 1f);
@@ -71,14 +73,14 @@ public class ItemSpawner : MonoBehaviour
             }
         }
 
-        // Царапины
+        // Р¦Р°СЂР°РїРёРЅС‹
         roll = Random.Range(0f, 1f);
         if (roll <= SettingManager.Instance.currentDifficulty.scratchesChance)
         {
             hasScratches = true;
         }
 
-        // Предмет дефектный если есть хотя бы один дефект
+        // РџСЂРµРґРјРµС‚ РґРµС„РµРєС‚РЅС‹Р№ РµСЃР»Рё РµСЃС‚СЊ С…РѕС‚СЏ Р±С‹ РѕРґРёРЅ РґРµС„РµРєС‚
         bool isDefective = hasStain || !hasBarcode || !barcodeShowsGood || hasScratches;
 
         item.InitializeItem(isDefective, hasBarcode, barcodeShowsGood, hasStain, hasScratches);

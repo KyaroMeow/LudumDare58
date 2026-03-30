@@ -4,11 +4,12 @@ public class Instrument : MonoBehaviour, IInteractable
 {
     public ToolType toolType;
     [SerializeField] private Material transparentMaterial;
+
     private Material originalMaterial;
     private Renderer[] renderers;
     private bool isPicked;
 
-    void Start()
+    private void Start()
     {
         renderers = GetComponentsInChildren<Renderer>();
         if (renderers.Length > 0)
@@ -24,13 +25,16 @@ public class Instrument : MonoBehaviour, IInteractable
             StopInteract();
             return;
         }
+
+        GameManager.Instance?.securitySystem?.ReportViolation($"Take tool {toolType}");
+
         if (transparentMaterial != null)
         {
             SetTransparent(true);
             isPicked = true;
         }
     }
-    
+
     public void StopInteract()
     {
         if (transparentMaterial != null)
@@ -39,6 +43,7 @@ public class Instrument : MonoBehaviour, IInteractable
             isPicked = false;
         }
     }
+
     public void SetTransparent(bool transparent)
     {
         Material targetMaterial = transparent ? transparentMaterial : originalMaterial;
@@ -48,4 +53,6 @@ public class Instrument : MonoBehaviour, IInteractable
             renderer.material = targetMaterial;
         }
     }
+
+    public bool IsPicked => isPicked;
 }

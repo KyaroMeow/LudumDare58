@@ -6,6 +6,7 @@ public class HUDManager : MonoBehaviour
     public static HUDManager Instance;
     
     public GameObject itemScanHUD;
+    public ItemMarkerUI itemMarkerUI;
 
     public void Awake()
     {
@@ -15,13 +16,15 @@ public class HUDManager : MonoBehaviour
         }
     }
 
-    public void showItemScanHUD()
+    public void showItemScanHUD(Item currentItem = null)
     {
         itemScanHUD.SetActive(true);
+        itemMarkerUI?.BeginItem(currentItem);
     }
     
     public void hideItemScanHUD()
     {
+        itemMarkerUI?.EndItem();
         itemScanHUD.SetActive(false);
     }
 }
