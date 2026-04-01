@@ -110,6 +110,48 @@ public class GameManager : MonoBehaviour
         scanerOnTable.SetActive(true);
     }
 
+    public void SubmitCurrentItem()
+    {
+        if (currentItem == null)
+        {
+            return;
+        }
+
+        hands.PlayPressButton();
+
+        Item item = currentItem.GetComponent<Item>();
+        if (item == null)
+        {
+            return;
+        }
+
+        int missedMarkers = itemMarkerUI != null ? itemMarkerUI.EvaluateCurrentSelection(item) : 0;
+        int markerPenalty = GetMarkerPenalty(missedMarkers);
+        bool hasNoMarkers = itemMarkerUI == null || !itemMarkerUI.HasAnySelection();
+        ItemMarkerUI.MarkerVerdict verdict = itemMarkerUI != null
+            ? itemMarkerUI.GetCurrentVerdict()
+            : ItemMarkerUI.MarkerVerdict.None;
+
+        lastMissedMarkers = missedMarkers;
+
+        bool selectedVariant = ResolveSelectedVariant(verdict, item);
+        int totalPenalty = markerPenalty + (hasNoMarkers ? 1 : 0);
+
+        if (selectedVariant == item.isDefective)
+        {
+            CorrectSort(totalPenalty);
+        }
+        else
+        {
+            WrongSort(1 + totalPenalty);
+        }
+
+        if (hasNoMarkers || missedMarkers > 0)
+        {
+            Debug.Log($"Submit item. No markers: {hasNoMarkers}. Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {itemMarkerUI?.BuildSelectionDebugText() ?? "Marker UI not assigned"}");
+        }
+    }
+
     public void SortItem(bool selectedVariant)
     {
         if (currentItem == null)
@@ -284,6 +326,19 @@ public class GameManager : MonoBehaviour
         string difficultyName = SettingManager.Instance.currentDifficulty.difficultyName.ToUpperInvariant();
         int penaltyPerMarker = difficultyName == "HARD" ? 2 : 1;
         return missedMarkers * penaltyPerMarker;
+    }
+
+    private bool ResolveSelectedVariant(ItemMarkerUI.MarkerVerdict verdict, Item item)
+    {
+        switch (verdict)
+        {
+            case ItemMarkerUI.MarkerVerdict.Accept:
+                return false;
+            case ItemMarkerUI.MarkerVerdict.Reject:
+                return true;
+            default:
+                return item.isDefective;
+        }
     }
 
     private void CompleteCurrentItem()

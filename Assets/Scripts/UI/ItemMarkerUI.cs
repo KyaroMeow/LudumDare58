@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class ItemMarkerUI : MonoBehaviour
 {
+    public enum MarkerVerdict
+    {
+        None = 0,
+        Accept = 1,
+        Reject = 2
+    }
+
     [Serializable]
     private struct MarkerVisualBinding
     {
@@ -11,7 +18,6 @@ public class ItemMarkerUI : MonoBehaviour
         public GameObject selectedStateObject;
     }
 
-    [SerializeField] private GameObject markerMenuRoot;
     [SerializeField] private MarkerVisualBinding[] markerVisuals;
 
     private readonly HashSet<ItemMarkerType> selectedMarkers = new HashSet<ItemMarkerType>();
@@ -20,49 +26,18 @@ public class ItemMarkerUI : MonoBehaviour
     private void Awake()
     {
         RefreshVisuals();
-        HideMenu();
     }
 
     public void BeginItem(Item item)
     {
         currentItem = item;
         ClearSelection();
-        HideMenu();
     }
 
     public void EndItem()
     {
         currentItem = null;
         ClearSelection();
-        HideMenu();
-    }
-
-    public void ToggleMenu()
-    {
-        if (currentItem == null || markerMenuRoot == null)
-        {
-            return;
-        }
-
-        markerMenuRoot.SetActive(!markerMenuRoot.activeSelf);
-    }
-
-    public void ShowMenu()
-    {
-        if (currentItem == null || markerMenuRoot == null)
-        {
-            return;
-        }
-
-        markerMenuRoot.SetActive(true);
-    }
-
-    public void HideMenu()
-    {
-        if (markerMenuRoot != null)
-        {
-            markerMenuRoot.SetActive(false);
-        }
     }
 
     public void ToggleMarker(int markerTypeIndex)
@@ -95,6 +70,41 @@ public class ItemMarkerUI : MonoBehaviour
         }
 
         return item.GetMissedMarkerCount(selectedMarkers);
+    }
+
+    public bool HasAnySelection()
+    {
+        return selectedMarkers.Count > 0;
+    }
+
+    public MarkerVerdict GetCurrentVerdict()
+    {
+        if (selectedMarkers.Count == 0)
+        {
+            return MarkerVerdict.None;
+        }
+
+        if (selectedMarkers.Contains(ItemMarkerType.Ideal))
+        {
+            return MarkerVerdict.Accept;
+        }
+
+        if (selectedMarkers.Contains(ItemMarkerType.Defective) ||
+            selectedMarkers.Contains(ItemMarkerType.Scratch) ||
+            selectedMarkers.Contains(ItemMarkerType.Stain) ||
+            selectedMarkers.Contains(ItemMarkerType.LegitimacyNegative) ||
+            selectedMarkers.Contains(ItemMarkerType.Anomaly) ||
+            selectedMarkers.Contains(ItemMarkerType.MassProduct))
+        {
+            return MarkerVerdict.Reject;
+        }
+
+        if (selectedMarkers.Contains(ItemMarkerType.LegitimacyPositive))
+        {
+            return MarkerVerdict.Accept;
+        }
+
+        return MarkerVerdict.None;
     }
 
     public string BuildSelectionDebugText()
