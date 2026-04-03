@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         AudioManager.Instance.Play("DroneSound");
-        if(CutsceneManager.Instance != null && CutsceneManager.Instance.isEnabled == true)
+        if(CutsceneManager.Instance != null)
         {
         CutsceneManager.Instance.PlayStartCutscene(() =>
         {
