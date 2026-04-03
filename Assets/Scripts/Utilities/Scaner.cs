@@ -18,8 +18,8 @@ public class Scaner : MonoBehaviour
 
     private void Update()
     {
-        ScanItem();
         FollowCursorYZ();
+        ScanItem();
     }
     
     private void ScanItem()
