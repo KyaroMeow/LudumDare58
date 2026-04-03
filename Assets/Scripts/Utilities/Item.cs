@@ -21,6 +21,7 @@ public class Item : MonoBehaviour
     [HideInInspector] public Renderer stainRenderer;
     public GameObject barcode;
     private readonly HashSet<ItemMarkerType> expectedMarkers = new HashSet<ItemMarkerType>();
+    private readonly HashSet<ItemMarkerType> playerMarkedMarkers = new HashSet<ItemMarkerType>();
 
     public void InitializeItem(bool defective, bool barcode, bool barcodeGood, bool stain, bool Scratches)
     {
@@ -101,6 +102,48 @@ public class Item : MonoBehaviour
         }
 
         return missedMarkers;
+    }
+
+    public int GetMissedPlayerMarkerCount()
+    {
+        return GetMissedMarkerCount(playerMarkedMarkers);
+    }
+
+    public void SetMarkerSelected(ItemMarkerType markerType, bool isSelected)
+    {
+        if (isSelected)
+        {
+            playerMarkedMarkers.Add(markerType);
+        }
+        else
+        {
+            playerMarkedMarkers.Remove(markerType);
+        }
+    }
+
+    public bool IsMarkerSelected(ItemMarkerType markerType)
+    {
+        return playerMarkedMarkers.Contains(markerType);
+    }
+
+    public bool HasAnyPlayerMarkers()
+    {
+        return playerMarkedMarkers.Count > 0;
+    }
+
+    public IEnumerable<ItemMarkerType> GetPlayerMarkedMarkers()
+    {
+        return playerMarkedMarkers;
+    }
+
+    public string BuildPlayerMarkersDebugText()
+    {
+        if (playerMarkedMarkers.Count == 0)
+        {
+            return "None";
+        }
+
+        return string.Join(", ", playerMarkedMarkers);
     }
 
     public string BuildExpectedMarkersDebugText()

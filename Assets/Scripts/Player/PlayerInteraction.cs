@@ -39,7 +39,7 @@ public class PlayerInteraction : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance))
         {
-            if (hit.collider.TryGetComponent(out IInteractable interactable) && currentInteractable == null)
+            if (hit.collider.TryGetComponent(out IInteractable interactable) && CanInteractWith(interactable))
             {
                 HandleOutline(hit);
 
@@ -68,6 +68,10 @@ public class PlayerInteraction : MonoBehaviour
         else if (interactable is TableScaner || interactable is TableFlashlight)
         {
             HandleScanerInteraction(interactable);
+        }
+        else if (interactable is SubmitItemInteractable)
+        {
+            interactable.Interact(holdPosition);
         }
         else
         {
@@ -155,5 +159,22 @@ public class PlayerInteraction : MonoBehaviour
     public bool IsCurrentInteractable(IInteractable interactable)
     {
         return ReferenceEquals(currentInteractable, interactable);
+    }
+
+    private bool CanInteractWith(IInteractable interactable)
+    {
+        if (currentInteractable == null)
+        {
+            return true;
+        }
+
+        if (ReferenceEquals(currentInteractable, interactable))
+        {
+            return false;
+        }
+
+        return interactable is TableScaner ||
+               interactable is TableFlashlight ||
+               interactable is SubmitItemInteractable;
     }
 }

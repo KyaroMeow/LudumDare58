@@ -13,6 +13,12 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private Vector3 originalPosition;
     private Quaternion originalRotation;
     private Transform originalParent;
+    private Collider[] cachedColliders;
+
+    private void Awake()
+    {
+        cachedColliders = GetComponentsInChildren<Collider>(true);
+    }
 
     public void Interact(Transform holdPosition)
     {
@@ -31,6 +37,8 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             rb.isKinematic = true;
         }
 
+        SetCollidersEnabled(false);
+
         HUDManager.Instance.showItemScanHUD(GetComponent<Item>());
         PlayerItemInspection.Instance.BeginInspection(gameObject);
     }
@@ -42,6 +50,8 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         {
             rb.isKinematic = false;
         }
+
+        SetCollidersEnabled(true);
 
         PlayerView.Instance.UnlockMovement();
         transform.SetParent(originalParent);
@@ -92,5 +102,26 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         Destroy(gameObject);
         GameManager.Instance.currentItem = null;
         GameManager.Instance?.SpawnNextItemAfterBypass();
+    }
+
+    private void SetCollidersEnabled(bool isEnabled)
+    {
+        if (cachedColliders == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < cachedColliders.Length; i++)
+        {
+            if (cachedColliders[i] != null)
+            {
+                if (cachedColliders[i].CompareTag("Code"))
+                {
+                    continue;
+                }
+
+                cachedColliders[i].enabled = isEnabled;
+            }
+        }
     }
 }

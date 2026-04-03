@@ -31,7 +31,7 @@ public class ItemMarkerUI : MonoBehaviour
     public void BeginItem(Item item)
     {
         currentItem = item;
-        ClearSelection();
+        LoadSelectionFromItem();
     }
 
     public void EndItem()
@@ -69,12 +69,14 @@ public class ItemMarkerUI : MonoBehaviour
             return 0;
         }
 
-        return item.GetMissedMarkerCount(selectedMarkers);
+        return item.GetMissedPlayerMarkerCount();
     }
 
     public bool HasAnySelection()
     {
-        return selectedMarkers.Count > 0;
+        return currentItem != null
+            ? currentItem.HasAnyPlayerMarkers()
+            : selectedMarkers.Count > 0;
     }
 
     public MarkerVerdict GetCurrentVerdict()
@@ -129,6 +131,7 @@ public class ItemMarkerUI : MonoBehaviour
             selectedMarkers.Remove(markerType);
         }
 
+        currentItem.SetMarkerSelected(markerType, selectedMarkers.Contains(markerType));
         RefreshVisuals();
     }
 
@@ -148,5 +151,20 @@ public class ItemMarkerUI : MonoBehaviour
                 markerVisuals[i].selectedStateObject.SetActive(isSelected);
             }
         }
+    }
+
+    private void LoadSelectionFromItem()
+    {
+        selectedMarkers.Clear();
+
+        if (currentItem != null)
+        {
+            foreach (ItemMarkerType markerType in currentItem.GetPlayerMarkedMarkers())
+            {
+                selectedMarkers.Add(markerType);
+            }
+        }
+
+        RefreshVisuals();
     }
 }

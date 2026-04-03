@@ -125,12 +125,10 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        int missedMarkers = itemMarkerUI != null ? itemMarkerUI.EvaluateCurrentSelection(item) : 0;
+        int missedMarkers = item.GetMissedPlayerMarkerCount();
         int markerPenalty = GetMarkerPenalty(missedMarkers);
-        bool hasNoMarkers = itemMarkerUI == null || !itemMarkerUI.HasAnySelection();
-        ItemMarkerUI.MarkerVerdict verdict = itemMarkerUI != null
-            ? itemMarkerUI.GetCurrentVerdict()
-            : ItemMarkerUI.MarkerVerdict.None;
+        bool hasNoMarkers = !item.HasAnyPlayerMarkers();
+        ItemMarkerUI.MarkerVerdict verdict = ResolveMarkerVerdict(item);
 
         lastMissedMarkers = missedMarkers;
 
@@ -148,7 +146,7 @@ public class GameManager : MonoBehaviour
 
         if (hasNoMarkers || missedMarkers > 0)
         {
-            Debug.Log($"Submit item. No markers: {hasNoMarkers}. Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {itemMarkerUI?.BuildSelectionDebugText() ?? "Marker UI not assigned"}");
+            Debug.Log($"Submit item. No markers: {hasNoMarkers}. Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {item.BuildPlayerMarkersDebugText()}");
         }
     }
 
@@ -166,7 +164,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        int missedMarkers = itemMarkerUI != null ? itemMarkerUI.EvaluateCurrentSelection(item) : 0;
+        int missedMarkers = item.GetMissedPlayerMarkerCount();
         int markerPenalty = GetMarkerPenalty(missedMarkers);
         lastMissedMarkers = missedMarkers;
 
@@ -182,7 +180,7 @@ public class GameManager : MonoBehaviour
 
         if (missedMarkers > 0)
         {
-            Debug.Log($"Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {itemMarkerUI?.BuildSelectionDebugText() ?? "Marker UI not assigned"}");
+            Debug.Log($"Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {item.BuildPlayerMarkersDebugText()}");
         }
     }
 
@@ -339,6 +337,36 @@ public class GameManager : MonoBehaviour
             default:
                 return item.isDefective;
         }
+    }
+
+    private ItemMarkerUI.MarkerVerdict ResolveMarkerVerdict(Item item)
+    {
+        if (item == null || !item.HasAnyPlayerMarkers())
+        {
+            return ItemMarkerUI.MarkerVerdict.None;
+        }
+
+        if (item.IsMarkerSelected(ItemMarkerType.Ideal))
+        {
+            return ItemMarkerUI.MarkerVerdict.Accept;
+        }
+
+        if (item.IsMarkerSelected(ItemMarkerType.Defective) ||
+            item.IsMarkerSelected(ItemMarkerType.Scratch) ||
+            item.IsMarkerSelected(ItemMarkerType.Stain) ||
+            item.IsMarkerSelected(ItemMarkerType.LegitimacyNegative) ||
+            item.IsMarkerSelected(ItemMarkerType.Anomaly) ||
+            item.IsMarkerSelected(ItemMarkerType.MassProduct))
+        {
+            return ItemMarkerUI.MarkerVerdict.Reject;
+        }
+
+        if (item.IsMarkerSelected(ItemMarkerType.LegitimacyPositive))
+        {
+            return ItemMarkerUI.MarkerVerdict.Accept;
+        }
+
+        return ItemMarkerUI.MarkerVerdict.None;
     }
 
     private void CompleteCurrentItem()

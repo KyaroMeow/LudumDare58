@@ -30,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 6788298872375677185}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.143, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -108,6 +108,8 @@ MonoBehaviour:
   hasScratches: 1
   barcodeShowsGood: 1
   hasUVStain: 0
+  isAnomalyItem: 0
+  extraHiddenDefectCount: 0
   stainSpots:
   - {fileID: 3237803634818984159}
   - {fileID: 5244501198964136009}
@@ -146,6 +148,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
+  toolTypeForDisassemble: 0
+  detailReward: {fileID: 0}
+  trashReward: {fileID: 0}
+  stealReward: {fileID: 0}
+  canBeStolen: 1
 --- !u!1001 &2334033934366752754
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -267,7 +274,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 136f950bb19f85d49b11136a8767bc40, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.559
+      value: 0.512
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 136f950bb19f85d49b11136a8767bc40, type: 3}
       propertyPath: m_LocalPosition.y
