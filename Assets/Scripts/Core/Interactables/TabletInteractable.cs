@@ -4,9 +4,9 @@ using UnityEngine;
 public class TabletInteractable : MonoBehaviour, IInteractable
 {
     public Transform holdTabletPosition;
-    public GameObject[] pages;
+    public GameObject homePage;
+    public GameObject[] otherPages;
     
-    private int currentPageId = 0;
     private Vector3 _originalPosition;
     private Quaternion _originalRotation;
     private Transform _originalParent;
@@ -30,40 +30,15 @@ public class TabletInteractable : MonoBehaviour, IInteractable
         transform.localPosition = _originalPosition;
         transform.localRotation = _originalRotation;
     }
-    
-    public void NextPages()
-    {
-        
-        if (currentPageId < pages.Length - 1)
-        {
-            pages[currentPageId].SetActive(false);
-            currentPageId++;
-            pages[currentPageId].SetActive(true);
-        }
-        else
-        {
-            pages[currentPageId].SetActive(false);
-            currentPageId = 0;
-            pages[currentPageId].SetActive(true);
-        }
-    }
 
-    public void PreviousPage()
+    public void GoHome()
     {
-        if (currentPageId > 1)
+        foreach (var page in otherPages)
         {
-            pages[currentPageId].SetActive(false);
-            currentPageId--;
-            pages[currentPageId].SetActive(true);
+            page.SetActive(false);
         }
-        else
-        {
-            pages[currentPageId].SetActive(false);
-            currentPageId = pages.Length - 1;
-            pages[currentPageId].SetActive(true);
-        }
+        homePage.SetActive(true);
     }
-
     public void StartGame()
     {
         if (GameManager.Instance.isGameStarted == false)
