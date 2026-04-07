@@ -45,7 +45,6 @@ public class PlayerView : MonoBehaviour
         {
             cameraStartLocalRotation = cameraTransform.localRotation;
             currentCameraRotation = Vector2.zero;
-            Cursor.visible = false;
         }
     }
     public void UnlockMovement()
