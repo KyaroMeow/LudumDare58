@@ -20,7 +20,7 @@ Material:
   stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
-  m_LockedProperties: 
+  m_LockedProperties: _Pulse_Speed
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -38,13 +38,13 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Glow_Str: 12.5
-    - _Pulse_Speed: 3.16
+    - _Glow_Str: 7.4
+    - _Pulse_Speed: 1.31
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
-    - _Emissive_Color: {r: 0, g: 0.09803922, b: 0.91764706, a: 1}
-    - _Neon_Color: {r: 0, g: 0.08627451, b: 0.85490197, a: 1}
+    - _Emissive_Color: {r: 7.3411765, g: 0.3102558, b: 0, a: 1}
+    - _Neon_Color: {r: 0.9326143, g: 0.034138832, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &2962295498862972132
