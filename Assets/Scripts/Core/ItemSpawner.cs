@@ -4,18 +4,15 @@ public class ItemSpawner : MonoBehaviour
 {
     [Header("Item Prefabs")]
     [SerializeField] private GameObject[] itemPrefabs;
-    [SerializeField] private GameObject anomalyItem;
+    [SerializeField] private Animator doorAnimator;
     [SerializeField] private GameObject bomb;
-
-    public void SpawnAnomalyItem()
-    {
-        GameObject spawnedItem = Instantiate(anomalyItem, transform.position, Quaternion.identity);
-        GameManager.Instance.currentItem = spawnedItem;
-    }
     public void SpawnBomb()
     {
+        if (bomb != null)
+        {
         GameObject spawnedBomb = Instantiate(bomb, transform.position, Quaternion.identity);
         GameManager.Instance.currentItem = spawnedBomb;
+        }
     }
     public void SpawnItem()
     {
@@ -30,6 +27,11 @@ public class ItemSpawner : MonoBehaviour
 
         SetupItem(itemToSpawn);
         GameManager.Instance.currentItem = itemToSpawn;
+
+        if(doorAnimator != null)
+        {
+        doorAnimator.SetTrigger("open");
+        }
     }
 
     private void SetupItem(GameObject itemObject)

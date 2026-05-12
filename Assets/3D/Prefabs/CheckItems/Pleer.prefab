@@ -108,6 +108,8 @@ MonoBehaviour:
   hasScratches: 1
   barcodeShowsGood: 1
   hasUVStain: 0
+  isAnomalyItem: 0
+  extraHiddenDefectCount: 0
   stainSpots:
   - {fileID: 8221916794555101675}
   - {fileID: 4207644073033933521}
@@ -146,6 +148,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
+  toolTypeForDisassemble: 0
+  detailReward: {fileID: 0}
+  trashReward: {fileID: 0}
+  stealReward: {fileID: 0}
+  canBeStolen: 1
+  itemName: pleer
 --- !u!1001 &321761873061377362
 PrefabInstance:
   m_ObjectHideFlags: 0

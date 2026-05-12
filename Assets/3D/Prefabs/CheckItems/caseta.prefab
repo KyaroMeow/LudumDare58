@@ -108,6 +108,8 @@ MonoBehaviour:
   hasScratches: 1
   barcodeShowsGood: 1
   hasUVStain: 0
+  isAnomalyItem: 0
+  extraHiddenDefectCount: 0
   stainSpots:
   - {fileID: 6387656095822906061}
   - {fileID: 6430354293236308713}
@@ -147,8 +149,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
-  detail: {fileID: 0}
-  trash: {fileID: 0}
+  detailReward: {fileID: 0}
+  trashReward: {fileID: 0}
+  stealReward: {fileID: 0}
+  canBeStolen: 1
+  itemName: cassete
 --- !u!1001 &276215950545434740
 PrefabInstance:
   m_ObjectHideFlags: 0

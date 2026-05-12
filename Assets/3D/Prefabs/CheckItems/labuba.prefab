@@ -60,6 +60,8 @@ MonoBehaviour:
   hasScratches: 1
   barcodeShowsGood: 1
   hasUVStain: 0
+  isAnomalyItem: 0
+  extraHiddenDefectCount: 0
   stainSpots:
   - {fileID: 6470629832415264261}
   - {fileID: 841992468269176750}
@@ -146,6 +148,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
+  toolTypeForDisassemble: 0
+  detailReward: {fileID: 0}
+  trashReward: {fileID: 0}
+  stealReward: {fileID: 0}
+  canBeStolen: 1
+  itemName: labuba
 --- !u!1001 &1013832294415565398
 PrefabInstance:
   m_ObjectHideFlags: 0

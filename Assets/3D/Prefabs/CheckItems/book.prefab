@@ -153,6 +153,7 @@ MonoBehaviour:
   trashReward: {fileID: 0}
   stealReward: {fileID: 0}
   canBeStolen: 1
+  itemName: book
 --- !u!1001 &341047084362741630
 PrefabInstance:
   m_ObjectHideFlags: 0

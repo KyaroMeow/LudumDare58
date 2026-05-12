@@ -256,11 +256,7 @@ public class GameManager : MonoBehaviour
 
     public void SpawnItem()
     {
-        if (totalItemsProcessed == SettingManager.Instance.currentDifficulty.anomalyItemNum)
-        {
-            itemSpawner.SpawnAnomalyItem();
-        }
-        else if (totalItemsProcessed == SettingManager.Instance.currentDifficulty.bombNum)
+        if (totalItemsProcessed == SettingManager.Instance.currentDifficulty.bombNum)
         {
             itemSpawner.SpawnBomb();
         }

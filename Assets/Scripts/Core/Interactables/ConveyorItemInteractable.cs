@@ -9,6 +9,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     [SerializeField] private InventoryItemDefinition trashReward;
     [SerializeField] private InventoryItemDefinition stealReward;
     [SerializeField] private bool canBeStolen = true;
+    [SerializeField] private string itemName;
 
     private Vector3 originalPosition;
     private Quaternion originalRotation;
@@ -22,6 +23,8 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     public void Interact(Transform holdPosition)
     {
+        TabletInteractable.Instance.OpenBestiaryItem(itemName);
+
         PlayerView.Instance.BlockMovement();
 
         originalPosition = transform.position;

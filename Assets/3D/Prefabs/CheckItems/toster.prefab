@@ -126,6 +126,7 @@ MonoBehaviour:
   trashReward: {fileID: 0}
   stealReward: {fileID: 0}
   canBeStolen: 1
+  itemName: toaster
 --- !u!54 &-1548012484119673584
 Rigidbody:
   m_ObjectHideFlags: 0

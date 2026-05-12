@@ -153,6 +153,7 @@ MonoBehaviour:
   trashReward: {fileID: 0}
   stealReward: {fileID: 0}
   canBeStolen: 1
+  itemName: guitar
 --- !u!1001 &5155838286844419084
 PrefabInstance:
   m_ObjectHideFlags: 0

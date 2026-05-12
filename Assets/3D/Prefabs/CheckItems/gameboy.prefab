@@ -133,6 +133,7 @@ MonoBehaviour:
   trashReward: {fileID: 0}
   stealReward: {fileID: 0}
   canBeStolen: 1
+  itemName: konsole
 --- !u!114 &4466121409998623136
 MonoBehaviour:
   m_ObjectHideFlags: 0

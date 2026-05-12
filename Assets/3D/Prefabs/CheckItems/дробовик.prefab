@@ -153,6 +153,7 @@ MonoBehaviour:
   trashReward: {fileID: 0}
   stealReward: {fileID: 0}
   canBeStolen: 1
+  itemName: shotgun
 --- !u!1001 &2334033934366752754
 PrefabInstance:
   m_ObjectHideFlags: 0
