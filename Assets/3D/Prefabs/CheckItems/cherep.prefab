@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
   detailReward: {fileID: 0}
-  trashReward: {fileID: 0}
-  stealReward: {fileID: 0}
+  trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
+  stealReward: {fileID: 11400000, guid: b2602d4556ee6b246afe6a5bbd7d923e, type: 2}
   canBeStolen: 1
   itemName: skull
 --- !u!1 &8908694353879782156

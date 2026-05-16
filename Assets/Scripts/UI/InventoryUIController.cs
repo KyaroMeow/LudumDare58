@@ -6,6 +6,7 @@ public class InventoryUIController : MonoBehaviour
 {
     [SerializeField] private GameObject inventoryRoot;
     [SerializeField] private Image[] slotIcons;
+    [SerializeField] private Button[] slotButtons;
     [SerializeField] private TextMeshProUGUI[] slotLabels;
 
     private void Update()
@@ -13,6 +14,7 @@ public class InventoryUIController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             ToggleInventory();
+            ToggleButtons();
         }
     }
 
@@ -26,6 +28,13 @@ public class InventoryUIController : MonoBehaviour
         Refresh();
     }
 
+    private void ToggleButtons()
+    {
+        foreach (Button button in slotButtons)
+        {
+            button.enabled = !button.enabled;
+        }
+    }
     private void OnDisable()
     {
         if (InventorySystem.Instance != null)

@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
   detailReward: {fileID: 0}
-  trashReward: {fileID: 0}
-  stealReward: {fileID: 0}
+  trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
+  stealReward: {fileID: 11400000, guid: ba707ca9317677040b4242d65e675a91, type: 2}
   canBeStolen: 1
   itemName: cassete
 --- !u!1001 &276215950545434740

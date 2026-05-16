@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
   detailReward: {fileID: 0}
-  trashReward: {fileID: 0}
-  stealReward: {fileID: 0}
+  trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
+  stealReward: {fileID: 11400000, guid: d05abea6cbff27d41bcc5a226bac7884, type: 2}
   canBeStolen: 1
   itemName: guitar
 --- !u!1001 &5155838286844419084

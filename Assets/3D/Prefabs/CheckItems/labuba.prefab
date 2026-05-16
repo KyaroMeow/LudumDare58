@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
   detailReward: {fileID: 0}
-  trashReward: {fileID: 0}
-  stealReward: {fileID: 0}
+  trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
+  stealReward: {fileID: 11400000, guid: 788ca3a2cc59cbb4dbd9c8699672e2d0, type: 2}
   canBeStolen: 1
   itemName: labuba
 --- !u!1001 &1013832294415565398

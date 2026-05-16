@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
   detailReward: {fileID: 0}
-  trashReward: {fileID: 0}
-  stealReward: {fileID: 0}
+  trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
+  stealReward: {fileID: 11400000, guid: 222b5eef09edfad4cbde25353be8acd1, type: 2}
   canBeStolen: 1
   itemName: pleer
 --- !u!1001 &321761873061377362
