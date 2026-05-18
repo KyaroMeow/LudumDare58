@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1335c57c5ee8804f9f3f481c4cc754e, type: 3}
   m_Name: labuba
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItemDefinition
-  itemId: 10
+  itemId: 7
   displayName: labuba
   icon: {fileID: 21300000, guid: de496287ed8c262448ee3a225e9c6e5e, type: 3}

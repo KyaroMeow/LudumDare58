@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1335c57c5ee8804f9f3f481c4cc754e, type: 3}
   m_Name: guitar
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItemDefinition
-  itemId: 11
+  itemId: 6
   displayName: guitar
   icon: {fileID: 21300000, guid: 99667931520e25f43956324352bd15b2, type: 3}

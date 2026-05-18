@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1335c57c5ee8804f9f3f481c4cc754e, type: 3}
   m_Name: acidToaster
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItemDefinition
-  itemId: 6
+  itemId: 0
   displayName: acid toaster
   icon: {fileID: 21300000, guid: 9ac1b314fb577c641b716dc0ff91635a, type: 3}

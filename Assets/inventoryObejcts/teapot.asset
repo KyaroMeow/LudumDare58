@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1335c57c5ee8804f9f3f481c4cc754e, type: 3}
   m_Name: teapot
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItemDefinition
-  itemId: 13
+  itemId: 12
   displayName: teapot
   icon: {fileID: 21300000, guid: 8936feffab7a2de4facfba5628959d29, type: 3}
