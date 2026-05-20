@@ -21,4 +21,6 @@ MonoBehaviour:
   wrongBarcodeChance: 0.1
   defectChance: 0.1
   scratchesChance: 0.1
+  protocolViolationPenaltyDefault: 1
+  protocolViolationPenaltyHard: 1
   description: "\u041E\u0431\u044B\u0447\u043D\u0430\u044F \u0441\u043B\u043E\u0436\u043D\u043E\u0441\u0442\u044C"

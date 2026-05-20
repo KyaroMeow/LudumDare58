@@ -22868,8 +22868,8 @@ MonoBehaviour:
   cube: {fileID: 463202765}
   sphere: {fileID: 886665844}
   endCube: {fileID: 1596017786}
-  EnergySphere: {fileID: 0}
-  inventory: {fileID: 0}
+  EnergySphere: {fileID: 11400000, guid: e31d39192e355a148b33aa4ac76b50f7, type: 2}
+  inventory: {fileID: 1570937983}
 --- !u!4 &1959665714
 Transform:
   m_ObjectHideFlags: 0
