@@ -6,6 +6,7 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private GameObject[] itemPrefabs;
     [SerializeField] private Animator doorAnimator;
     [SerializeField] private GameObject bomb;
+    [SerializeField] private GameObject anomalyItem;
     public void SpawnBomb()
     {
         if (bomb != null)
@@ -13,6 +14,12 @@ public class ItemSpawner : MonoBehaviour
         GameObject spawnedBomb = Instantiate(bomb, transform.position, Quaternion.identity);
         GameManager.Instance.currentItem = spawnedBomb;
         }
+    }
+
+    public void SpawnAnomalyItem()
+    {
+        GameObject spawnedItem = Instantiate(anomalyItem, transform.position, Quaternion.identity);
+        GameManager.Instance.currentItem = spawnedItem;
     }
     public void SpawnItem()
     {

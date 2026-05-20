@@ -8,8 +8,8 @@ public class AnomallyController : MonoBehaviour
     [SerializeField] private GameObject cube;
     [SerializeField] private GameObject sphere;
     [SerializeField] private GameObject endCube;
-    [SerializeField] private BeglecAnim beglec;
-    [SerializeField] private GameObject choicePanel;
+    [SerializeField] private InventoryItemDefinition EnergySphere;
+    [SerializeField] private InventorySystem inventory;
 
     private int positionId = 0;
 
@@ -32,11 +32,7 @@ public class AnomallyController : MonoBehaviour
     }
     private void EndAnomally()
     {
-        if (beglec != null)
-        {
-        beglec.HandOut();
-        }
-        CutsceneManager.Instance.PlayBeglecCutscene(() => choicePanel.SetActive(true));
+        inventory.TryAddItem(EnergySphere);
     }
     private void GoToNextPosition()
     {
