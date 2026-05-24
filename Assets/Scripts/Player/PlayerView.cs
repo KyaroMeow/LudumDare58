@@ -70,7 +70,14 @@ public class PlayerView : MonoBehaviour
     {
         isPaused = !isPaused;
         pauseMenuUI.SetActive(isPaused);
-        Time.timeScale = isPaused ? 0f : 1f;
+        if(isPaused == false)
+        {
+            GameManager.Instance.ResumeGame();
+        }
+        else
+        {
+            GameManager.Instance.isTimerWork = false;
+        }
         AudioListener.pause = isPaused;
     }
     

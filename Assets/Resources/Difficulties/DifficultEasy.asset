@@ -15,8 +15,8 @@ MonoBehaviour:
   difficultyName: EASY
   timePerItem: 90
   maxMistakes: 15
-  anomalyItemNum: 10
-  bombNum: 20
+  anomalyItemNum: 2
+  bombNum: 6
   noBarcodeChance: 0.2
   wrongBarcodeChance: 0.1
   defectChance: 0.1

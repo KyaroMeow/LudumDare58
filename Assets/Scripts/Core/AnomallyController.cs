@@ -33,6 +33,8 @@ public class AnomallyController : MonoBehaviour
     private void EndAnomally()
     {
         inventory.TryAddItem(EnergySphere);
+        endCube.SetActive(false);
+        GameManager.Instance.SpawnItem();
     }
     private void GoToNextPosition()
     {

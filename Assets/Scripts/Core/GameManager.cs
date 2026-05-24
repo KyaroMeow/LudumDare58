@@ -273,7 +273,7 @@ public class GameManager : MonoBehaviour
 
     public void ResumeGame()
     {
-        Time.timeScale = 1f;
+        isTimerWork = SettingManager.Instance.timer;
         AudioListener.pause = false;
     }
 
