@@ -12,7 +12,6 @@ public class AmbientPipeSmokeController : MonoBehaviour
     {
         public Transform Point;
         public ParticleSystem[] Effects;
-        public AudioSource Audio;
         public float Weight;
         public bool Active;
     }
@@ -28,13 +27,6 @@ public class AmbientPipeSmokeController : MonoBehaviour
     [SerializeField] private float sizeMultiplier = 1.12f;
     [SerializeField] private Color minSmokeColor = new Color(0.58f, 0.61f, 0.64f, 0.24f);
     [SerializeField] private Color maxSmokeColor = new Color(0.88f, 0.9f, 0.92f, 0.42f);
-
-    [Header("Audio")]
-    [SerializeField] private AudioClip steamClip1;
-    [SerializeField] private AudioClip steamClip2;
-    [SerializeField] private Vector2 steamVolumeRange = new Vector2(0.14f, 0.24f);
-    [SerializeField] private Vector2 steamPitchRange = new Vector2(0.9f, 1.1f);
-    [SerializeField] private Vector2 steamStartOffsetRange = new Vector2(0f, 0.08f);
 
     [Header("Timing")]
     [SerializeField] private Vector2 idleDelayRange = new Vector2(3.8f, 7.2f);
@@ -146,21 +138,10 @@ public class AmbientPipeSmokeController : MonoBehaviour
             effects[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
-        AudioSource audio = pointObject.AddComponent<AudioSource>();
-        audio.playOnAwake = false;
-        audio.loop = false;
-        audio.spatialBlend = 1f;
-        audio.rolloffMode = AudioRolloffMode.Linear;
-        audio.minDistance = 1.2f;
-        audio.maxDistance = 8f;
-        audio.spread = 18f;
-        audio.reverbZoneMix = 0.9f;
-
         sources.Add(new SmokeSource
         {
             Point = pointObject.transform,
             Effects = effects,
-            Audio = audio,
             Weight = Mathf.Clamp01((pipe.position.y + 8f) / 24f) + 0.7f
         });
     }
@@ -196,7 +177,6 @@ public class AmbientPipeSmokeController : MonoBehaviour
             source.Effects[i].Play(true);
         }
 
-        PlaySteam(source.Audio);
         yield return new WaitForSeconds(Random.Range(activeDurationRange.x, activeDurationRange.y));
 
         for (int i = 0; i < source.Effects.Length; i++)
@@ -210,29 +190,6 @@ public class AmbientPipeSmokeController : MonoBehaviour
         }
 
         source.Active = false;
-    }
-
-    private void PlaySteam(AudioSource audio)
-    {
-        if (audio == null)
-        {
-            return;
-        }
-
-        AudioClip clip = steamClip1 == null ? steamClip2 : steamClip2 == null ? steamClip1 : (Random.value < 0.5f ? steamClip1 : steamClip2);
-        if (clip == null)
-        {
-            return;
-        }
-
-        audio.Stop();
-        audio.clip = clip;
-        audio.volume = Random.Range(steamVolumeRange.x, steamVolumeRange.y);
-        audio.pitch = Random.Range(steamPitchRange.x, steamPitchRange.y);
-        audio.spread = Random.Range(12f, 28f);
-        audio.reverbZoneMix = Random.Range(0.84f, 1f);
-        audio.time = Random.Range(steamStartOffsetRange.x, Mathf.Min(steamStartOffsetRange.y, clip.length * 0.2f));
-        audio.Play();
     }
 
     private void TuneParticleSystem(ParticleSystem particleSystem)

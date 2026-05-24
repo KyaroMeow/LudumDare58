@@ -10,6 +10,9 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     [SerializeField] private InventoryItemDefinition stealReward;
     [SerializeField] private bool canBeStolen = true;
     [SerializeField] private string itemName;
+    [SerializeField] private SfxEmitter sfxEmitter;
+    [SerializeField] private SfxCue pickupSfx;
+    [SerializeField] private SfxCue wrenchDisassembleSfx;
 
     private Vector3 originalPosition;
     private Quaternion originalRotation;
@@ -44,6 +47,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
         HUDManager.Instance.showItemScanHUD(GetComponent<Item>());
         PlayerItemInspection.Instance.BeginInspection(gameObject);
+        PlaySfx(pickupSfx);
     }
 
     public void StopInteract()
@@ -101,6 +105,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             return;
         }
 
+        if (toolType == ToolType.Wrench && toolTypeForDisassemble == toolType)
+        {
+            PlaySfx(wrenchDisassembleSfx);
+        }
+
         GameManager.Instance?.securitySystem?.ReportViolation($"Use tool {toolType}");
         Destroy(gameObject);
         GameManager.Instance.currentItem = null;
@@ -126,5 +135,24 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
                 cachedColliders[i].enabled = isEnabled;
             }
         }
+    }
+
+    private void PlaySfx(SfxCue cue)
+    {
+        if (cue == null)
+        {
+            return;
+        }
+
+        if (sfxEmitter == null)
+        {
+            sfxEmitter = GetComponent<SfxEmitter>();
+            if (sfxEmitter == null)
+            {
+                sfxEmitter = gameObject.AddComponent<SfxEmitter>();
+            }
+        }
+
+        sfxEmitter.Play(cue);
     }
 }

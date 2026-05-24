@@ -5,6 +5,8 @@ public class ItemSpawner : MonoBehaviour
     [Header("Item Prefabs")]
     [SerializeField] private GameObject[] itemPrefabs;
     [SerializeField] private Animator doorAnimator;
+    [SerializeField] private SfxCue conveyorDoorSfx;
+    [SerializeField] private SfxEmitter doorSfxEmitter;
     [SerializeField] private GameObject bomb;
     [SerializeField] private GameObject anomalyItem;
     public void SpawnBomb()
@@ -37,8 +39,47 @@ public class ItemSpawner : MonoBehaviour
 
         if(doorAnimator != null)
         {
-        doorAnimator.SetTrigger("open");
+            doorAnimator.SetTrigger("open");
+            PlayConveyorDoorSfx();
         }
+    }
+
+    private void PlayConveyorDoorSfx()
+    {
+        SfxEmitter emitter = ResolveDoorSfxEmitter();
+        if (emitter == null)
+        {
+            return;
+        }
+
+        emitter.PlayOneShot(conveyorDoorSfx);
+    }
+
+    private SfxEmitter ResolveDoorSfxEmitter()
+    {
+        if (doorSfxEmitter != null)
+        {
+            return doorSfxEmitter;
+        }
+
+        if (doorAnimator != null)
+        {
+            doorSfxEmitter = doorAnimator.GetComponent<SfxEmitter>();
+            if (doorSfxEmitter == null)
+            {
+                doorSfxEmitter = doorAnimator.gameObject.AddComponent<SfxEmitter>();
+            }
+
+            return doorSfxEmitter;
+        }
+
+        doorSfxEmitter = GetComponent<SfxEmitter>();
+        if (doorSfxEmitter == null)
+        {
+            doorSfxEmitter = gameObject.AddComponent<SfxEmitter>();
+        }
+
+        return doorSfxEmitter;
     }
 
     private void SetupItem(GameObject itemObject)

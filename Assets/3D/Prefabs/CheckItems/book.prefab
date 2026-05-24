@@ -154,6 +154,45 @@ MonoBehaviour:
   stealReward: {fileID: 11400000, guid: 5d2332653ba07b74e8dd7cbc9b1baf82, type: 2}
   canBeStolen: 1
   itemName: book
+  sfxEmitter: {fileID: 0}
+  pickupSfx:
+    label: Item Pickup
+    clip: {fileID: 8300000, guid: 5ac5305be1f3df141948d7556afb3f89, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.35
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  wrenchDisassembleSfx:
+    label: Wrench Disassemble
+    clip: {fileID: 8300000, guid: f17e088efa627bd4fa687bec79d91e28, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.5
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
 --- !u!1001 &341047084362741630
 PrefabInstance:
   m_ObjectHideFlags: 0

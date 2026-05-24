@@ -2927,13 +2927,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 244588932}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.44823092, z: -0, w: 0.8939178}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -13.948, y: 2.608, z: 0.273}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1862974596}
-  m_LocalEulerAnglesHint: {x: 0, y: -53.26, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &244588934
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3592,6 +3592,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cb2f8bb23342af4eb238597640a0a5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SubmitItemInteractable
+  sfxEmitter: {fileID: 0}
+  pressSfx:
+    label: Conveyor Side Button Press
+    clip: {fileID: 8300000, guid: 47713b7794161104a81faff5c433e16a, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.45
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
 --- !u!65 &322870455
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4722,6 +4742,133 @@ Transform:
   - {fileID: 1159780937}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &439670253
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 439670254}
+  - component: {fileID: 439670256}
+  - component: {fileID: 439670255}
+  m_Layer: 0
+  m_Name: PointLight01 (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &439670254
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439670253}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.054883145, y: 0.035352733, z: -0.70507437, w: 0.706122}
+  m_LocalPosition: {x: 16.77, y: 0.74, z: 31.94}
+  m_LocalScale: {x: 5.2731943, y: 5.2731967, z: 5.273196}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2146492399}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &439670255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439670253}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
+--- !u!108 &439670256
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 439670253}
+  m_Enabled: 1
+  serializedVersion: 12
+  m_Type: 2
+  m_Color: {r: 1, g: 0.37814653, b: 0, a: 1}
+  m_Intensity: 0.57
+  m_Range: 1.7190127
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!1 &450337911
 GameObject:
   m_ObjectHideFlags: 0
@@ -6814,6 +6961,133 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 603302626}
   m_CullTransparentMesh: 1
+--- !u!1 &609707225
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 609707226}
+  - component: {fileID: 609707228}
+  - component: {fileID: 609707227}
+  m_Layer: 0
+  m_Name: PointLight01 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &609707226
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 609707225}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.054883145, y: 0.035352733, z: -0.70507437, w: 0.706122}
+  m_LocalPosition: {x: -4.04, y: -0.07, z: 5.21}
+  m_LocalScale: {x: 5.2731943, y: 5.2731967, z: 5.273196}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2146492399}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &609707227
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 609707225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
+--- !u!108 &609707228
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 609707225}
+  m_Enabled: 1
+  serializedVersion: 12
+  m_Type: 2
+  m_Color: {r: 1, g: 0.37814653, b: 0, a: 1}
+  m_Intensity: 0.57
+  m_Range: 1.7190127
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!1 &611188577
 GameObject:
   m_ObjectHideFlags: 0
@@ -6900,6 +7174,27 @@ MonoBehaviour:
   playerCamera: {fileID: 806097100}
   inspectRotationSpeed: 500
   uvLighter: {fileID: 1820451786}
+  sfxEmitter: {fileID: 0}
+  rotateSfx:
+    label: Item Rotate Soft
+    clip: {fileID: 8300000, guid: 8314799a1a05c7140bd3cd5924540726, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.12
+    randomizeVolume: 1
+    volumeRange: {x: 0.08, y: 0.18}
+    pitch: 1
+    randomizePitch: 1
+    pitchRange: {x: 0.92, y: 1.08}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  rotateSfxCooldown: 0.18
 --- !u!1 &634552777
 GameObject:
   m_ObjectHideFlags: 0
@@ -7891,6 +8186,133 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 688655215}
   m_CullTransparentMesh: 1
+--- !u!1 &698159842
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 698159843}
+  - component: {fileID: 698159845}
+  - component: {fileID: 698159844}
+  m_Layer: 0
+  m_Name: AreaLight03 (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &698159843
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698159842}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -16.689, y: 2.608, z: 0.273}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1862974596}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &698159844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698159842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
+--- !u!108 &698159845
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 698159842}
+  m_Enabled: 1
+  serializedVersion: 12
+  m_Type: 2
+  m_Color: {r: 0, g: 0.20752141, b: 0.735849, a: 1}
+  m_Intensity: 4.14
+  m_Range: 10.2627
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 2
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 0.4911331, y: 0.46503544}
+  m_BounceIntensity: 4.79
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
 --- !u!1 &713654969
 GameObject:
   m_ObjectHideFlags: 0
@@ -8891,6 +9313,26 @@ MonoBehaviour:
   cameraEnabledIndicator: {fileID: 962985187}
   cameraDisabledIndicator: {fileID: 1647391123}
   generatorAnimator: {fileID: 0}
+  sfxEmitter: {fileID: 0}
+  cameraCaptureSfx:
+    label: Camera Capture
+    clip: {fileID: 8300000, guid: c1af5dc63e4d39942b09c22c318769c1, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.45
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
 --- !u!4 &760902352
 Transform:
   m_ObjectHideFlags: 0
@@ -10454,6 +10896,328 @@ SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 6943450121104613660, guid: 5de3cba4e8d56cb4ba2a9d379308250d, type: 3}
   m_PrefabInstance: {fileID: 906931654}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &910000100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 910000101}
+  - component: {fileID: 910000102}
+  m_Layer: 0
+  m_Name: GameAudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &910000101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &910000102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910000100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a8ce2c64c5ad456aa386b72f08285d7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneStartMusic: {fileID: 8300000, guid: 66410d0e4b55bd7468a80b27cb84a390, type: 3}
+  sceneStartMusicVolume: 0.084
+  playSceneStartMusicOnStart: 1
+  loopSceneStartMusic: 1
+  mainShiftMusic: {fileID: 8300000, guid: 34f73ce50ab5646408c8e783c7a16ee6, type: 3}
+  mainShiftMusicVolume: 0.274
+  loopMainShiftMusic: 1
+  musicCrossfadeDuration: 2.2
+  enableTimerMusicIntensity: 1
+  baseMusicPitch: 1
+  warningMusicPitch: 1.045
+  criticalMusicPitch: 1.11
+  normalMusicVolume: 0.326
+  warningMusicVolume: 0.471
+  criticalMusicVolume: 0.595
+  warningTimeThreshold: 35
+  criticalTimeThreshold: 10
+  pitchSmoothSpeed: 2.2
+  volumeSmoothSpeed: 2.6
+--- !u!1 &910003100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 910003101}
+  - component: {fileID: 910003102}
+  m_Layer: 0
+  m_Name: AmbientController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &910003101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910003100}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &910003102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 910003100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f7b3f5b91f74c118d932a2bd4d4fd19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ambientLayers:
+  - layerName: Industrial Fan Hum
+    clip: {fileID: 8300000, guid: 184acf7f2839883449b7b8ecf32e1440, type: 3}
+    playOnStart: 1
+    loop: 1
+    volume: 0.22
+    pitch: 0.92
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 543450652410082655}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 3
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  - layerName: Mechanical Nodes Hum
+    clip: {fileID: 8300000, guid: 310bfa62140a46c44b4943702a56a638, type: 3}
+    playOnStart: 1
+    loop: 1
+    volume: 0.2
+    pitch: 0.85
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 2065283625}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 3
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  - layerName: Neon Buzz
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 1
+    volume: 0.12
+    pitch: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 2
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  - layerName: Lamp Buzz
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 1
+    volume: 0.1
+    pitch: 0.98
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 2
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  - layerName: Ventilation Hum
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 1
+    volume: 0.18
+    pitch: 0.95
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 1
+    spatialBlend: 0.75
+    spatialTarget: {fileID: 0}
+    minDistance: 1.5
+    maxDistance: 12
+    fadeInDuration: 3
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  - layerName: Distant Metal Scrape
+    clip: {fileID: 8300000, guid: 290c31916bce45b418cc7058a9db298f, type: 3}
+    playOnStart: 1
+    loop: 0
+    volume: 0.18
+    pitch: 0.9
+    randomizeVolume: 1
+    volumeRange: {x: 0.1, y: 0.22}
+    randomizePitch: 1
+    pitchRange: {x: 0.82, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 2
+    fadeOutDuration: 1
+    isRandomOneShot: 1
+    randomIntervalRange: {x: 18, y: 45}
+  - layerName: Liquid Drops
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 0
+    volume: 0.12
+    pitch: 1
+    randomizeVolume: 1
+    volumeRange: {x: 0.06, y: 0.16}
+    randomizePitch: 1
+    pitchRange: {x: 0.9, y: 1.12}
+    randomStartTime: 0
+    startDelay: 0
+    spatial3D: 1
+    spatialBlend: 0.55
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 8
+    fadeInDuration: 2
+    fadeOutDuration: 1
+    isRandomOneShot: 1
+    randomIntervalRange: {x: 4, y: 14}
+  - layerName: Cooling Metal Ticks
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 0
+    volume: 0.1
+    pitch: 1
+    randomizeVolume: 1
+    volumeRange: {x: 0.04, y: 0.13}
+    randomizePitch: 1
+    pitchRange: {x: 0.85, y: 1.18}
+    randomStartTime: 0
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 2
+    fadeOutDuration: 1
+    isRandomOneShot: 1
+    randomIntervalRange: {x: 7, y: 22}
+  - layerName: Building Low Rumble
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 1
+    volume: 0.2
+    pitch: 0.75
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 4
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  - layerName: Basement Room Tone
+    clip: {fileID: 0}
+    playOnStart: 1
+    loop: 1
+    volume: 0.12
+    pitch: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.25, y: 0.45}
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    randomStartTime: 1
+    startDelay: 0
+    spatial3D: 0
+    spatialBlend: 0
+    spatialTarget: {fileID: 0}
+    minDistance: 1
+    maxDistance: 12
+    fadeInDuration: 3
+    fadeOutDuration: 1
+    isRandomOneShot: 0
+    randomIntervalRange: {x: 8, y: 20}
+  playOnStart: 1
+  masterVolume: 1
+  stopAllOnDisable: 1
+  showWarnings: 1
 --- !u!1 &910381580
 GameObject:
   m_ObjectHideFlags: 0
@@ -12700,6 +13464,27 @@ MonoBehaviour:
     selectedStateObject: {fileID: 1327655563}
   - markerType: 6
     selectedStateObject: {fileID: 1491693837}
+  sfxEmitter: {fileID: 0}
+  markerToggleSfx:
+    label: Marker Select
+    clip: {fileID: 8300000, guid: 914cdc2720feb5c42bcca48538649bcb, type: 3}
+    useVariations: 1
+    variations:
+    - {fileID: 8300000, guid: b06add8799fe60048893bfee7bdb0b00, type: 3}
+    loop: 0
+    volume: 0.32
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 1
+    pitchRange: {x: 0.96, y: 1.04}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
 --- !u!114 &1075652593
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14777,6 +15562,103 @@ MonoBehaviour:
   anomallyController: {fileID: 1959665713}
   itemMarkerUI: {fileID: 1075652592}
   securitySystem: {fileID: 760902351}
+  gameAudioManager: {fileID: 910000102}
+  sfxEmitter: {fileID: 0}
+  scannerStartSfx:
+    label: Scanner Start
+    clip: {fileID: 8300000, guid: b7fb6cd55a84c2e47b9c60b5984c7364, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.4
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  scannerErrorSfx:
+    label: Scanner Error
+    clip: {fileID: 8300000, guid: 1896755690288294181fc1859aef4b83, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.45
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  sortingSuccessSfx:
+    label: Sorting Success
+    clip: {fileID: 8300000, guid: 55d837f9c888ae04eaf608825f1a601c, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.55
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  sortingFailSfx:
+    label: Sorting Fail
+    clip: {fileID: 8300000, guid: b6cb499486cf94f428670d30bcaa60c3, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.55
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  punishmentSfx:
+    label: Punishment
+    clip: {fileID: 8300000, guid: 1d6eac9317945804ba29cef2d557ce50, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.75
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
 --- !u!4 &1252240131
 Transform:
   m_ObjectHideFlags: 0
@@ -15021,7 +15903,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1272766440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16184,7 +17066,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1843782489}
-  - {fileID: 1384463636}
   - {fileID: 1252240131}
   - {fileID: 1310990802}
   - {fileID: 1705855958}
@@ -16216,11 +17097,6 @@ MonoBehaviour:
   sizeMultiplier: 1.12
   minSmokeColor: {r: 0.58, g: 0.61, b: 0.64, a: 0.24}
   maxSmokeColor: {r: 0.88, g: 0.9, b: 0.92, a: 0.42}
-  steamClip1: {fileID: 8300000, guid: 7d24e94c57c4c434e9d664b03e07e04f, type: 3}
-  steamClip2: {fileID: 8300000, guid: 57e5c6f6718da7f408ef0146ad1d8914, type: 3}
-  steamVolumeRange: {x: 0.14, y: 0.24}
-  steamPitchRange: {x: 0.9, y: 1.1}
-  steamStartOffsetRange: {x: 0, y: 0.08}
   idleDelayRange: {x: 19, y: 25}
   activeDurationRange: {x: 0.45, y: 0.95}
   maxSimultaneousSources: 3
@@ -16559,93 +17435,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1371878741}
   m_CullTransparentMesh: 1
---- !u!1 &1384463635
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1384463636}
-  - component: {fileID: 1384463637}
-  m_Layer: 0
-  m_Name: AudioManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1384463636
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1384463635}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1336003855}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1384463637
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1384463635}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 450523287872e674195e57dbad5bf5dc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sounds:
-  - name: Wake up
-    clip: {fileID: 8300000, guid: fa90d265f2bee7648b9208de8b2df1a2, type: 3}
-    volume: 1
-    pitch: 1
-    loop: 0
-    source: {fileID: 0}
-  - name: Conveyor
-    clip: {fileID: 8300000, guid: 3b13185cdbac88647ab6130ae673f6be, type: 3}
-    volume: 0.1
-    pitch: 1
-    loop: 1
-    source: {fileID: 0}
-  - name: Doomed
-    clip: {fileID: 8300000, guid: d46a09a8c81dc074d954bdc3770418b6, type: 3}
-    volume: 1
-    pitch: 1
-    loop: 0
-    source: {fileID: 0}
-  - name: Monitor
-    clip: {fileID: 8300000, guid: 25bf32a58ff35b44988ae16780222d69, type: 3}
-    volume: 1
-    pitch: 1
-    loop: 0
-    source: {fileID: 0}
-  - name: DroneSound
-    clip: {fileID: 8300000, guid: 5f4130f835f8b4348ad686a004004cc1, type: 3}
-    volume: 1
-    pitch: 0.9
-    loop: 0
-    source: {fileID: 0}
-  - name: CorrectSort
-    clip: {fileID: 8300000, guid: 579008c6718dd5f4ca0b40b2c5898e25, type: 3}
-    volume: 1
-    pitch: 1
-    loop: 0
-    source: {fileID: 0}
-  - name: IncorrectSort
-    clip: {fileID: 8300000, guid: c1749e28f4862e44f95e765e0a05de2f, type: 3}
-    volume: 0.6
-    pitch: 1
-    loop: 0
-    source: {fileID: 0}
 --- !u!1 &1395077563
 GameObject:
   m_ObjectHideFlags: 0
@@ -18412,10 +19201,26 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 1959665713}
-          m_TargetAssemblyTypeName: AnomallyController, Assembly-CSharp
-          m_MethodName: ClickOnBall
-          m_Mode: 1
+        - m_Target: {fileID: 641866984}
+          m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+  - eventID: 1
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 641866984}
+          m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+          m_MethodName: SetActive
+          m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -20049,18 +20854,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1384463637}
-        m_TargetAssemblyTypeName: AudioManager, Assembly-CSharp
-        m_MethodName: Play
-        m_Mode: 5
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: Doomed
-          m_BoolArgument: 1
-        m_CallState: 2
       - m_Target: {fileID: 1252240130}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
         m_MethodName: CorrectSort
@@ -20271,7 +21064,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1734701120}
   - component: {fileID: 1734701121}
-  - component: {fileID: 1734701122}
   m_Layer: 0
   m_Name: Hands
   m_TagString: Untagged
@@ -20310,104 +21102,6 @@ MonoBehaviour:
   hand: {fileID: 906931658}
   burnFinger: {fileID: 2100000, guid: a35cb8448b865e84ea592d21cc985e3d, type: 2}
   animator: {fileID: 906931657}
-  audioSource: {fileID: 1734701122}
---- !u!82 &1734701122
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1734701119}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 386c2f62b1db7c54ba9fe27786fb1c7a, type: 3}
-  m_PlayOnAwake: 0
-  m_Volume: 0.5
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
 --- !u!1 &1754616360
 GameObject:
   m_ObjectHideFlags: 0
@@ -21593,6 +22287,7 @@ Transform:
   - {fileID: 396744429}
   - {fileID: 236142127}
   - {fileID: 244588933}
+  - {fileID: 698159843}
   - {fileID: 2061698383}
   - {fileID: 1520858235}
   m_Father: {fileID: 0}
@@ -22346,6 +23041,26 @@ MonoBehaviour:
   - {fileID: 762366456301422993, guid: 323e1397169e57a43814a203006ba551, type: 3}
   - {fileID: 6788298872375677185, guid: 7afccfa8694a4db4992c65c14fc7189f, type: 3}
   doorAnimator: {fileID: 1006615910}
+  conveyorDoorSfx:
+    label: 
+    clip: {fileID: 8300000, guid: 97a6dfa5c5a125743b8cd516c953dc77, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.544
+    randomizeVolume: 1
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 1
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  doorSfxEmitter: {fileID: 0}
   bomb: {fileID: 9005380443188864438, guid: 394f80c016aaf9240aa2b81051b368a2, type: 3}
   anomalyItem: {fileID: 8554604064987432285, guid: b31bc64bd6442f744b19c721194641ec, type: 3}
 --- !u!1 &1947942767
@@ -24116,6 +24831,11 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!4 &2065283625 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4701076407211358675, guid: 27555ff68558bb84ca802c15e4293f4f, type: 3}
+  m_PrefabInstance: {fileID: 7341973670027023097}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2073754972
 GameObject:
   m_ObjectHideFlags: 0
@@ -24612,6 +25332,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2140711442}
   m_CullTransparentMesh: 1
+--- !u!4 &2146492399 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4471893721579918016, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+  m_PrefabInstance: {fileID: 4349094745952950407}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &77029199291467201 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2172445226347571481, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
@@ -25877,6 +26602,10 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 1.54
       objectReference: {fileID: 0}
+    - target: {fileID: 2236753311256949556, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_Range
+      value: 1.7190127
+      objectReference: {fileID: 0}
     - target: {fileID: 2970749427346329850, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       propertyPath: destroyAfterSeconds
       value: 6
@@ -25904,6 +26633,18 @@ PrefabInstance:
     - target: {fileID: 3602687440498687416, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       propertyPath: m_LocalPosition.z
       value: -2.48
+      objectReference: {fileID: 0}
+    - target: {fileID: 4242343612892976693, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.17
+      objectReference: {fileID: 0}
+    - target: {fileID: 4242343612892976693, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.16
+      objectReference: {fileID: 0}
+    - target: {fileID: 4242343612892976693, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1.26
       objectReference: {fileID: 0}
     - target: {fileID: 4446003531509703824, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       propertyPath: m_LocalPosition.y
@@ -26014,6 +26755,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7437149999082959812, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       insertIndex: -1
       addedObject: {fileID: 323708435}
+    - targetCorrespondingSourceObject: {fileID: 4471893721579918016, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      insertIndex: 1
+      addedObject: {fileID: 609707226}
+    - targetCorrespondingSourceObject: {fileID: 4471893721579918016, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 439670254}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
 --- !u!4 &4349094745952950408 stripped
@@ -26572,6 +27319,45 @@ MonoBehaviour:
   - toasterDanger
   - teapot
   - pleer
+  sfxEmitter: {fileID: 0}
+  bestiaryEntryAddedSfx:
+    label: Bestiary Entry Added
+    clip: {fileID: 8300000, guid: d7583d49ba26c7240a17d5083f0058f1, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.38
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
+  uiTapSfx:
+    label: Tablet UI Tap
+    clip: {fileID: 8300000, guid: 43cd87f0dedbd6244bc1a40c048e763e, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.3
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 1
+    pitchRange: {x: 0.98, y: 1.03}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 1
+    stopPreviousLoopBeforeStart: 0
 --- !u!114 &6597064081679800428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27305,3 +28091,5 @@ SceneRoots:
   - {fileID: 1631887023}
   - {fileID: 1962649071}
   - {fileID: 430867858}
+  - {fileID: 910000101}
+  - {fileID: 910003101}

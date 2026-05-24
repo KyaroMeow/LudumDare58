@@ -6,7 +6,6 @@ public class Hands : MonoBehaviour
     [SerializeField] private SkinnedMeshRenderer hand;
     [SerializeField] private Material burnFinger;
     [SerializeField] private Animator animator;
-    [SerializeField] private AudioSource audioSource;
     private int[] fingersNum = {3, 0, 2, 4, 5};
     private int fingerID = 0;
 
@@ -32,6 +31,5 @@ public class Hands : MonoBehaviour
         hand.materials = currentMaterials;
         fingerID++;
         yield return new WaitForSeconds(2f);
-        audioSource.Play();
     }
 }

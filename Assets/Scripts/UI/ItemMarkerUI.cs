@@ -19,6 +19,8 @@ public class ItemMarkerUI : MonoBehaviour
     }
 
     [SerializeField] private MarkerVisualBinding[] markerVisuals;
+    [SerializeField] private SfxEmitter sfxEmitter;
+    [SerializeField] private SfxCue markerToggleSfx;
 
     private readonly HashSet<ItemMarkerType> selectedMarkers = new HashSet<ItemMarkerType>();
     private Item currentItem;
@@ -133,6 +135,7 @@ public class ItemMarkerUI : MonoBehaviour
 
         currentItem.SetMarkerSelected(markerType, selectedMarkers.Contains(markerType));
         RefreshVisuals();
+        PlaySfx(markerToggleSfx);
     }
 
     private void ClearSelection()
@@ -166,5 +169,24 @@ public class ItemMarkerUI : MonoBehaviour
         }
 
         RefreshVisuals();
+    }
+
+    private void PlaySfx(SfxCue cue)
+    {
+        if (cue == null)
+        {
+            return;
+        }
+
+        if (sfxEmitter == null)
+        {
+            sfxEmitter = GetComponent<SfxEmitter>();
+            if (sfxEmitter == null)
+            {
+                sfxEmitter = gameObject.AddComponent<SfxEmitter>();
+            }
+        }
+
+        sfxEmitter.Play(cue);
     }
 }

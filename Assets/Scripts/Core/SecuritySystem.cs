@@ -23,6 +23,8 @@ public class SecuritySystem : MonoBehaviour
     [SerializeField] private GameObject cameraEnabledIndicator;
     [SerializeField] private GameObject cameraDisabledIndicator;
     [SerializeField] private Animator generatorAnimator;
+    [SerializeField] private SfxEmitter sfxEmitter;
+    [SerializeField] private SfxCue cameraCaptureSfx;
 
     private Coroutine autoShutdownRoutine;
     private Coroutine shutdownRoutine;
@@ -59,6 +61,7 @@ public class SecuritySystem : MonoBehaviour
 
         int penalty = GetViolationPenalty();
         Debug.Log($"Protocol violation detected: {actionName}. Penalty: {penalty}");
+        PlaySfx(cameraCaptureSfx);
         GameManager.Instance?.ApplyPenalty(penalty);
     }
 
@@ -165,5 +168,24 @@ public class SecuritySystem : MonoBehaviour
         return difficulty.difficultyName.ToUpperInvariant() == "HARD"
             ? difficulty.protocolViolationPenaltyHard
             : difficulty.protocolViolationPenaltyDefault;
+    }
+
+    private void PlaySfx(SfxCue cue)
+    {
+        if (cue == null)
+        {
+            return;
+        }
+
+        if (sfxEmitter == null)
+        {
+            sfxEmitter = GetComponent<SfxEmitter>();
+            if (sfxEmitter == null)
+            {
+                sfxEmitter = gameObject.AddComponent<SfxEmitter>();
+            }
+        }
+
+        sfxEmitter.Play(cue);
     }
 }

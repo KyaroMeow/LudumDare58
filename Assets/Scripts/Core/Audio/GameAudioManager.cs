@@ -1,0 +1,265 @@
+using System.Collections;
+using UnityEngine;
+
+[DisallowMultipleComponent]
+public class GameAudioManager : MonoBehaviour
+{
+    private enum MusicState
+    {
+        None,
+        SceneStart,
+        MainShift
+    }
+
+    [Header("Scene Start Music")]
+    [SerializeField] private AudioClip sceneStartMusic;
+    [Range(0f, 1f)]
+    [SerializeField] private float sceneStartMusicVolume = 0.35f;
+    [SerializeField] private bool playSceneStartMusicOnStart = true;
+    [SerializeField] private bool loopSceneStartMusic = true;
+
+    [Header("Main Shift Music")]
+    [SerializeField] private AudioClip mainShiftMusic;
+    [Range(0f, 1f)]
+    [SerializeField] private float mainShiftMusicVolume = 0.65f;
+    [SerializeField] private bool loopMainShiftMusic = true;
+    [SerializeField] private float musicCrossfadeDuration = 1.5f;
+
+    [Header("Timer Music Intensity")]
+    [SerializeField] private bool enableTimerMusicIntensity = true;
+    [Range(0.85f, 1.2f)]
+    [SerializeField] private float baseMusicPitch = 1.0f;
+    [Range(0.85f, 1.2f)]
+    [SerializeField] private float warningMusicPitch = 1.06f;
+    [Range(0.85f, 1.2f)]
+    [SerializeField] private float criticalMusicPitch = 1.14f;
+
+    [Range(0f, 1f)]
+    [SerializeField] private float normalMusicVolume = 0.65f;
+    [Range(0f, 1f)]
+    [SerializeField] private float warningMusicVolume = 0.75f;
+    [Range(0f, 1f)]
+    [SerializeField] private float criticalMusicVolume = 0.9f;
+
+    [SerializeField] private float warningTimeThreshold = 30f;
+    [SerializeField] private float criticalTimeThreshold = 10f;
+    [SerializeField] private float pitchSmoothSpeed = 3f;
+    [SerializeField] private float volumeSmoothSpeed = 3f;
+
+    private AudioSource musicSourceA;
+    private AudioSource musicSourceB;
+    private AudioSource activeMusicSource;
+    private AudioSource inactiveMusicSource;
+    private Coroutine crossfadeRoutine;
+    private MusicState currentMusicState = MusicState.None;
+    private float targetMusicPitch = 1f;
+    private float targetMusicVolume = 0.65f;
+    private bool isCrossfading;
+
+    private void Awake()
+    {
+        musicSourceA = CreateMusicSource("Music Source A");
+        musicSourceB = CreateMusicSource("Music Source B");
+        activeMusicSource = musicSourceA;
+        inactiveMusicSource = musicSourceB;
+        targetMusicPitch = Mathf.Clamp(baseMusicPitch, 0.85f, 1.2f);
+        targetMusicVolume = Mathf.Clamp01(sceneStartMusicVolume);
+    }
+
+    private void Start()
+    {
+        if (playSceneStartMusicOnStart)
+        {
+            PlaySceneStartMusic();
+        }
+    }
+
+    private void Update()
+    {
+        if (activeMusicSource == null || !activeMusicSource.isPlaying)
+        {
+            return;
+        }
+
+        activeMusicSource.pitch = Mathf.Lerp(activeMusicSource.pitch, targetMusicPitch, Time.deltaTime * pitchSmoothSpeed);
+
+        if (!isCrossfading)
+        {
+            activeMusicSource.volume = Mathf.Lerp(activeMusicSource.volume, targetMusicVolume, Time.deltaTime * volumeSmoothSpeed);
+        }
+    }
+
+    private AudioSource CreateMusicSource(string sourceName)
+    {
+        GameObject sourceObject = new GameObject(sourceName);
+        sourceObject.transform.SetParent(transform, false);
+
+        AudioSource source = sourceObject.AddComponent<AudioSource>();
+        source.playOnAwake = false;
+        source.loop = true;
+        source.spatialBlend = 0f;
+        source.volume = 0f;
+        source.pitch = 1f;
+        return source;
+    }
+
+    private void PlaySceneStartMusic()
+    {
+        if (sceneStartMusic == null)
+        {
+            return;
+        }
+
+        StopCrossfade();
+        ConfigureMusicSource(activeMusicSource, sceneStartMusic, loopSceneStartMusic);
+        inactiveMusicSource.Stop();
+        inactiveMusicSource.clip = null;
+
+        activeMusicSource.volume = Mathf.Clamp01(sceneStartMusicVolume);
+        activeMusicSource.pitch = Mathf.Clamp(baseMusicPitch, 0.85f, 1.2f);
+        activeMusicSource.Play();
+
+        currentMusicState = MusicState.SceneStart;
+        ApplyTargetMusicIntensity(baseMusicPitch, sceneStartMusicVolume);
+    }
+
+    public void StartShiftMusic()
+    {
+        currentMusicState = MusicState.MainShift;
+        ApplyTargetMusicIntensity(baseMusicPitch, normalMusicVolume);
+
+        if (mainShiftMusic == null)
+        {
+            return;
+        }
+
+        StopCrossfade();
+        crossfadeRoutine = StartCoroutine(CrossfadeTo(mainShiftMusic, mainShiftMusicVolume, loopMainShiftMusic, musicCrossfadeDuration));
+    }
+
+    public void UpdateTimerMusicIntensity(float remainingTime, float totalTime)
+    {
+        if (!enableTimerMusicIntensity || currentMusicState != MusicState.MainShift)
+        {
+            return;
+        }
+
+        if (totalTime <= 0f)
+        {
+            ApplyTargetMusicIntensity(baseMusicPitch, normalMusicVolume);
+            return;
+        }
+
+        float targetPitch = baseMusicPitch;
+        float targetVolume = normalMusicVolume;
+
+        if (remainingTime <= criticalTimeThreshold)
+        {
+            float criticalT = Mathf.InverseLerp(criticalTimeThreshold, 0f, Mathf.Max(0f, remainingTime));
+            targetPitch = Mathf.Lerp(warningMusicPitch, criticalMusicPitch, criticalT);
+            targetVolume = Mathf.Lerp(warningMusicVolume, criticalMusicVolume, criticalT);
+        }
+        else if (remainingTime <= warningTimeThreshold)
+        {
+            float warningT = Mathf.InverseLerp(warningTimeThreshold, criticalTimeThreshold, remainingTime);
+            targetPitch = Mathf.Lerp(baseMusicPitch, warningMusicPitch, warningT);
+            targetVolume = Mathf.Lerp(normalMusicVolume, warningMusicVolume, warningT);
+        }
+
+        ApplyTargetMusicIntensity(targetPitch, targetVolume);
+    }
+
+    public void ResetTimerMusicIntensity()
+    {
+        ApplyTargetMusicIntensity(baseMusicPitch, normalMusicVolume);
+    }
+
+    public void StopMusic(float fadeDuration = 1f)
+    {
+        StopCrossfade();
+        crossfadeRoutine = StartCoroutine(CrossfadeTo(null, 0f, false, fadeDuration));
+        currentMusicState = MusicState.None;
+    }
+
+    private IEnumerator CrossfadeTo(AudioClip clip, float targetVolume, bool loop, float duration)
+    {
+        isCrossfading = true;
+
+        AudioSource fromSource = activeMusicSource;
+        AudioSource toSource = inactiveMusicSource;
+        float fromStartVolume = fromSource != null ? fromSource.volume : 0f;
+        float targetClampedVolume = Mathf.Clamp01(targetVolume);
+
+        if (clip != null)
+        {
+            ConfigureMusicSource(toSource, clip, loop);
+            toSource.volume = 0f;
+            toSource.pitch = Mathf.Clamp(baseMusicPitch, 0.85f, 1.2f);
+            toSource.Play();
+        }
+
+        float elapsed = 0f;
+        float safeDuration = Mathf.Max(0.01f, duration);
+        while (elapsed < safeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / safeDuration);
+
+            if (fromSource != null)
+            {
+                fromSource.volume = Mathf.Lerp(fromStartVolume, 0f, t);
+            }
+
+            if (clip != null)
+            {
+                toSource.volume = Mathf.Lerp(0f, targetClampedVolume, t);
+            }
+
+            yield return null;
+        }
+
+        if (fromSource != null)
+        {
+            fromSource.Stop();
+            fromSource.clip = null;
+            fromSource.volume = 0f;
+        }
+
+        if (clip != null)
+        {
+            toSource.volume = targetClampedVolume;
+            activeMusicSource = toSource;
+            inactiveMusicSource = fromSource;
+            ApplyTargetMusicIntensity(baseMusicPitch, targetClampedVolume);
+        }
+
+        isCrossfading = false;
+        crossfadeRoutine = null;
+    }
+
+    private void ApplyTargetMusicIntensity(float targetPitch, float targetVolume)
+    {
+        targetMusicPitch = Mathf.Clamp(targetPitch, 0.85f, 1.2f);
+        targetMusicVolume = Mathf.Clamp01(targetVolume);
+    }
+
+    private void ConfigureMusicSource(AudioSource source, AudioClip clip, bool loop)
+    {
+        source.clip = clip;
+        source.loop = loop;
+        source.playOnAwake = false;
+        source.spatialBlend = 0f;
+    }
+
+    private void StopCrossfade()
+    {
+        if (crossfadeRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(crossfadeRoutine);
+        crossfadeRoutine = null;
+        isCrossfading = false;
+    }
+}

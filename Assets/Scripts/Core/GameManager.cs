@@ -27,6 +27,13 @@ public class GameManager : MonoBehaviour
     public AnomallyController anomallyController;
     public ItemMarkerUI itemMarkerUI;
     public SecuritySystem securitySystem;
+    [SerializeField] private GameAudioManager gameAudioManager;
+    [SerializeField] private SfxEmitter sfxEmitter;
+    [SerializeField] private SfxCue scannerStartSfx;
+    [SerializeField] private SfxCue scannerErrorSfx;
+    [SerializeField] private SfxCue sortingSuccessSfx;
+    [SerializeField] private SfxCue sortingFailSfx;
+    [SerializeField] private SfxCue punishmentSfx;
 
     private void Awake()
     {
@@ -42,15 +49,11 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        AudioManager.Instance.Play("DroneSound");
+        ResolveGameAudioManager();
+
         if(CutsceneManager.Instance != null)
         {
-        CutsceneManager.Instance.PlayStartCutscene(() =>
-        {
-            AudioManager.Instance.Play("Wake up");
-            AudioManager.Instance.Stop("DroneSound");
-            AudioManager.Instance.Play("Conveyor");
-        });
+            CutsceneManager.Instance.PlayStartCutscene();
         }
     }
 
@@ -71,6 +74,8 @@ public class GameManager : MonoBehaviour
     {
         isGameStarted = true;
         isTimerWork = true;
+        ResolveGameAudioManager();
+        gameAudioManager?.StartShiftMusic();
         SpawnItem();
     }
 
@@ -89,6 +94,7 @@ public class GameManager : MonoBehaviour
         if (currentTime > 0)
         {
             currentTime -= Time.deltaTime;
+            gameAudioManager?.UpdateTimerMusicIntensity(currentTime, SettingManager.Instance.currentDifficulty.timePerItem);
         }
         else
         {
@@ -105,6 +111,11 @@ public class GameManager : MonoBehaviour
     {
         scaner.SetActive(!scaner.activeSelf);
         scanerOnTable.SetActive(!scaner.activeSelf);
+
+        if (scaner.activeSelf)
+        {
+            PlaySfx(scannerStartSfx);
+        }
     }
 
     public void ToggleScanerOff()
@@ -189,12 +200,23 @@ public class GameManager : MonoBehaviour
 
     public void ShowScanResult()
     {
-        scanUI.ShowResult(currentItem.GetComponent<Item>().barcodeShowsGood);
+        Item item = currentItem.GetComponent<Item>();
+        if (item == null)
+        {
+            return;
+        }
+
+        scanUI.ShowResult(item.barcodeShowsGood);
+
+        if (!item.barcodeShowsGood)
+        {
+            PlaySfx(scannerErrorSfx);
+        }
     }
 
     public void CorrectSort(int additionalMistakes = 0)
     {
-        AudioManager.Instance.Play("CorrectSort");
+        PlaySfx(sortingSuccessSfx);
         lights.ChangeColorGreen();
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
@@ -212,7 +234,7 @@ public class GameManager : MonoBehaviour
 
     public void WrongSort(int mistakesToAdd = 1)
     {
-        AudioManager.Instance.Play("IncorrectSort");
+        PlaySfx(sortingFailSfx);
         lights.ChangeColorRed();
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
@@ -229,6 +251,7 @@ public class GameManager : MonoBehaviour
         {
             if (mistakeIndex % mistakesPerDamage == 0)
             {
+                PlaySfx(punishmentSfx);
                 hands.PlayTakeDamage();
             }
         }
@@ -268,7 +291,37 @@ public class GameManager : MonoBehaviour
         {
             itemSpawner.SpawnItem();
             currentTime = SettingManager.Instance.currentDifficulty.timePerItem;
+            gameAudioManager?.ResetTimerMusicIntensity();
         }
+    }
+
+    private void ResolveGameAudioManager()
+    {
+        if (gameAudioManager != null)
+        {
+            return;
+        }
+
+        gameAudioManager = FindFirstObjectByType<GameAudioManager>();
+    }
+
+    private void PlaySfx(SfxCue cue)
+    {
+        if (cue == null)
+        {
+            return;
+        }
+
+        if (sfxEmitter == null)
+        {
+            sfxEmitter = GetComponent<SfxEmitter>();
+            if (sfxEmitter == null)
+            {
+                sfxEmitter = gameObject.AddComponent<SfxEmitter>();
+            }
+        }
+
+        sfxEmitter.Play(cue);
     }
 
     public void ResumeGame()
