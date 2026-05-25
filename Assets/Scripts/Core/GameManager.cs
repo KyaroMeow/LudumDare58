@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
@@ -131,37 +132,30 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        hands.PlayPressButton();
-
         Item item = currentItem.GetComponent<Item>();
         if (item == null)
         {
+            Debug.LogWarning("Cannot submit current item because it has no Item component.");
             return;
         }
 
-        int missedMarkers = item.GetMissedPlayerMarkerCount();
-        int markerPenalty = GetMarkerPenalty(missedMarkers);
-        bool hasNoMarkers = !item.HasAnyPlayerMarkers();
-        ItemMarkerUI.MarkerVerdict verdict = ResolveMarkerVerdict(item);
+        bool hasAcceptMarker = item.IsMarkerSelected(ItemMarkerType.Ideal);
+        bool hasRejectMarker = item.IsMarkerSelected(ItemMarkerType.Defective);
 
-        lastMissedMarkers = missedMarkers;
-
-        bool selectedVariant = ResolveSelectedVariant(verdict, item);
-        int totalPenalty = markerPenalty + (hasNoMarkers ? 1 : 0);
-
-        if (selectedVariant == item.isDefective)
+        if (!hasAcceptMarker && !hasRejectMarker)
         {
-            CorrectSort(totalPenalty);
-        }
-        else
-        {
-            WrongSort(1 + totalPenalty);
+            Debug.LogWarning("Item submission blocked: select either Accept/Not Defective or Reject/Defective before submitting.");
+            return;
         }
 
-        if (hasNoMarkers || missedMarkers > 0)
+        if (hasAcceptMarker && hasRejectMarker)
         {
-            Debug.Log($"Submit item. No markers: {hasNoMarkers}. Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {item.BuildPlayerMarkersDebugText()}");
+            Debug.LogWarning("Item submission blocked: conflicting final markers selected. Choose either Accept/Not Defective or Reject/Defective, not both.");
+            return;
         }
+
+        hands?.PlayPressButton();
+        ProcessSortSubmission(item, hasRejectMarker);
     }
 
     public void SortItem(bool selectedVariant)
@@ -171,31 +165,27 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        hands.PlayPressButton();
         Item item = currentItem.GetComponent<Item>();
         if (item == null)
         {
+            Debug.LogWarning("Cannot sort current item because it has no Item component.");
             return;
         }
 
-        int missedMarkers = item.GetMissedPlayerMarkerCount();
-        int markerPenalty = GetMarkerPenalty(missedMarkers);
-        lastMissedMarkers = missedMarkers;
-
-        bool itemVariant = item.isDefective;
-        if (selectedVariant == itemVariant)
+        if (HasConflictingFinalMarkers(item))
         {
-            CorrectSort(markerPenalty);
-        }
-        else
-        {
-            WrongSort(1 + markerPenalty);
+            Debug.LogWarning("Item sorting blocked: conflicting final markers selected. Choose either Accept/Not Defective or Reject/Defective, not both.");
+            return;
         }
 
-        if (missedMarkers > 0)
+        if (HasOppositeFinalMarker(item, selectedVariant))
         {
-            Debug.Log($"Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {item.BuildPlayerMarkersDebugText()}");
+            Debug.LogWarning("Item sorting blocked: selected category conflicts with the final marker on the item.");
+            return;
         }
+
+        hands?.PlayPressButton();
+        ProcessSortSubmission(item, selectedVariant);
     }
 
     public void ShowScanResult()
@@ -382,47 +372,56 @@ public class GameManager : MonoBehaviour
         return missedMarkers * penaltyPerMarker;
     }
 
-    private bool ResolveSelectedVariant(ItemMarkerUI.MarkerVerdict verdict, Item item)
+    private void ProcessSortSubmission(Item item, bool selectedVariant)
     {
-        switch (verdict)
+        if (item == null)
         {
-            case ItemMarkerUI.MarkerVerdict.Accept:
-                return false;
-            case ItemMarkerUI.MarkerVerdict.Reject:
-                return true;
-            default:
-                return item.isDefective;
+            return;
+        }
+
+        int missedMarkers = GetMissedMarkerCountForSubmission(item, selectedVariant);
+        int markerPenalty = GetMarkerPenalty(missedMarkers);
+        lastMissedMarkers = missedMarkers;
+
+        if (selectedVariant == item.isDefective)
+        {
+            CorrectSort(markerPenalty);
+        }
+        else
+        {
+            WrongSort(1 + markerPenalty);
+        }
+
+        if (missedMarkers > 0)
+        {
+            Debug.Log($"Missed markers: {missedMarkers}. Expected: {item.BuildExpectedMarkersDebugText()}. Selected: {item.BuildPlayerMarkersDebugText()}");
         }
     }
 
-    private ItemMarkerUI.MarkerVerdict ResolveMarkerVerdict(Item item)
+    private int GetMissedMarkerCountForSubmission(Item item, bool selectedVariant)
     {
-        if (item == null || !item.HasAnyPlayerMarkers())
+        List<ItemMarkerType> submittedMarkers = new List<ItemMarkerType>(item.GetPlayerMarkedMarkers());
+        ItemMarkerType finalMarker = selectedVariant ? ItemMarkerType.Defective : ItemMarkerType.Ideal;
+
+        if (!submittedMarkers.Contains(finalMarker))
         {
-            return ItemMarkerUI.MarkerVerdict.None;
+            submittedMarkers.Add(finalMarker);
         }
 
-        if (item.IsMarkerSelected(ItemMarkerType.Ideal))
-        {
-            return ItemMarkerUI.MarkerVerdict.Accept;
-        }
+        return item.GetMissedMarkerCount(submittedMarkers);
+    }
 
-        if (item.IsMarkerSelected(ItemMarkerType.Defective) ||
-            item.IsMarkerSelected(ItemMarkerType.Scratch) ||
-            item.IsMarkerSelected(ItemMarkerType.Stain) ||
-            item.IsMarkerSelected(ItemMarkerType.LegitimacyNegative) ||
-            item.IsMarkerSelected(ItemMarkerType.Anomaly) ||
-            item.IsMarkerSelected(ItemMarkerType.MassProduct))
-        {
-            return ItemMarkerUI.MarkerVerdict.Reject;
-        }
+    private bool HasConflictingFinalMarkers(Item item)
+    {
+        return item.IsMarkerSelected(ItemMarkerType.Ideal) &&
+               item.IsMarkerSelected(ItemMarkerType.Defective);
+    }
 
-        if (item.IsMarkerSelected(ItemMarkerType.LegitimacyPositive))
-        {
-            return ItemMarkerUI.MarkerVerdict.Accept;
-        }
-
-        return ItemMarkerUI.MarkerVerdict.None;
+    private bool HasOppositeFinalMarker(Item item, bool selectedVariant)
+    {
+        return selectedVariant
+            ? item.IsMarkerSelected(ItemMarkerType.Ideal)
+            : item.IsMarkerSelected(ItemMarkerType.Defective);
     }
 
     private void CompleteCurrentItem()
