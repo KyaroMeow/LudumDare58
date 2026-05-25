@@ -159,9 +159,10 @@ public class SecuritySystem : MonoBehaviour
 
     private int GetViolationPenalty()
     {
-        Difficult difficulty = SettingManager.Instance.currentDifficulty;
+        Difficult difficulty = SettingManager.EnsureInstance()?.currentDifficulty;
         if (difficulty == null)
         {
+            Debug.LogWarning("Using default protocol violation penalty because current difficulty is not assigned.");
             return 5;
         }
 

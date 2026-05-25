@@ -48,15 +48,30 @@ public class SettingButtons : MonoBehaviour
     }
     public void SaveSettings()
     {
-        SettingManager.Instance.SetDifficulty(diffText.text);
-        SettingManager.Instance.volumeValue = volumeSlider.value;
-        if (currentTimerIndex == 0)
+        SettingManager settings = SettingManager.EnsureInstance();
+        if (settings == null)
         {
-            SettingManager.Instance.timer = true;
+            return;
+        }
+
+        settings.SetDifficulty(diffText.text);
+
+        if (volumeSlider != null)
+        {
+            settings.volumeValue = volumeSlider.value;
         }
         else
         {
-            SettingManager.Instance.timer = false;
+            Debug.LogWarning("Cannot save volume because volumeSlider is not assigned on SettingButtons.");
+        }
+
+        if (currentTimerIndex == 0)
+        {
+            settings.timer = true;
+        }
+        else
+        {
+            settings.timer = false;
         }
     }
     private void UpdateDisplay()

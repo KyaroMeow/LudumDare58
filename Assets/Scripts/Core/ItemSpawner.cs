@@ -92,6 +92,13 @@ public class ItemSpawner : MonoBehaviour
         Item item = itemObject.GetComponent<Item>();
         if (item == null) return;
 
+        Difficult difficulty = SettingManager.EnsureInstance()?.currentDifficulty;
+        if (difficulty == null)
+        {
+            Debug.LogError("Cannot initialize spawned item because current difficulty is not assigned.");
+            return;
+        }
+
         bool hasStain = false;
         bool hasBarcode = true;
         bool barcodeShowsGood = true;
@@ -101,14 +108,14 @@ public class ItemSpawner : MonoBehaviour
         float roll = Random.Range(0f, 1f);
 
         // РџСЏС‚РЅРѕ
-        if (roll <= SettingManager.Instance.currentDifficulty.defectChance)
+        if (roll <= difficulty.defectChance)
         {
             hasStain = true;
         }
 
         // РћС‚СЃСѓС‚СЃС‚РІРёРµ С€С‚СЂРёС…РєРѕРґР°
         roll = Random.Range(0f, 1f);
-        if (roll <= SettingManager.Instance.currentDifficulty.noBarcodeChance)
+        if (roll <= difficulty.noBarcodeChance)
         {
             hasBarcode = false;
         }
@@ -117,7 +124,7 @@ public class ItemSpawner : MonoBehaviour
         if (hasBarcode)
         {
             roll = Random.Range(0f, 1f);
-            if (roll <= SettingManager.Instance.currentDifficulty.wrongBarcodeChance)
+            if (roll <= difficulty.wrongBarcodeChance)
             {
                 barcodeShowsGood = false;
             }
@@ -125,7 +132,7 @@ public class ItemSpawner : MonoBehaviour
 
         // Р¦Р°СЂР°РїРёРЅС‹
         roll = Random.Range(0f, 1f);
-        if (roll <= SettingManager.Instance.currentDifficulty.scratchesChance)
+        if (roll <= difficulty.scratchesChance)
         {
             hasScratches = true;
         }

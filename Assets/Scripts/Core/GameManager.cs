@@ -50,6 +50,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        SettingManager.EnsureInstance();
         ResolveGameAudioManager();
 
         if(CutsceneManager.Instance != null)
@@ -73,6 +74,12 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
+        Difficult difficulty = GetCurrentDifficulty("start the game");
+        if (difficulty == null)
+        {
+            return;
+        }
+
         isGameStarted = true;
         isTimerWork = true;
         ResolveGameAudioManager();
@@ -87,15 +94,23 @@ public class GameManager : MonoBehaviour
 
     private void UpdateTimer()
     {
-        if (!isTimerWork || !SettingManager.Instance.timer)
+        SettingManager settings = SettingManager.EnsureInstance();
+        if (!isTimerWork || settings == null || !settings.timer)
         {
+            return;
+        }
+
+        Difficult difficulty = GetCurrentDifficulty("update the timer");
+        if (difficulty == null)
+        {
+            isTimerWork = false;
             return;
         }
 
         if (currentTime > 0)
         {
             currentTime -= Time.deltaTime;
-            gameAudioManager?.UpdateTimerMusicIntensity(currentTime, SettingManager.Instance.currentDifficulty.timePerItem);
+            gameAudioManager?.UpdateTimerMusicIntensity(currentTime, difficulty.timePerItem);
         }
         else
         {
@@ -105,7 +120,19 @@ public class GameManager : MonoBehaviour
 
     public void SetVolume()
     {
-        SettingManager.Instance.volumeValue = volumeSlider.value;
+        SettingManager settings = SettingManager.EnsureInstance();
+        if (settings == null)
+        {
+            return;
+        }
+
+        if (volumeSlider == null)
+        {
+            Debug.LogWarning("Cannot set volume because volumeSlider is not assigned on GameManager.");
+            return;
+        }
+
+        settings.volumeValue = volumeSlider.value;
     }
 
     public void ToggleScaner()
@@ -144,7 +171,9 @@ public class GameManager : MonoBehaviour
 
         if (!hasAcceptMarker && !hasRejectMarker)
         {
-            Debug.LogWarning("Item submission blocked: select either Accept/Not Defective or Reject/Defective before submitting.");
+            Debug.Log("Item submitted without final marker. Treated as wrong sort.");
+            hands?.PlayPressButton();
+            ProcessSortSubmission(item, false, false);
             return;
         }
 
@@ -155,7 +184,7 @@ public class GameManager : MonoBehaviour
         }
 
         hands?.PlayPressButton();
-        ProcessSortSubmission(item, hasRejectMarker);
+        ProcessSortSubmission(item, hasRejectMarker, true);
     }
 
     public void SortItem(bool selectedVariant)
@@ -185,7 +214,7 @@ public class GameManager : MonoBehaviour
         }
 
         hands?.PlayPressButton();
-        ProcessSortSubmission(item, selectedVariant);
+        ProcessSortSubmission(item, selectedVariant, true);
     }
 
     public void ShowScanResult()
@@ -249,7 +278,13 @@ public class GameManager : MonoBehaviour
 
     private int GetMistakesPerDamage()
     {
-        switch (SettingManager.Instance.currentDifficulty.difficultyName)
+        Difficult difficulty = GetCurrentDifficulty("calculate damage frequency");
+        if (difficulty == null)
+        {
+            return 3;
+        }
+
+        switch (difficulty.difficultyName)
         {
             case "EASY":
                 return 3;
@@ -269,18 +304,24 @@ public class GameManager : MonoBehaviour
 
     public void SpawnItem()
     {
-        if (totalItemsProcessed == SettingManager.Instance.currentDifficulty.anomalyItemNum)
+        Difficult difficulty = GetCurrentDifficulty("spawn an item");
+        if (difficulty == null)
+        {
+            return;
+        }
+
+        if (totalItemsProcessed == difficulty.anomalyItemNum)
         {
             itemSpawner.SpawnAnomalyItem();
         }
-        else if (totalItemsProcessed == SettingManager.Instance.currentDifficulty.bombNum)   
+        else if (totalItemsProcessed == difficulty.bombNum)
         {
             itemSpawner.SpawnBomb();
         }
         else
         {
             itemSpawner.SpawnItem();
-            currentTime = SettingManager.Instance.currentDifficulty.timePerItem;
+            currentTime = difficulty.timePerItem;
             gameAudioManager?.ResetTimerMusicIntensity();
         }
     }
@@ -316,7 +357,8 @@ public class GameManager : MonoBehaviour
 
     public void ResumeGame()
     {
-        isTimerWork = SettingManager.Instance.timer;
+        SettingManager settings = SettingManager.EnsureInstance();
+        isTimerWork = settings != null && settings.timer;
         AudioListener.pause = false;
     }
 
@@ -354,7 +396,13 @@ public class GameManager : MonoBehaviour
         currentMistakes += mistakesToAdd;
         CheckForDamage(previousMistakeCount);
 
-        if (currentMistakes > SettingManager.Instance.currentDifficulty.maxMistakes)
+        Difficult difficulty = GetCurrentDifficulty("check mistake limit");
+        if (difficulty == null)
+        {
+            return;
+        }
+
+        if (currentMistakes > difficulty.maxMistakes)
         {
             GameOver();
         }
@@ -367,23 +415,51 @@ public class GameManager : MonoBehaviour
             return 0;
         }
 
-        string difficultyName = SettingManager.Instance.currentDifficulty.difficultyName.ToUpperInvariant();
+        Difficult difficulty = GetCurrentDifficulty("calculate marker penalty");
+        if (difficulty == null)
+        {
+            return missedMarkers;
+        }
+
+        string difficultyName = difficulty.difficultyName.ToUpperInvariant();
         int penaltyPerMarker = difficultyName == "HARD" ? 2 : 1;
         return missedMarkers * penaltyPerMarker;
     }
 
-    private void ProcessSortSubmission(Item item, bool selectedVariant)
+    private Difficult GetCurrentDifficulty(string actionName)
+    {
+        SettingManager settings = SettingManager.EnsureInstance();
+        if (settings == null)
+        {
+            Debug.LogError($"Cannot {actionName}: SettingManager is missing.");
+            return null;
+        }
+
+        if (settings.currentDifficulty == null)
+        {
+            Debug.LogError($"Cannot {actionName}: current difficulty is not assigned.");
+            return null;
+        }
+
+        return settings.currentDifficulty;
+    }
+
+    private void ProcessSortSubmission(Item item, bool selectedVariant, bool hasFinalChoice)
     {
         if (item == null)
         {
             return;
         }
 
-        int missedMarkers = GetMissedMarkerCountForSubmission(item, selectedVariant);
+        int missedMarkers = GetMissedMarkerCountForSubmission(item, selectedVariant, hasFinalChoice);
         int markerPenalty = GetMarkerPenalty(missedMarkers);
         lastMissedMarkers = missedMarkers;
 
-        if (selectedVariant == item.isDefective)
+        if (!hasFinalChoice)
+        {
+            WrongSort(1 + markerPenalty);
+        }
+        else if (selectedVariant == item.isDefective)
         {
             CorrectSort(markerPenalty);
         }
@@ -398,14 +474,18 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private int GetMissedMarkerCountForSubmission(Item item, bool selectedVariant)
+    private int GetMissedMarkerCountForSubmission(Item item, bool selectedVariant, bool hasFinalChoice)
     {
         List<ItemMarkerType> submittedMarkers = new List<ItemMarkerType>(item.GetPlayerMarkedMarkers());
-        ItemMarkerType finalMarker = selectedVariant ? ItemMarkerType.Defective : ItemMarkerType.Ideal;
 
-        if (!submittedMarkers.Contains(finalMarker))
+        if (hasFinalChoice)
         {
-            submittedMarkers.Add(finalMarker);
+            ItemMarkerType finalMarker = selectedVariant ? ItemMarkerType.Defective : ItemMarkerType.Ideal;
+
+            if (!submittedMarkers.Contains(finalMarker))
+            {
+                submittedMarkers.Add(finalMarker);
+            }
         }
 
         return item.GetMissedMarkerCount(submittedMarkers);

@@ -21,7 +21,7 @@ public class GameAudioManager : MonoBehaviour
     [Header("Main Shift Music")]
     [SerializeField] private AudioClip mainShiftMusic;
     [Range(0f, 1f)]
-    [SerializeField] private float mainShiftMusicVolume = 0.65f;
+    [SerializeField] private float mainShiftMusicVolume = 0.4f;
     [SerializeField] private bool loopMainShiftMusic = true;
     [SerializeField] private float musicCrossfadeDuration = 1.5f;
 
@@ -35,11 +35,11 @@ public class GameAudioManager : MonoBehaviour
     [SerializeField] private float criticalMusicPitch = 1.14f;
 
     [Range(0f, 1f)]
-    [SerializeField] private float normalMusicVolume = 0.65f;
+    [SerializeField] private float normalMusicVolume = 0.4f;
     [Range(0f, 1f)]
-    [SerializeField] private float warningMusicVolume = 0.75f;
+    [SerializeField] private float warningMusicVolume = 0.48f;
     [Range(0f, 1f)]
-    [SerializeField] private float criticalMusicVolume = 0.9f;
+    [SerializeField] private float criticalMusicVolume = 0.56f;
 
     [SerializeField] private float warningTimeThreshold = 30f;
     [SerializeField] private float criticalTimeThreshold = 10f;
@@ -126,7 +126,8 @@ public class GameAudioManager : MonoBehaviour
     public void StartShiftMusic()
     {
         currentMusicState = MusicState.MainShift;
-        ApplyTargetMusicIntensity(baseMusicPitch, normalMusicVolume);
+        float shiftVolume = GetBaseShiftMusicVolume();
+        ApplyTargetMusicIntensity(baseMusicPitch, shiftVolume);
 
         if (mainShiftMusic == null)
         {
@@ -134,7 +135,7 @@ public class GameAudioManager : MonoBehaviour
         }
 
         StopCrossfade();
-        crossfadeRoutine = StartCoroutine(CrossfadeTo(mainShiftMusic, mainShiftMusicVolume, loopMainShiftMusic, musicCrossfadeDuration));
+        crossfadeRoutine = StartCoroutine(CrossfadeTo(mainShiftMusic, shiftVolume, loopMainShiftMusic, musicCrossfadeDuration));
     }
 
     public void UpdateTimerMusicIntensity(float remainingTime, float totalTime)
@@ -146,24 +147,27 @@ public class GameAudioManager : MonoBehaviour
 
         if (totalTime <= 0f)
         {
-            ApplyTargetMusicIntensity(baseMusicPitch, normalMusicVolume);
+            ApplyTargetMusicIntensity(baseMusicPitch, GetBaseShiftMusicVolume());
             return;
         }
 
         float targetPitch = baseMusicPitch;
-        float targetVolume = normalMusicVolume;
+        float baseShiftVolume = GetBaseShiftMusicVolume();
+        float warningShiftVolume = GetWarningShiftMusicVolume(baseShiftVolume);
+        float criticalShiftVolume = GetCriticalShiftMusicVolume(baseShiftVolume, warningShiftVolume);
+        float targetVolume = baseShiftVolume;
 
         if (remainingTime <= criticalTimeThreshold)
         {
             float criticalT = Mathf.InverseLerp(criticalTimeThreshold, 0f, Mathf.Max(0f, remainingTime));
             targetPitch = Mathf.Lerp(warningMusicPitch, criticalMusicPitch, criticalT);
-            targetVolume = Mathf.Lerp(warningMusicVolume, criticalMusicVolume, criticalT);
+            targetVolume = Mathf.Lerp(warningShiftVolume, criticalShiftVolume, criticalT);
         }
         else if (remainingTime <= warningTimeThreshold)
         {
             float warningT = Mathf.InverseLerp(warningTimeThreshold, criticalTimeThreshold, remainingTime);
             targetPitch = Mathf.Lerp(baseMusicPitch, warningMusicPitch, warningT);
-            targetVolume = Mathf.Lerp(normalMusicVolume, warningMusicVolume, warningT);
+            targetVolume = Mathf.Lerp(baseShiftVolume, warningShiftVolume, warningT);
         }
 
         ApplyTargetMusicIntensity(targetPitch, targetVolume);
@@ -171,7 +175,7 @@ public class GameAudioManager : MonoBehaviour
 
     public void ResetTimerMusicIntensity()
     {
-        ApplyTargetMusicIntensity(baseMusicPitch, normalMusicVolume);
+        ApplyTargetMusicIntensity(baseMusicPitch, GetBaseShiftMusicVolume());
     }
 
     public void StopMusic(float fadeDuration = 1f)
@@ -241,6 +245,25 @@ public class GameAudioManager : MonoBehaviour
     {
         targetMusicPitch = Mathf.Clamp(targetPitch, 0.85f, 1.2f);
         targetMusicVolume = Mathf.Clamp01(targetVolume);
+    }
+
+    private float GetBaseShiftMusicVolume()
+    {
+        normalMusicVolume = Mathf.Clamp01(mainShiftMusicVolume);
+        return normalMusicVolume;
+    }
+
+    private float GetWarningShiftMusicVolume(float baseShiftVolume)
+    {
+        float configuredWarningVolume = Mathf.Clamp01(warningMusicVolume);
+        return Mathf.Clamp01(Mathf.Max(baseShiftVolume, Mathf.Min(configuredWarningVolume, baseShiftVolume + 0.1f)));
+    }
+
+    private float GetCriticalShiftMusicVolume(float baseShiftVolume, float warningShiftVolume)
+    {
+        float configuredCriticalVolume = Mathf.Clamp01(criticalMusicVolume);
+        float cappedCriticalVolume = Mathf.Min(configuredCriticalVolume, baseShiftVolume + 0.18f);
+        return Mathf.Clamp01(Mathf.Max(warningShiftVolume, cappedCriticalVolume));
     }
 
     private void ConfigureMusicSource(AudioSource source, AudioClip clip, bool loop)
