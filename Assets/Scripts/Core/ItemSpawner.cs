@@ -13,29 +13,46 @@ public class ItemSpawner : MonoBehaviour
     {
         if (bomb != null)
         {
-        GameObject spawnedBomb = Instantiate(bomb, transform.position, Quaternion.identity);
-        GameManager.Instance.currentItem = spawnedBomb;
+            GameObject spawnedBomb = Instantiate(bomb, transform.position, Quaternion.identity);
+            AssignCurrentItem(spawnedBomb, "Bomb");
+        }
+        else
+        {
+            Debug.LogWarning("Cannot spawn bomb because bomb prefab is not assigned.");
         }
     }
 
     public void SpawnAnomalyItem()
     {
+        if (anomalyItem == null)
+        {
+            Debug.LogWarning("Cannot spawn anomaly item because anomalyItem prefab is not assigned.");
+            return;
+        }
+
         GameObject spawnedItem = Instantiate(anomalyItem, transform.position, Quaternion.identity);
-        GameManager.Instance.currentItem = spawnedItem;
+        AssignCurrentItem(spawnedItem, "Anomaly item");
     }
+
     public void SpawnItem()
     {
-        if (itemPrefabs.Length == 0)
+        if (itemPrefabs == null || itemPrefabs.Length == 0)
         {
             Debug.LogError("No item prefabs assigned!");
             return;
         }
 
         int randomIndex = Random.Range(0, itemPrefabs.Length);
+        if (itemPrefabs[randomIndex] == null)
+        {
+            Debug.LogWarning($"Cannot spawn item because item prefab at index {randomIndex} is not assigned.");
+            return;
+        }
+
         GameObject itemToSpawn = Instantiate(itemPrefabs[randomIndex], transform.position, Quaternion.identity);
 
         SetupItem(itemToSpawn);
-        GameManager.Instance.currentItem = itemToSpawn;
+        AssignCurrentItem(itemToSpawn, "Item");
 
         if(doorAnimator != null)
         {
@@ -84,13 +101,27 @@ public class ItemSpawner : MonoBehaviour
 
     private void SetupItem(GameObject itemObject)
     {
+        if (itemObject == null)
+        {
+            return;
+        }
+
         if (!itemObject.TryGetComponent<ConveyorItemInteractable>(out _))
         {
             itemObject.AddComponent<ConveyorItemInteractable>();
         }
         
         Item item = itemObject.GetComponent<Item>();
-        if (item == null) return;
+        if (item == null)
+        {
+            item = itemObject.GetComponentInChildren<Item>(true);
+        }
+
+        if (item == null)
+        {
+            Debug.LogWarning($"Spawned item '{itemObject.name}' has no Item component on root or children.");
+            return;
+        }
 
         Difficult difficulty = SettingManager.EnsureInstance()?.currentDifficulty;
         if (difficulty == null)
@@ -143,6 +174,35 @@ public class ItemSpawner : MonoBehaviour
         item.InitializeItem(isDefective, hasBarcode, barcodeShowsGood, hasStain, hasScratches);
     }
 
+    private void AssignCurrentItem(GameObject spawnedObject, string spawnType)
+    {
+        if (spawnedObject == null)
+        {
+            return;
+        }
+
+        if (GameManager.Instance == null)
+        {
+            Debug.LogWarning($"Cannot assign spawned {spawnType} '{spawnedObject.name}' because GameManager.Instance is missing.");
+            return;
+        }
+
+        Item rootItem = spawnedObject.GetComponent<Item>();
+        if (rootItem == null)
+        {
+            Item childItem = spawnedObject.GetComponentInChildren<Item>(true);
+            if (childItem != null)
+            {
+                Debug.Log($"{spawnType} '{spawnedObject.name}' has Item component on child '{childItem.gameObject.name}'.");
+            }
+            else
+            {
+                Debug.LogWarning($"{spawnType} '{spawnedObject.name}' has no Item component on root or children. It will be skipped safely if submitted as a sortable item.");
+            }
+        }
+
+        GameManager.Instance.currentItem = spawnedObject;
+    }
 
 }
     

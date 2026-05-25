@@ -9,13 +9,13 @@ public class UVLighter : MonoBehaviour
     public void ToggleLighterOff()
     {
         lighter.SetActive(false);
-        if(GameManager.Instance.currentItem!=null)GameManager.Instance.currentItem.GetComponent<Item>().SetUVVisibility(false);
+        if(GameManager.Instance != null && GameManager.Instance.TryResolveCurrentItem(out Item item)) item.SetUVVisibility(false);
         uVOnTable.SetActive(true);
     }
     public void ToggleLighter()
     {
         lighter.SetActive(!lighter.activeSelf);
         uVOnTable.SetActive(!lighter.activeSelf);
-        GameManager.Instance.currentItem.GetComponent<Item>().SetUVVisibility(lighter.activeSelf);
+        if(GameManager.Instance != null && GameManager.Instance.TryResolveCurrentItem(out Item item)) item.SetUVVisibility(lighter.activeSelf);
     }
 }

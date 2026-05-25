@@ -53,6 +53,7 @@ public class GameManager : MonoBehaviour
     private bool isGameOverStarted;
     private bool warnedMissingHandsForDamage;
     private float nextHandCounterDecayTime;
+    private readonly HashSet<int> loggedChildItemRoots = new HashSet<int>();
 
     public int CurrentHandDamageCounter => currentHandDamageCounter;
     public int CurrentHandDamageThreshold => GetHandCounterLimit();
@@ -178,15 +179,9 @@ public class GameManager : MonoBehaviour
 
     public void SubmitCurrentItem()
     {
-        if (currentItem == null)
+        if (!TryResolveCurrentItem(out Item item))
         {
-            return;
-        }
-
-        Item item = currentItem.GetComponent<Item>();
-        if (item == null)
-        {
-            Debug.LogWarning("Cannot submit current item because it has no Item component.");
+            HandleCurrentItemWithoutItem("submit");
             return;
         }
 
@@ -213,15 +208,9 @@ public class GameManager : MonoBehaviour
 
     public void SortItem(bool selectedVariant)
     {
-        if (currentItem == null)
+        if (!TryResolveCurrentItem(out Item item))
         {
-            return;
-        }
-
-        Item item = currentItem.GetComponent<Item>();
-        if (item == null)
-        {
-            Debug.LogWarning("Cannot sort current item because it has no Item component.");
+            HandleCurrentItemWithoutItem("sort");
             return;
         }
 
@@ -243,8 +232,7 @@ public class GameManager : MonoBehaviour
 
     public void ShowScanResult()
     {
-        Item item = currentItem.GetComponent<Item>();
-        if (item == null)
+        if (!TryResolveCurrentItem(out Item item))
         {
             return;
         }
@@ -519,6 +507,41 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public bool TryResolveCurrentItem(out Item item)
+    {
+        return TryResolveItemFromGameObject(currentItem, out item);
+    }
+
+    public bool TryResolveItemFromGameObject(GameObject sourceObject, out Item item)
+    {
+        item = null;
+        if (sourceObject == null)
+        {
+            return false;
+        }
+
+        item = sourceObject.GetComponent<Item>();
+        if (item != null)
+        {
+            return true;
+        }
+
+        item = sourceObject.GetComponentInChildren<Item>(true);
+        if (item == null)
+        {
+            return false;
+        }
+
+        int sourceId = sourceObject.GetInstanceID();
+        if (!loggedChildItemRoots.Contains(sourceId))
+        {
+            loggedChildItemRoots.Add(sourceId);
+            Debug.Log($"Resolved Item component for '{sourceObject.name}' from child '{item.gameObject.name}'.");
+        }
+
+        return true;
+    }
+
     public void ApplyPenalty(int mistakesToAdd)
     {
         AddMistakes(mistakesToAdd);
@@ -675,6 +698,25 @@ public class GameManager : MonoBehaviour
         {
             Destroy(currentItem);
             currentItem = null;
+        }
+    }
+
+    private void HandleCurrentItemWithoutItem(string actionName)
+    {
+        if (currentItem == null)
+        {
+            return;
+        }
+
+        Debug.LogWarning($"Cannot {actionName} current item '{currentItem.name}' because it has no Item component on root or children. Skipping broken item without player penalty.");
+
+        totalItemsProcessed++;
+        securitySystem?.NotifySortingAction();
+        CompleteCurrentItem();
+
+        if (isGameStarted && !isGameOverStarted)
+        {
+            SpawnItem();
         }
     }
 

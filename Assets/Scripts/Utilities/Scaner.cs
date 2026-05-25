@@ -34,8 +34,7 @@ public class Scaner : MonoBehaviour
         {
             if (collider.isTrigger && collider.CompareTag("Code"))
             {
-                Item item = GameManager.Instance.currentItem.GetComponent<Item>();
-                if (item != null)
+                if (GameManager.Instance != null && GameManager.Instance.TryResolveCurrentItem(out _))
                 {
                     GameManager.Instance.ShowScanResult();
                     GameManager.Instance.ToggleScanerOff();

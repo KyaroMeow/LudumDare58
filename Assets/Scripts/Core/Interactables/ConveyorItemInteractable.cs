@@ -45,7 +45,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
         SetCollidersEnabled(false);
 
-        HUDManager.Instance.showItemScanHUD(GetComponent<Item>());
+        HUDManager.Instance.showItemScanHUD(GetComponentInChildren<Item>(true));
         PlayerItemInspection.Instance.BeginInspection(gameObject);
         PlaySfx(pickupSfx);
     }
