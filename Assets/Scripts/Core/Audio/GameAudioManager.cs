@@ -46,6 +46,12 @@ public class GameAudioManager : MonoBehaviour
     [SerializeField] private float pitchSmoothSpeed = 3f;
     [SerializeField] private float volumeSmoothSpeed = 3f;
 
+    [Header("Blackout Music")]
+    [Range(0f, 1f)]
+    [SerializeField] private float blackoutMusicVolumeMultiplier = 0.6f;
+    [Range(0.85f, 1.2f)]
+    [SerializeField] private float blackoutWarningPitch = 1.08f;
+
     private AudioSource musicSourceA;
     private AudioSource musicSourceB;
     private AudioSource activeMusicSource;
@@ -55,6 +61,9 @@ public class GameAudioManager : MonoBehaviour
     private float targetMusicPitch = 1f;
     private float targetMusicVolume = 0.65f;
     private bool isCrossfading;
+    private bool isBlackoutMusicDucked;
+    private float preBlackoutTargetPitch = 1f;
+    private float preBlackoutTargetVolume = 0.4f;
 
     private void Awake()
     {
@@ -140,7 +149,7 @@ public class GameAudioManager : MonoBehaviour
 
     public void UpdateTimerMusicIntensity(float remainingTime, float totalTime)
     {
-        if (!enableTimerMusicIntensity || currentMusicState != MusicState.MainShift)
+        if (!enableTimerMusicIntensity || currentMusicState != MusicState.MainShift || isBlackoutMusicDucked)
         {
             return;
         }
@@ -176,6 +185,53 @@ public class GameAudioManager : MonoBehaviour
     public void ResetTimerMusicIntensity()
     {
         ApplyTargetMusicIntensity(baseMusicPitch, GetBaseShiftMusicVolume());
+    }
+
+    public void OnBlackoutStarted()
+    {
+        if (currentMusicState != MusicState.MainShift)
+        {
+            return;
+        }
+
+        if (!isBlackoutMusicDucked)
+        {
+            preBlackoutTargetPitch = targetMusicPitch;
+            preBlackoutTargetVolume = targetMusicVolume;
+            isBlackoutMusicDucked = true;
+        }
+
+        ApplyTargetMusicIntensity(baseMusicPitch, preBlackoutTargetVolume * blackoutMusicVolumeMultiplier);
+        Debug.Log("Game music ducked for blackout.");
+    }
+
+    public void OnBlackoutRestoreWarning()
+    {
+        if (currentMusicState != MusicState.MainShift)
+        {
+            return;
+        }
+
+        float warningVolume = isBlackoutMusicDucked
+            ? Mathf.Max(preBlackoutTargetVolume * blackoutMusicVolumeMultiplier, preBlackoutTargetVolume * 0.75f)
+            : targetMusicVolume;
+        ApplyTargetMusicIntensity(blackoutWarningPitch, warningVolume);
+        Debug.Log("Game music restore warning intensity applied.");
+    }
+
+    public void OnBlackoutEnded()
+    {
+        if (currentMusicState != MusicState.MainShift)
+        {
+            isBlackoutMusicDucked = false;
+            return;
+        }
+
+        float restorePitch = isBlackoutMusicDucked ? preBlackoutTargetPitch : baseMusicPitch;
+        float restoreVolume = isBlackoutMusicDucked ? preBlackoutTargetVolume : GetBaseShiftMusicVolume();
+        isBlackoutMusicDucked = false;
+        ApplyTargetMusicIntensity(restorePitch, restoreVolume);
+        Debug.Log("Game music restored after blackout.");
     }
 
     public void StopMusic(float fadeDuration = 1f)

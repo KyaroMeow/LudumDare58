@@ -33,6 +33,7 @@ public class SecuritySystem : MonoBehaviour
     private float lastViolationTime = -999f;
 
     public bool IsCameraActive { get; private set; }
+    public bool IsSecurityEnabled { get; private set; } = true;
     public bool IsGeneratorReady => currentLoadNormalized >= 1f;
     public float CurrentLoadNormalized => currentLoadNormalized;
 
@@ -60,6 +61,12 @@ public class SecuritySystem : MonoBehaviour
         if (string.IsNullOrWhiteSpace(actionName))
         {
             Debug.LogWarning("Protocol violation ignored: action name is empty.");
+            return;
+        }
+
+        if (!IsSecurityEnabled)
+        {
+            Debug.Log($"Protocol violation ignored because security is offline: {actionName}");
             return;
         }
 
@@ -106,6 +113,18 @@ public class SecuritySystem : MonoBehaviour
     public void ForceTemporaryShutdown(float duration)
     {
         StartShutdown(duration);
+    }
+
+    public void SetSecurityEnabled(bool enabled)
+    {
+        if (IsSecurityEnabled == enabled)
+        {
+            return;
+        }
+
+        IsSecurityEnabled = enabled;
+        SetCameraState(enabled);
+        Debug.Log(enabled ? "Security system online." : "Security system offline.");
     }
 
     private void AddLoad(float amount)

@@ -94,6 +94,10 @@ public class PlayerInteraction : MonoBehaviour
         {
             interactable.Interact(holdPosition);
         }
+        else if (interactable is IOneShotInteractable)
+        {
+            interactable.Interact(holdPosition);
+        }
         else
         {
             HandleOtherInteraction(interactable);
