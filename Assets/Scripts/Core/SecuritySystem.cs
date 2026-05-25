@@ -25,9 +25,12 @@ public class SecuritySystem : MonoBehaviour
     [SerializeField] private Animator generatorAnimator;
     [SerializeField] private SfxEmitter sfxEmitter;
     [SerializeField] private SfxCue cameraCaptureSfx;
+    [SerializeField] private float duplicateViolationSuppressSeconds = 0.75f;
 
     private Coroutine autoShutdownRoutine;
     private Coroutine shutdownRoutine;
+    private string lastViolationActionName;
+    private float lastViolationTime = -999f;
 
     public bool IsCameraActive { get; private set; }
     public bool IsGeneratorReady => currentLoadNormalized >= 1f;
@@ -54,15 +57,38 @@ public class SecuritySystem : MonoBehaviour
 
     public void ReportViolation(string actionName)
     {
+        if (string.IsNullOrWhiteSpace(actionName))
+        {
+            Debug.LogWarning("Protocol violation ignored: action name is empty.");
+            return;
+        }
+
         if (!IsCameraActive)
         {
             return;
         }
 
+        if (IsDuplicateViolation(actionName))
+        {
+            Debug.Log($"Duplicate protocol violation suppressed: {actionName}");
+            return;
+        }
+
         int penalty = GetViolationPenalty();
         Debug.Log($"Protocol violation detected: {actionName}. Penalty: {penalty}");
+        lastViolationActionName = actionName;
+        lastViolationTime = Time.time;
+
         PlaySfx(cameraCaptureSfx);
-        GameManager.Instance?.ApplyPenalty(penalty);
+
+        GameManager gameManager = GameManager.Instance;
+        if (gameManager == null)
+        {
+            Debug.LogWarning($"Protocol violation '{actionName}' could not apply penalty because GameManager is missing.");
+            return;
+        }
+
+        gameManager.ApplyPenalty(penalty);
     }
 
     public bool TryManualShutdown()
@@ -144,7 +170,11 @@ public class SecuritySystem : MonoBehaviour
     private void SetCameraState(bool isEnabled)
     {
         IsCameraActive = isEnabled;
-        GameManager.Instance?.SetCameraState(isEnabled);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.SetCameraState(isEnabled);
+        }
 
         if (cameraEnabledIndicator != null)
         {
@@ -159,7 +189,8 @@ public class SecuritySystem : MonoBehaviour
 
     private int GetViolationPenalty()
     {
-        Difficult difficulty = SettingManager.EnsureInstance()?.currentDifficulty;
+        SettingManager settings = SettingManager.EnsureInstance();
+        Difficult difficulty = settings != null ? settings.currentDifficulty : null;
         if (difficulty == null)
         {
             Debug.LogWarning("Using default protocol violation penalty because current difficulty is not assigned.");
@@ -169,6 +200,13 @@ public class SecuritySystem : MonoBehaviour
         return difficulty.difficultyName.ToUpperInvariant() == "HARD"
             ? difficulty.protocolViolationPenaltyHard
             : difficulty.protocolViolationPenaltyDefault;
+    }
+
+    private bool IsDuplicateViolation(string actionName)
+    {
+        return duplicateViolationSuppressSeconds > 0f &&
+               actionName == lastViolationActionName &&
+               Time.time - lastViolationTime <= duplicateViolationSuppressSeconds;
     }
 
     private void PlaySfx(SfxCue cue)

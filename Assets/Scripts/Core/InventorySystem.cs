@@ -9,6 +9,7 @@ public class InventorySystem : MonoBehaviour
 
     public static InventorySystem Instance { get; private set; }
     public event Action OnInventoryChanged;
+    public int SlotCount => slots != null ? slots.Length : 0;
 
     private void Awake()
     {
@@ -78,8 +79,54 @@ public class InventorySystem : MonoBehaviour
         return true;
     }
 
+    public bool TryRemoveFirstItem(out InventoryItemDefinition removedItem)
+    {
+        removedItem = null;
+
+        if (slots == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] != null)
+            {
+                removedItem = slots[i];
+                slots[i] = null;
+                NotifyChanged();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool HasAnyItem()
+    {
+        if (slots == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] != null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public bool HasFreeSlot()
     {
+        if (slots == null)
+        {
+            return false;
+        }
+
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] == null)
@@ -93,7 +140,7 @@ public class InventorySystem : MonoBehaviour
 
     private bool IsValidSlot(int slotIndex)
     {
-        return slotIndex >= 0 && slotIndex < slots.Length;
+        return slots != null && slotIndex >= 0 && slotIndex < slots.Length;
     }
 
     private void NotifyChanged()

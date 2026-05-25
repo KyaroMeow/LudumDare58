@@ -8,13 +8,18 @@ public class InventoryUIController : MonoBehaviour
     [SerializeField] private Image[] slotIcons;
     [SerializeField] private Button[] slotButtons;
     [SerializeField] private TextMeshProUGUI[] slotLabels;
+    public bool IsInventoryOpen => inventoryRoot != null && inventoryRoot.activeSelf;
 
     private void Update()
     {
+        if (TrashBinInteractable.IsTrashUiOpen)
+        {
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             ToggleInventory();
-            ToggleButtons();
         }
     }
 
@@ -28,11 +33,19 @@ public class InventoryUIController : MonoBehaviour
         Refresh();
     }
 
-    private void ToggleButtons()
+    private void SetButtonsEnabled(bool isEnabled)
     {
+        if (slotButtons == null)
+        {
+            return;
+        }
+
         foreach (Button button in slotButtons)
         {
-            button.enabled = !button.enabled;
+            if (button != null)
+            {
+                button.enabled = isEnabled;
+            }
         }
     }
     private void OnDisable()
@@ -50,7 +63,37 @@ public class InventoryUIController : MonoBehaviour
             return;
         }
 
-        inventoryRoot.SetActive(!inventoryRoot.activeSelf);
+        if (inventoryRoot.activeSelf)
+        {
+            CloseInventory();
+        }
+        else
+        {
+            OpenInventory();
+        }
+    }
+
+    public void OpenInventory(bool enableSlotButtons = true)
+    {
+        if (inventoryRoot == null)
+        {
+            return;
+        }
+
+        inventoryRoot.SetActive(true);
+        SetButtonsEnabled(enableSlotButtons);
+        Refresh();
+    }
+
+    public void CloseInventory()
+    {
+        if (inventoryRoot == null)
+        {
+            return;
+        }
+
+        inventoryRoot.SetActive(false);
+        SetButtonsEnabled(true);
         Refresh();
     }
 

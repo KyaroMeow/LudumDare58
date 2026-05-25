@@ -18,6 +18,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private Quaternion originalRotation;
     private Transform originalParent;
     private Collider[] cachedColliders;
+    private bool isBeingInspected;
 
     private void Awake()
     {
@@ -26,9 +27,9 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     public void Interact(Transform holdPosition)
     {
-        TabletInteractable.Instance.OpenBestiaryItem(itemName);
+        TabletInteractable.Instance?.OpenBestiaryItem(itemName);
 
-        PlayerView.Instance.BlockMovement();
+        PlayerView.Instance?.BlockMovement();
 
         originalPosition = transform.position;
         originalRotation = transform.rotation;
@@ -45,8 +46,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
         SetCollidersEnabled(false);
 
-        HUDManager.Instance.showItemScanHUD(GetComponentInChildren<Item>(true));
-        PlayerItemInspection.Instance.BeginInspection(gameObject);
+        Item item = GetComponentInChildren<Item>(true);
+        PlayerHeldItem.Instance?.TrySelectItem(item);
+        HUDManager.Instance?.showItemScanHUD(item);
+        PlayerItemInspection.Instance?.BeginInspection(gameObject);
+        isBeingInspected = true;
         PlaySfx(pickupSfx);
     }
 
@@ -60,35 +64,49 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
         SetCollidersEnabled(true);
 
-        PlayerView.Instance.UnlockMovement();
+        PlayerView.Instance?.UnlockMovement();
         transform.SetParent(originalParent);
         transform.localPosition = originalPosition;
         transform.localRotation = originalRotation;
 
-        GameManager.Instance.ToggleScanerOff();
-        HUDManager.Instance.hideItemScanHUD();
-        PlayerItemInspection.Instance.EndInspection();
+        GameManager.Instance?.ToggleScanerOff();
+        HUDManager.Instance?.hideItemScanHUD();
+        PlayerHeldItem.Instance?.ClearItem();
+        PlayerItemInspection.Instance?.EndInspection();
+        isBeingInspected = false;
     }
 
-    public void TryDisassemble(ToolType toolType)
+    public bool TryDisassemble(ToolType toolType)
+    {
+        return TryUseTool(toolType);
+    }
+
+    public bool TryStealFromInspection()
+    {
+        return TryUseTool(ToolType.Steal);
+    }
+
+    private bool TryUseTool(ToolType toolType)
     {
         if (InventorySystem.Instance == null)
         {
             Debug.LogWarning("InventorySystem is not present in scene.");
-            return;
+            return false;
         }
 
         InventoryItemDefinition reward = null;
+        string actionName = $"Use tool {toolType}";
 
         if (toolType == ToolType.Steal)
         {
             if (!canBeStolen)
             {
-                Debug.Log("This item cannot be stolen.");
-                return;
+                Debug.LogWarning($"Cannot steal '{gameObject.name}' because this item is marked as not stealable.");
+                return false;
             }
 
             reward = stealReward;
+            actionName = "Steal item";
         }
         else if (toolTypeForDisassemble == toolType)
         {
@@ -99,10 +117,16 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             reward = trashReward;
         }
 
-        if (reward != null && !InventorySystem.Instance.TryAddItem(reward))
+        if (reward == null)
         {
-            Debug.Log("Inventory is full.");
-            return;
+            Debug.LogWarning($"Cannot use tool {toolType} on '{gameObject.name}' because no reward is configured. Item remains in place.");
+            return false;
+        }
+
+        if (!InventorySystem.Instance.TryAddItem(reward))
+        {
+            Debug.LogWarning($"Inventory is full. Cannot add reward '{reward.displayName}' from item '{gameObject.name}' using tool {toolType}.");
+            return false;
         }
 
         if (toolType == ToolType.Wrench && toolTypeForDisassemble == toolType)
@@ -110,10 +134,44 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             PlaySfx(wrenchDisassembleSfx);
         }
 
-        GameManager.Instance?.securitySystem?.ReportViolation($"Use tool {toolType}");
+        GameManager.Instance?.securitySystem?.ReportViolation(actionName);
+        CompleteToolAction();
+        return true;
+    }
+
+    private void CompleteToolAction()
+    {
+        if (PlayerInteraction.Instance != null && PlayerInteraction.Instance.IsCurrentInteractable(this))
+        {
+            StopInteract();
+            PlayerInteraction.Instance.ClearCurrentInteractable(this);
+        }
+        else
+        {
+            PlayerHeldItem.Instance?.ClearItem();
+            isBeingInspected = false;
+        }
+
         Destroy(gameObject);
-        GameManager.Instance.currentItem = null;
+        if (GameManager.Instance != null && GameManager.Instance.currentItem == gameObject)
+        {
+            GameManager.Instance.currentItem = null;
+        }
+
         GameManager.Instance?.SpawnNextItemAfterBypass();
+    }
+
+    private void OnGUI()
+    {
+        if (!isBeingInspected)
+        {
+            return;
+        }
+
+        if (GUI.Button(new Rect(16f, 104f, 120f, 32f), "Steal"))
+        {
+            TryStealFromInspection();
+        }
     }
 
     private void SetCollidersEnabled(bool isEnabled)

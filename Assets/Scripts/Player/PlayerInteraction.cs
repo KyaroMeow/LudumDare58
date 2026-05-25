@@ -12,8 +12,7 @@ public class PlayerInteraction : MonoBehaviour
 
     private IInteractable currentInteractable;
     private OutlineEffect currentInteractableOutline;
-    private ToolType currentTool = ToolType.None;
-    private Instrument currentInstrument;
+    private PlayerHeldItem heldItem;
 
     private void Awake()
     {
@@ -21,15 +20,37 @@ public class PlayerInteraction : MonoBehaviour
         {
             Instance = this;
         }
+
+        heldItem = GetComponent<PlayerHeldItem>();
+        if (heldItem == null)
+        {
+            heldItem = gameObject.AddComponent<PlayerHeldItem>();
+        }
     }
 
     private void Update()
     {
+        if (TrashBinInteractable.IsTrashUiOpen)
+        {
+            return;
+        }
+
         HandleInteraction();
+        HandleToolCancelInput();
 
         if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
         {
             HandleStopInteraction();
+        }
+    }
+
+    private void HandleToolCancelInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Q) && heldItem != null && heldItem.HasTool)
+        {
+            ToolType toolType = heldItem.CurrentToolType;
+            heldItem.ClearTool();
+            Debug.Log($"Tool deselected: {toolType}");
         }
     }
 
@@ -89,41 +110,53 @@ public class PlayerInteraction : MonoBehaviour
 
     private void HandleToolInteraction(Instrument tool)
     {
-        if (currentInstrument == tool)
+        if (heldItem == null)
         {
-            tool.StopInteract();
-            currentInstrument = null;
-            currentTool = ToolType.None;
+            Debug.LogWarning("Cannot select tool because PlayerHeldItem is missing.");
             return;
         }
 
-        if (currentInstrument != null)
+        if (tool != null && tool.toolType == ToolType.Steal)
         {
-            currentInstrument.StopInteract();
-            currentInstrument = null;
-            currentTool = ToolType.None;
+            Debug.Log("Steal is available from the inspection button and does not need a physical tool.");
+            return;
+        }
+
+        if (heldItem.IsHoldingTool(tool))
+        {
+            ToolType toolType = heldItem.CurrentToolType;
+            heldItem.ClearTool();
+            Debug.Log($"Tool deselected: {toolType}");
+            return;
+        }
+
+        if (!heldItem.TrySelectTool(tool))
+        {
+            return;
         }
 
         tool.Interact(holdPosition);
         if (tool.IsPicked)
         {
-            hands.PlayTakeItem();
-            currentInstrument = tool;
-            currentTool = tool.toolType;
+            hands?.PlayTakeItem();
             Debug.Log($"Tool selected: {tool.toolType}");
+        }
+        else
+        {
+            heldItem.ClearTool();
         }
     }
 
     private void HandleOtherInteraction(IInteractable interactable)
     {
-        if (currentTool == ToolType.None)
+        if (heldItem == null || !heldItem.HasTool)
         {
             currentInteractable = interactable;
             currentInteractable.Interact(holdPosition);
         }
         else if (interactable is ConveyorItemInteractable item)
         {
-            item.TryDisassemble(currentTool);
+            item.TryDisassemble(heldItem.CurrentToolType);
         }
     }
 
@@ -161,6 +194,14 @@ public class PlayerInteraction : MonoBehaviour
         return ReferenceEquals(currentInteractable, interactable);
     }
 
+    public void ClearCurrentInteractable(IInteractable interactable)
+    {
+        if (ReferenceEquals(currentInteractable, interactable))
+        {
+            currentInteractable = null;
+        }
+    }
+
     private bool CanInteractWith(IInteractable interactable)
     {
         if (currentInteractable == null)
@@ -176,5 +217,89 @@ public class PlayerInteraction : MonoBehaviour
         return interactable is TableScaner ||
                interactable is TableFlashlight ||
                interactable is SubmitItemInteractable;
+    }
+}
+
+public class PlayerHeldItem : MonoBehaviour
+{
+    public static PlayerHeldItem Instance { get; private set; }
+
+    public Instrument CurrentTool { get; private set; }
+    public Item CurrentItem { get; private set; }
+    public bool HasTool => CurrentTool != null;
+    public bool HasItem => CurrentItem != null;
+    public ToolType CurrentToolType => CurrentTool != null ? CurrentTool.toolType : ToolType.None;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(this);
+        }
+    }
+
+    public bool TrySelectTool(Instrument tool)
+    {
+        if (tool == null)
+        {
+            Debug.LogWarning("Cannot select tool because Instrument is null.");
+            return false;
+        }
+
+        if (IsHoldingTool(tool))
+        {
+            Debug.Log($"Tool already selected: {tool.toolType}");
+            return false;
+        }
+
+        if (CurrentTool != null)
+        {
+            Debug.Log($"Tool deselected: {CurrentTool.toolType}");
+        }
+
+        ClearTool();
+        CurrentTool = tool;
+        return true;
+    }
+
+    public void ClearTool()
+    {
+        if (CurrentTool != null)
+        {
+            CurrentTool.StopInteract();
+            CurrentTool = null;
+        }
+    }
+
+    public bool IsHoldingTool(Instrument tool)
+    {
+        return tool != null && ReferenceEquals(CurrentTool, tool);
+    }
+
+    public bool TrySelectItem(Item item)
+    {
+        if (item == null)
+        {
+            Debug.LogWarning("Cannot select item because Item is null.");
+            return false;
+        }
+
+        CurrentItem = item;
+        return true;
+    }
+
+    public void ClearItem()
+    {
+        CurrentItem = null;
+    }
+
+    public void ClearAll()
+    {
+        ClearTool();
+        ClearItem();
     }
 }
