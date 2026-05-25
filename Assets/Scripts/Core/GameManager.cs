@@ -36,6 +36,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private SfxCue sortingFailSfx;
     [SerializeField] private SfxCue punishmentSfx;
 
+    private bool isGameOverStarted;
+    private bool warnedMissingHandsForDamage;
+
     private void Awake()
     {
         if (Instance == null)
@@ -235,43 +238,79 @@ public class GameManager : MonoBehaviour
 
     public void CorrectSort(int additionalMistakes = 0)
     {
+        if (isGameOverStarted)
+        {
+            Debug.LogWarning("Correct sort ignored because game over has already started.");
+            return;
+        }
+
         PlaySfx(sortingSuccessSfx);
         lights.ChangeColorGreen();
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
 
+        bool canContinue = true;
         if (additionalMistakes > 0)
         {
-            AddMistakes(additionalMistakes);
+            canContinue = AddMistakes(additionalMistakes);
             totalMarkerPenalty += additionalMistakes;
         }
 
         CompleteCurrentItem();
-        StartTimer();
-        SpawnItem();
+
+        if (canContinue)
+        {
+            StartTimer();
+            SpawnItem();
+        }
     }
 
     public void WrongSort(int mistakesToAdd = 1)
     {
+        if (isGameOverStarted)
+        {
+            Debug.LogWarning("Wrong sort ignored because game over has already started.");
+            return;
+        }
+
         PlaySfx(sortingFailSfx);
         lights.ChangeColorRed();
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
-        AddMistakes(mistakesToAdd);
+        bool canContinue = AddMistakes(mistakesToAdd);
         CompleteCurrentItem();
-        SpawnItem();
+
+        if (canContinue)
+        {
+            SpawnItem();
+        }
     }
 
     private void CheckForDamage(int previousMistakeCount)
     {
         int mistakesPerDamage = GetMistakesPerDamage();
+        if (mistakesPerDamage <= 0)
+        {
+            Debug.LogWarning($"Hand damage check skipped: invalid mistakes per damage value {mistakesPerDamage}.");
+            return;
+        }
+
+        if (hands == null)
+        {
+            WarnMissingHandsForDamage();
+            return;
+        }
 
         for (int mistakeIndex = previousMistakeCount + 1; mistakeIndex <= currentMistakes; mistakeIndex++)
         {
             if (mistakeIndex % mistakesPerDamage == 0)
             {
+                Debug.Log($"Damage threshold reached at mistake {mistakeIndex}. Applying hand damage.");
                 PlaySfx(punishmentSfx);
-                hands.PlayTakeDamage();
+                if (!hands.TryPlayTakeDamage())
+                {
+                    Debug.LogWarning("Hand damage logic continued, but visual damage was skipped or all fingers are already damaged.");
+                }
             }
         }
     }
@@ -299,7 +338,15 @@ public class GameManager : MonoBehaviour
 
     public void BadEnd()
     {
-        CutsceneManager.Instance.PlayLooseCutscene(() => SceneManager.LoadScene(0));
+        CutsceneManager cutsceneManager = CutsceneManager.Instance;
+        if (cutsceneManager == null)
+        {
+            Debug.LogWarning("CutsceneManager is missing. Loading menu without loose cutscene.");
+            SceneManager.LoadScene(0);
+            return;
+        }
+
+        cutsceneManager.PlayLooseCutscene(() => SceneManager.LoadScene(0));
     }
 
     public void SpawnItem()
@@ -382,30 +429,59 @@ public class GameManager : MonoBehaviour
 
     private void GameOver()
     {
-        SceneManager.LoadScene(0);
+        if (isGameOverStarted)
+        {
+            Debug.LogWarning("Game over request ignored because game over has already started.");
+            return;
+        }
+
+        isGameOverStarted = true;
+        isTimerWork = false;
+        isGameStarted = false;
+        Debug.Log("Game over started.");
+
+        CutsceneManager cutsceneManager = CutsceneManager.Instance;
+        if (cutsceneManager == null)
+        {
+            Debug.LogWarning("CutsceneManager is missing. Loading menu without loose cutscene.");
+            SceneManager.LoadScene(0);
+            return;
+        }
+
+        cutsceneManager.PlayLooseCutscene(() => SceneManager.LoadScene(0));
     }
 
-    private void AddMistakes(int mistakesToAdd)
+    private bool AddMistakes(int mistakesToAdd)
     {
+        if (isGameOverStarted)
+        {
+            Debug.LogWarning($"Mistake penalty {mistakesToAdd} ignored because game over has already started.");
+            return false;
+        }
+
         if (mistakesToAdd <= 0)
         {
-            return;
+            return true;
         }
 
         int previousMistakeCount = currentMistakes;
         currentMistakes += mistakesToAdd;
+        Debug.Log($"Mistakes added: +{mistakesToAdd}. Total mistakes: {currentMistakes}.");
         CheckForDamage(previousMistakeCount);
 
         Difficult difficulty = GetCurrentDifficulty("check mistake limit");
         if (difficulty == null)
         {
-            return;
+            return true;
         }
 
         if (currentMistakes > difficulty.maxMistakes)
         {
             GameOver();
+            return false;
         }
+
+        return true;
     }
 
     private int GetMarkerPenalty(int missedMarkers)
@@ -527,5 +603,16 @@ public class GameManager : MonoBehaviour
         {
             PlayerInteraction.Instance.HandleStopInteraction();
         }
+    }
+
+    private void WarnMissingHandsForDamage()
+    {
+        if (warnedMissingHandsForDamage)
+        {
+            return;
+        }
+
+        warnedMissingHandsForDamage = true;
+        Debug.LogWarning("Hand damage skipped: GameManager hands reference is not assigned.");
     }
 }

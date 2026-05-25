@@ -33,6 +33,13 @@ public class CutsceneManager : MonoBehaviour
     
     public void PlayLooseCutscene(Action callback = null)
     {
+        if (looseCutscene == null)
+        {
+            Debug.LogWarning("Loose cutscene is not assigned. Running fallback callback.");
+            callback?.Invoke();
+            return;
+        }
+
         looseCutscene.Play(callback);
     }
 
