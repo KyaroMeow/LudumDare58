@@ -36,8 +36,26 @@ public class GameManager : MonoBehaviour
     [SerializeField] private SfxCue sortingFailSfx;
     [SerializeField] private SfxCue punishmentSfx;
 
+    [Header("Hand Damage Counter")]
+    [SerializeField] private int currentHandDamageCounter = 0;
+    [SerializeField] private int handCounterLimit = 10;
+    [SerializeField] private int easyHandPenaltyPoints = 1;
+    [SerializeField] private int normalHandPenaltyPoints = 2;
+    [SerializeField] private int hardHandPenaltyPoints = 5;
+    [SerializeField] private bool enableHandCounterDecay = true;
+    [SerializeField] private float handCounterDecayDelay = 5f;
+    [SerializeField] private float handCounterDecayInterval = 3f;
+    [SerializeField] private int handCounterDecayAmount = 1;
+    [SerializeField] private bool showHandPenaltyDebugCounter = true;
+    [SerializeField] private Vector2 handPenaltyDebugPosition = new Vector2(16f, 16f);
+    [SerializeField] private Vector2 handPenaltyDebugSize = new Vector2(220f, 48f);
+
     private bool isGameOverStarted;
     private bool warnedMissingHandsForDamage;
+    private float nextHandCounterDecayTime;
+
+    public int CurrentHandDamageCounter => currentHandDamageCounter;
+    public int CurrentHandDamageThreshold => GetHandCounterLimit();
 
     private void Awake()
     {
@@ -67,6 +85,7 @@ public class GameManager : MonoBehaviour
         if (isGameStarted)
         {
             UpdateTimer();
+            UpdateHandCounterDecay();
         }
     }
 
@@ -85,6 +104,8 @@ public class GameManager : MonoBehaviour
 
         isGameStarted = true;
         isTimerWork = true;
+        currentHandDamageCounter = 0;
+        ResetHandCounterDecayTimer();
         ResolveGameAudioManager();
         gameAudioManager?.StartShiftMusic();
         SpawnItem();
@@ -286,53 +307,134 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void CheckForDamage(int previousMistakeCount)
+    private bool AccumulateHandDamageCounter()
     {
-        int mistakesPerDamage = GetMistakesPerDamage();
-        if (mistakesPerDamage <= 0)
+        if (isGameOverStarted)
         {
-            Debug.LogWarning($"Hand damage check skipped: invalid mistakes per damage value {mistakesPerDamage}.");
-            return;
+            Debug.LogWarning("Hand damage counter update ignored because game over has already started.");
+            return false;
+        }
+
+        int handCounterLimitValue = GetHandCounterLimit();
+        if (handCounterLimitValue <= 0)
+        {
+            Debug.LogWarning($"Hand damage counter skipped: invalid limit value {handCounterLimitValue}.");
+            return true;
+        }
+
+        int handPenaltyPoints = GetHandPenaltyPointsPerMistake();
+        if (handPenaltyPoints <= 0)
+        {
+            Debug.LogWarning($"Hand damage counter skipped: invalid penalty points value {handPenaltyPoints}.");
+            return true;
+        }
+
+        currentHandDamageCounter = Mathf.Min(currentHandDamageCounter + handPenaltyPoints, handCounterLimitValue);
+        ResetHandCounterDecayTimer();
+        Debug.Log($"Hand damage counter increased by {handPenaltyPoints}: {currentHandDamageCounter}/{handCounterLimitValue}.");
+
+        if (currentHandDamageCounter < handCounterLimitValue)
+        {
+            return true;
+        }
+
+        Debug.Log($"Hand damage counter filled: {currentHandDamageCounter}/{handCounterLimitValue}. Applying one hand punishment.");
+        currentHandDamageCounter = 0;
+        ResetHandCounterDecayTimer();
+        return ApplyHandPunishment();
+    }
+
+    private bool ApplyHandPunishment()
+    {
+        if (isGameOverStarted)
+        {
+            Debug.LogWarning("Hand punishment ignored because game over has already started.");
+            return false;
         }
 
         if (hands == null)
         {
             WarnMissingHandsForDamage();
+            Debug.Log($"Hand damage counter reset after skipped punishment: {currentHandDamageCounter}/{GetHandCounterLimit()}.");
+            return true;
+        }
+
+        if (hands.IsFullyDamaged)
+        {
+            Debug.LogWarning("Hand punishment reached critical state: all fingers are already damaged. Starting game over.");
+            GameOver();
+            return false;
+        }
+
+        PlaySfx(punishmentSfx);
+        if (hands.TryPlayTakeDamage())
+        {
+            Debug.Log($"Hand damage applied. Counter reset to {currentHandDamageCounter}/{GetHandCounterLimit()}.");
+            return true;
+        }
+
+        if (hands.IsFullyDamaged)
+        {
+            Debug.LogWarning("Hand punishment failed because the hand is fully damaged. Starting game over.");
+            GameOver();
+            return false;
+        }
+
+        Debug.LogWarning($"Hand damage logic continued, but visual damage was skipped. Counter reset to {currentHandDamageCounter}/{GetHandCounterLimit()}.");
+        return true;
+    }
+
+    private void UpdateHandCounterDecay()
+    {
+        if (!enableHandCounterDecay || isGameOverStarted || currentHandDamageCounter <= 0)
+        {
             return;
         }
 
-        for (int mistakeIndex = previousMistakeCount + 1; mistakeIndex <= currentMistakes; mistakeIndex++)
+        if (handCounterDecayInterval <= 0f || handCounterDecayAmount <= 0)
         {
-            if (mistakeIndex % mistakesPerDamage == 0)
-            {
-                Debug.Log($"Damage threshold reached at mistake {mistakeIndex}. Applying hand damage.");
-                PlaySfx(punishmentSfx);
-                if (!hands.TryPlayTakeDamage())
-                {
-                    Debug.LogWarning("Hand damage logic continued, but visual damage was skipped or all fingers are already damaged.");
-                }
-            }
+            return;
         }
+
+        if (Time.time < nextHandCounterDecayTime)
+        {
+            return;
+        }
+
+        int previousCounter = currentHandDamageCounter;
+        currentHandDamageCounter = Mathf.Max(0, currentHandDamageCounter - handCounterDecayAmount);
+        nextHandCounterDecayTime = Time.time + handCounterDecayInterval;
+        Debug.Log($"Hand damage counter decayed: {previousCounter} -> {currentHandDamageCounter}/{GetHandCounterLimit()}.");
     }
 
-    private int GetMistakesPerDamage()
+    private void ResetHandCounterDecayTimer()
     {
-        Difficult difficulty = GetCurrentDifficulty("calculate damage frequency");
+        nextHandCounterDecayTime = Time.time + Mathf.Max(0f, handCounterDecayDelay);
+    }
+
+    private int GetHandCounterLimit()
+    {
+        return Mathf.Max(1, handCounterLimit);
+    }
+
+    private int GetHandPenaltyPointsPerMistake()
+    {
+        Difficult difficulty = GetCurrentDifficulty("calculate hand penalty points");
         if (difficulty == null)
         {
-            return 3;
+            return normalHandPenaltyPoints;
         }
 
         switch (difficulty.difficultyName)
         {
             case "EASY":
-                return 3;
+                return easyHandPenaltyPoints;
             case "NORMAL":
-                return 2;
+                return normalHandPenaltyPoints;
             case "HARD":
-                return 1;
+                return hardHandPenaltyPoints;
             default:
-                return 3;
+                return normalHandPenaltyPoints;
         }
     }
 
@@ -464,24 +566,9 @@ public class GameManager : MonoBehaviour
             return true;
         }
 
-        int previousMistakeCount = currentMistakes;
         currentMistakes += mistakesToAdd;
         Debug.Log($"Mistakes added: +{mistakesToAdd}. Total mistakes: {currentMistakes}.");
-        CheckForDamage(previousMistakeCount);
-
-        Difficult difficulty = GetCurrentDifficulty("check mistake limit");
-        if (difficulty == null)
-        {
-            return true;
-        }
-
-        if (currentMistakes > difficulty.maxMistakes)
-        {
-            GameOver();
-            return false;
-        }
-
-        return true;
+        return AccumulateHandDamageCounter();
     }
 
     private int GetMarkerPenalty(int missedMarkers)
@@ -614,5 +701,18 @@ public class GameManager : MonoBehaviour
 
         warnedMissingHandsForDamage = true;
         Debug.LogWarning("Hand damage skipped: GameManager hands reference is not assigned.");
+    }
+
+    private void OnGUI()
+    {
+        if (!showHandPenaltyDebugCounter || !isGameStarted)
+        {
+            return;
+        }
+
+        int handCounterLimitValue = GetHandCounterLimit();
+        GUI.Label(
+            new Rect(handPenaltyDebugPosition.x, handPenaltyDebugPosition.y, handPenaltyDebugSize.x, handPenaltyDebugSize.y),
+            $"Hand penalty: {currentHandDamageCounter} / {handCounterLimitValue}\nTotal mistakes: {currentMistakes}");
     }
 }
