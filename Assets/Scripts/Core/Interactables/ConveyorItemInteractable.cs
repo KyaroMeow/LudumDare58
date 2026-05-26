@@ -27,6 +27,13 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     public void Interact(Transform holdPosition)
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked)
+        {
+            Debug.Log("Item inspection blocked because vent hand intro is running.");
+            PlayerInteraction.Instance?.ClearCurrentInteractable(this);
+            return;
+        }
+
         TabletInteractable.Instance?.OpenBestiaryItem(itemName);
 
         PlayerView.Instance?.BlockMovement();
@@ -88,6 +95,12 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     private bool TryUseTool(ToolType toolType)
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked)
+        {
+            Debug.Log($"Tool action {toolType} blocked because vent hand intro is running.");
+            return false;
+        }
+
         if (InventorySystem.Instance == null)
         {
             Debug.LogWarning("InventorySystem is not present in scene.");
@@ -164,6 +177,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private void OnGUI()
     {
         if (!isBeingInspected)
+        {
+            return;
+        }
+
+        if (GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked)
         {
             return;
         }

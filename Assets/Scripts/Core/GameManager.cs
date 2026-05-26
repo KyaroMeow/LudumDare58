@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     public AnomallyController anomallyController;
     public ItemMarkerUI itemMarkerUI;
     public SecuritySystem securitySystem;
+    [SerializeField] private ConveyorExitController conveyorExitController;
     [SerializeField] private GameAudioManager gameAudioManager;
     [SerializeField] private SfxEmitter sfxEmitter;
     [SerializeField] private SfxCue scannerStartSfx;
@@ -51,12 +52,20 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Vector2 handPenaltyDebugSize = new Vector2(220f, 48f);
 
     private bool isGameOverStarted;
+    private bool isStoryInteractionLocked;
+    private bool isCompletingCurrentItem;
+    private bool warnedMissingConveyorExitController;
+    private bool storyTimerPauseActive;
+    private bool storyTimerWasWorking;
     private bool warnedMissingHandsForDamage;
     private float nextHandCounterDecayTime;
     private readonly HashSet<int> loggedChildItemRoots = new HashSet<int>();
 
     public int CurrentHandDamageCounter => currentHandDamageCounter;
     public int CurrentHandDamageThreshold => GetHandCounterLimit();
+    public bool IsGameOverStarted => isGameOverStarted;
+    public bool IsStoryInteractionLocked => isStoryInteractionLocked;
+    public bool IsCompletingCurrentItem => isCompletingCurrentItem;
 
     private void Awake()
     {
@@ -179,6 +188,18 @@ public class GameManager : MonoBehaviour
 
     public void SubmitCurrentItem()
     {
+        if (isStoryInteractionLocked)
+        {
+            Debug.Log("Submit current item ignored because story interaction is locked.");
+            return;
+        }
+
+        if (isCompletingCurrentItem)
+        {
+            Debug.Log("Submit current item ignored because the previous item is still exiting.");
+            return;
+        }
+
         if (!TryResolveCurrentItem(out Item item))
         {
             HandleCurrentItemWithoutItem("submit");
@@ -208,6 +229,18 @@ public class GameManager : MonoBehaviour
 
     public void SortItem(bool selectedVariant)
     {
+        if (isStoryInteractionLocked)
+        {
+            Debug.Log("Sort item ignored because story interaction is locked.");
+            return;
+        }
+
+        if (isCompletingCurrentItem)
+        {
+            Debug.Log("Sort item ignored because the previous item is still exiting.");
+            return;
+        }
+
         if (!TryResolveCurrentItem(out Item item))
         {
             HandleCurrentItemWithoutItem("sort");
@@ -265,13 +298,7 @@ public class GameManager : MonoBehaviour
             totalMarkerPenalty += additionalMistakes;
         }
 
-        CompleteCurrentItem();
-
-        if (canContinue)
-        {
-            StartTimer();
-            SpawnItem();
-        }
+        CompleteCurrentItemAfterSort(canContinue, true);
     }
 
     public void WrongSort(int mistakesToAdd = 1)
@@ -287,12 +314,12 @@ public class GameManager : MonoBehaviour
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
         bool canContinue = AddMistakes(mistakesToAdd);
-        CompleteCurrentItem();
-
         if (canContinue)
         {
-            SpawnItem();
+            VentHandIntroController.Instance?.NotifyFirstSortingMistake();
         }
+
+        CompleteCurrentItemAfterSort(canContinue, true);
     }
 
     private bool AccumulateHandDamageCounter()
@@ -441,6 +468,18 @@ public class GameManager : MonoBehaviour
 
     public void SpawnItem()
     {
+        if (isStoryInteractionLocked)
+        {
+            Debug.Log("Spawn item skipped because story interaction is locked.");
+            return;
+        }
+
+        if (isCompletingCurrentItem)
+        {
+            Debug.Log("Spawn item skipped because current item exit sequence is still running.");
+            return;
+        }
+
         Difficult difficulty = GetCurrentDifficulty("spawn an item");
         if (difficulty == null)
         {
@@ -501,10 +540,47 @@ public class GameManager : MonoBehaviour
 
     public void SpawnNextItemAfterBypass()
     {
-        if (isGameStarted)
+        if (isGameStarted && !isStoryInteractionLocked && !isCompletingCurrentItem)
         {
             SpawnItem();
         }
+    }
+
+    public void SetStoryInteractionLocked(bool locked)
+    {
+        if (isStoryInteractionLocked == locked)
+        {
+            return;
+        }
+
+        isStoryInteractionLocked = locked;
+        Debug.Log(locked ? "Story interaction lock enabled." : "Story interaction lock disabled.");
+    }
+
+    public void SetTimerPausedForStory(bool paused)
+    {
+        if (paused)
+        {
+            if (storyTimerPauseActive)
+            {
+                return;
+            }
+
+            storyTimerWasWorking = isTimerWork;
+            storyTimerPauseActive = true;
+            isTimerWork = false;
+            return;
+        }
+
+        if (!storyTimerPauseActive)
+        {
+            return;
+        }
+
+        storyTimerPauseActive = false;
+        SettingManager settings = SettingManager.EnsureInstance();
+        isTimerWork = isGameStarted && !isGameOverStarted && storyTimerWasWorking && settings != null && settings.timer;
+        storyTimerWasWorking = false;
     }
 
     public bool TryResolveCurrentItem(out Item item)
@@ -701,6 +777,70 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void CompleteCurrentItemAfterSort(bool canContinue, bool restartTimerBeforeSpawn)
+    {
+        ReleaseHeldCurrentItem();
+
+        GameObject itemToComplete = currentItem;
+        if (itemToComplete == null)
+        {
+            FinishCurrentItemCompletion(canContinue, restartTimerBeforeSpawn);
+            return;
+        }
+
+        isCompletingCurrentItem = true;
+        isTimerWork = false;
+        ResolveConveyorExitController();
+
+        if (conveyorExitController != null &&
+            !isStoryInteractionLocked &&
+            conveyorExitController.TryRunExit(itemToComplete, () => FinishCurrentItemCompletion(canContinue, restartTimerBeforeSpawn)))
+        {
+            return;
+        }
+
+        WarnMissingConveyorExitController();
+        Destroy(itemToComplete);
+        FinishCurrentItemCompletion(canContinue, restartTimerBeforeSpawn);
+    }
+
+    private void FinishCurrentItemCompletion(bool canContinue, bool restartTimerBeforeSpawn)
+    {
+        currentItem = null;
+        isCompletingCurrentItem = false;
+
+        if (!canContinue || !isGameStarted || isGameOverStarted || isStoryInteractionLocked)
+        {
+            return;
+        }
+
+        if (restartTimerBeforeSpawn)
+        {
+            StartTimer();
+        }
+
+        SpawnItem();
+    }
+
+    private void ResolveConveyorExitController()
+    {
+        if (conveyorExitController == null)
+        {
+            conveyorExitController = FindFirstObjectByType<ConveyorExitController>();
+        }
+    }
+
+    private void WarnMissingConveyorExitController()
+    {
+        if (conveyorExitController != null || warnedMissingConveyorExitController)
+        {
+            return;
+        }
+
+        warnedMissingConveyorExitController = true;
+        Debug.LogWarning("ConveyorExitController is not configured. Item completion uses old instant destroy/spawn flow.");
+    }
+
     private void HandleCurrentItemWithoutItem(string actionName)
     {
         if (currentItem == null)
@@ -712,12 +852,7 @@ public class GameManager : MonoBehaviour
 
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
-        CompleteCurrentItem();
-
-        if (isGameStarted && !isGameOverStarted)
-        {
-            SpawnItem();
-        }
+        CompleteCurrentItemAfterSort(isGameStarted && !isGameOverStarted, true);
     }
 
     private void ReleaseHeldCurrentItem()

@@ -9,8 +9,27 @@ public class ItemSpawner : MonoBehaviour
     [SerializeField] private SfxEmitter doorSfxEmitter;
     [SerializeField] private GameObject bomb;
     [SerializeField] private GameObject anomalyItem;
+    private bool isStoryPaused;
+    private bool warnedStoryPaused;
+
+    public bool IsStoryPaused => isStoryPaused;
+
+    public void SetStoryPaused(bool paused)
+    {
+        isStoryPaused = paused;
+        if (!paused)
+        {
+            warnedStoryPaused = false;
+        }
+    }
+
     public void SpawnBomb()
     {
+        if (IsSpawnBlockedByStory())
+        {
+            return;
+        }
+
         if (bomb != null)
         {
             GameObject spawnedBomb = Instantiate(bomb, transform.position, Quaternion.identity);
@@ -24,6 +43,11 @@ public class ItemSpawner : MonoBehaviour
 
     public void SpawnAnomalyItem()
     {
+        if (IsSpawnBlockedByStory())
+        {
+            return;
+        }
+
         if (anomalyItem == null)
         {
             Debug.LogWarning("Cannot spawn anomaly item because anomalyItem prefab is not assigned.");
@@ -36,6 +60,11 @@ public class ItemSpawner : MonoBehaviour
 
     public void SpawnItem()
     {
+        if (IsSpawnBlockedByStory())
+        {
+            return;
+        }
+
         if (itemPrefabs == null || itemPrefabs.Length == 0)
         {
             Debug.LogError("No item prefabs assigned!");
@@ -202,6 +231,22 @@ public class ItemSpawner : MonoBehaviour
         }
 
         GameManager.Instance.currentItem = spawnedObject;
+    }
+
+    private bool IsSpawnBlockedByStory()
+    {
+        if (!isStoryPaused)
+        {
+            return false;
+        }
+
+        if (!warnedStoryPaused)
+        {
+            warnedStoryPaused = true;
+            Debug.Log("Item spawn skipped because vent hand intro is running.");
+        }
+
+        return true;
     }
 
 }

@@ -44,6 +44,12 @@ public class TabletInteractable : MonoBehaviour, IInteractable
 
     public void Interact(Transform holdPosition)
     {
+        if (IsBlockedByStoryLock())
+        {
+            Debug.Log("Tablet interaction blocked because vent hand intro is running.");
+            return;
+        }
+
         PlayerView.Instance.BlockMovement();
         SavePosition();
 
@@ -83,12 +89,22 @@ public class TabletInteractable : MonoBehaviour, IInteractable
 
     public void SetHeader(string text)
     {
+        if (IsBlockedByStoryLock())
+        {
+            return;
+        }
+
         PlaySfx(uiTapSfx);
         headerText.text = text;
     }
 
     public void GoHome()
     {
+        if (IsBlockedByStoryLock())
+        {
+            return;
+        }
+
         PlaySfx(uiTapSfx);
         foreach (var page in otherPages)
         {
@@ -99,6 +115,11 @@ public class TabletInteractable : MonoBehaviour, IInteractable
     }
     public void StartGame()
     {
+        if (IsBlockedByStoryLock())
+        {
+            return;
+        }
+
         PlaySfx(uiTapSfx);
         if (GameManager.Instance.isGameStarted == false)
         {
@@ -123,5 +144,10 @@ public class TabletInteractable : MonoBehaviour, IInteractable
         }
 
         sfxEmitter.Play(cue);
+    }
+
+    private bool IsBlockedByStoryLock()
+    {
+        return GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked;
     }
 }

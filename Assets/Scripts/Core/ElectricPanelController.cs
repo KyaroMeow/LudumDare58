@@ -39,6 +39,8 @@ public class ElectricPanelController : MonoBehaviour
     }
 
     public static ElectricPanelController Instance { get; private set; }
+    public event System.Action BlackoutStarted;
+    public event System.Action BlackoutEnded;
 
     [Header("Debug and Timing")]
     [SerializeField] private bool debugAllowPanelBeforeHandIntro = true;
@@ -57,6 +59,11 @@ public class ElectricPanelController : MonoBehaviour
     [SerializeField] private bool autoFindSecurityCamera = true;
     [SerializeField] private bool autoFindIndicatorObjects = true;
     [SerializeField] private bool showDebugGui = true;
+
+    [Header("Story Intro Lock")]
+    [SerializeField] private float preIntroVoltageMin = 0.2f;
+    [SerializeField] private float preIntroVoltageMax = 0.3f;
+    [SerializeField] private float preIntroVoltageNoiseSpeed = 0.65f;
 
     [Header("Lever")]
     [SerializeField] private Transform leverVisual;
@@ -203,14 +210,19 @@ public class ElectricPanelController : MonoBehaviour
     private bool voltageValueInitialized;
     private bool gaugeNeedlePoseCached;
     private bool warnedMissingGaugeNeedles;
+    private bool storyIntroLockActive;
+    private bool storyBlackoutActive;
+    private bool storyBlackoutRestoring;
     private float lastDeniedFeedbackTime = -999f;
 
-    public bool IsBlackoutActive => state == PanelState.BlackoutActive || state == PanelState.RestoreWarning;
+    public bool IsBlackoutActive => storyBlackoutActive || state == PanelState.BlackoutActive || state == PanelState.RestoreWarning;
     public bool IsReady => state == PanelState.Ready;
     public float Charge01 => charge01;
     public float BlackoutRemaining => Mathf.Max(0f, blackoutRemaining);
     public float CooldownRemaining => Mathf.Max(0f, cooldownRemaining);
     public PanelState CurrentState => state;
+    public bool IsStoryIntroLockActive => storyIntroLockActive;
+    public bool IsStoryBlackoutActive => storyBlackoutActive || storyBlackoutRestoring;
 
     private static Gradient CreateDefaultChargeGradient()
     {
@@ -256,7 +268,19 @@ public class ElectricPanelController : MonoBehaviour
     {
         EnsureInitialized();
 
-        if (state == PanelState.Locked && debugAllowPanelBeforeHandIntro && IsShiftReadyForDebugCharge())
+        if (storyBlackoutActive || storyBlackoutRestoring)
+        {
+            UpdateIndicatorVisuals();
+            UpdateCameraWarningVisuals();
+            return;
+        }
+
+        if (storyIntroLockActive && state == PanelState.Locked)
+        {
+            UpdatePreIntroVoltageVisual();
+        }
+
+        if (!storyIntroLockActive && state == PanelState.Locked && debugAllowPanelBeforeHandIntro && IsShiftReadyForDebugCharge())
         {
             StartCharging();
         }
@@ -313,7 +337,7 @@ public class ElectricPanelController : MonoBehaviour
         ApplyCameraOnline();
         UpdateIndicatorVisuals();
 
-        if (debugAllowPanelBeforeHandIntro && IsShiftReadyForDebugCharge())
+        if (!storyIntroLockActive && debugAllowPanelBeforeHandIntro && IsShiftReadyForDebugCharge())
         {
             StartCharging();
         }
@@ -334,6 +358,7 @@ public class ElectricPanelController : MonoBehaviour
 
     public void UnlockAfterVentHandIntro()
     {
+        storyIntroLockActive = false;
         if (state != PanelState.Locked)
         {
             return;
@@ -346,15 +371,17 @@ public class ElectricPanelController : MonoBehaviour
     {
         EnsureInitialized();
 
+        if (storyIntroLockActive || storyBlackoutActive || storyBlackoutRestoring)
+        {
+            Debug.Log("Electric panel lever ignored. Vent hand intro has not unlocked the panel yet.");
+            PlayDeniedFeedback();
+            return false;
+        }
+
         if (state != PanelState.Ready)
         {
             Debug.Log($"Electric panel lever ignored. Current state: {state}.");
-            if (Time.unscaledTime - lastDeniedFeedbackTime >= deniedFeedbackCooldown)
-            {
-                lastDeniedFeedbackTime = Time.unscaledTime;
-                PlaySfx(leverDeniedSfx, leverDeniedAudioClip, nameof(leverDeniedSfx));
-            }
-
+            PlayDeniedFeedback();
             return false;
         }
 
@@ -364,12 +391,111 @@ public class ElectricPanelController : MonoBehaviour
 
     public void RestorePower()
     {
+        if (storyBlackoutActive || storyBlackoutRestoring)
+        {
+            Debug.Log("RestorePower ignored because story blackout controls restoration.");
+            return;
+        }
+
         if (state == PanelState.Restoring || state == PanelState.Cooldown)
         {
             return;
         }
 
         StartCoroutine(RestorePowerRoutine());
+    }
+
+    public void SetStoryIntroLockActive(bool active, float minVisual = 0.2f, float maxVisual = 0.3f)
+    {
+        EnsureInitialized();
+        storyIntroLockActive = active;
+        preIntroVoltageMin = Mathf.Clamp01(Mathf.Min(minVisual, maxVisual));
+        preIntroVoltageMax = Mathf.Clamp01(Mathf.Max(minVisual, maxVisual));
+
+        if (active && !storyBlackoutActive && !storyBlackoutRestoring)
+        {
+            state = PanelState.Locked;
+            warningStarted = false;
+            cooldownRemaining = 0f;
+            blackoutRemaining = 0f;
+            UpdatePreIntroVoltageVisual();
+            Debug.Log("Electric panel story intro lock enabled.");
+        }
+        else if (!active)
+        {
+            Debug.Log("Electric panel story intro lock disabled.");
+        }
+    }
+
+    public void BeginStoryBlackout()
+    {
+        EnsureInitialized();
+
+        if (storyBlackoutActive)
+        {
+            return;
+        }
+
+        storyBlackoutActive = true;
+        storyBlackoutRestoring = false;
+        state = PanelState.BlackoutActive;
+        charge01 = 0f;
+        blackoutRemaining = 0f;
+        warningStarted = true;
+
+        Debug.Log("Electric panel story blackout started.");
+        PlaySfx(powerDownSfx, powerDownAudioClip, nameof(powerDownSfx));
+        gameAudioManager?.OnBlackoutStarted();
+
+        SecuritySystem securitySystem = ResolveSecuritySystem();
+        securitySystem?.SetSecurityEnabled(false);
+
+        ApplyCameraOffline();
+        StartLightRoutine(ApplyBlackoutLightsRoutine());
+        UpdateIndicatorVisuals();
+    }
+
+    public void EndStoryBlackout()
+    {
+        StartCoroutine(EndStoryBlackoutRoutine(false));
+    }
+
+    public IEnumerator EndStoryBlackoutRoutine(bool unlockAfterRestore)
+    {
+        EnsureInitialized();
+
+        if (!storyBlackoutActive && !storyBlackoutRestoring)
+        {
+            if (unlockAfterRestore)
+            {
+                UnlockAfterVentHandIntro();
+            }
+
+            yield break;
+        }
+
+        storyBlackoutActive = false;
+        storyBlackoutRestoring = true;
+        state = PanelState.Restoring;
+        blackoutRemaining = 0f;
+        charge01 = 0f;
+
+        Debug.Log("Electric panel ending story blackout.");
+        PlaySfx(powerRestoreSfx, powerRestoreAudioClip, nameof(powerRestoreSfx));
+        gameAudioManager?.OnBlackoutEnded();
+
+        SecuritySystem securitySystem = ResolveSecuritySystem();
+        securitySystem?.SetSecurityEnabled(true);
+
+        ApplyCameraOnline();
+        yield return RestoreLightsRoutine();
+
+        storyBlackoutRestoring = false;
+        state = PanelState.Locked;
+        if (unlockAfterRestore)
+        {
+            UnlockAfterVentHandIntro();
+        }
     }
 
     private void StartCharging()
@@ -379,6 +505,25 @@ public class ElectricPanelController : MonoBehaviour
         blackoutRemaining = 0f;
         cooldownRemaining = 0f;
         Debug.Log("Electric panel charging started.");
+    }
+
+    private void UpdatePreIntroVoltageVisual()
+    {
+        float min = Mathf.Clamp01(Mathf.Min(preIntroVoltageMin, preIntroVoltageMax));
+        float max = Mathf.Clamp01(Mathf.Max(preIntroVoltageMin, preIntroVoltageMax));
+        float noise = Mathf.PerlinNoise(Time.time * Mathf.Max(0.01f, preIntroVoltageNoiseSpeed), 24.7f);
+        charge01 = Mathf.Lerp(min, max, noise);
+    }
+
+    private void PlayDeniedFeedback()
+    {
+        if (Time.unscaledTime - lastDeniedFeedbackTime < deniedFeedbackCooldown)
+        {
+            return;
+        }
+
+        lastDeniedFeedbackTime = Time.unscaledTime;
+        PlaySfx(leverDeniedSfx, leverDeniedAudioClip, nameof(leverDeniedSfx));
     }
 
     private void StartBlackout()
@@ -399,6 +544,7 @@ public class ElectricPanelController : MonoBehaviour
         ApplyCameraOffline();
         AnimateLeverPulled();
         StartLightRoutine(ApplyBlackoutLightsRoutine());
+        BlackoutStarted?.Invoke();
     }
 
     private void UpdateBlackoutTimer()
@@ -435,6 +581,7 @@ public class ElectricPanelController : MonoBehaviour
         Debug.Log("Electric panel restoring power.");
         PlaySfx(powerRestoreSfx, powerRestoreAudioClip, nameof(powerRestoreSfx));
         gameAudioManager?.OnBlackoutEnded();
+        BlackoutEnded?.Invoke();
 
         SecuritySystem securitySystem = ResolveSecuritySystem();
         securitySystem?.SetSecurityEnabled(true);
@@ -708,14 +855,6 @@ public class ElectricPanelController : MonoBehaviour
 
     private void UpdateChargeBarVisual(Color fallbackColor)
     {
-        Renderer activeRenderer = GetActiveChargeFillRenderer();
-        if (activeRenderer == null)
-        {
-            return;
-        }
-
-        CacheChargeBarPose();
-
         float gameplayCharge = GetGameplayCharge01();
         if (useSegmentedVoltageIndicator && voltageSegmentIndicator != null)
         {
@@ -724,10 +863,18 @@ public class ElectricPanelController : MonoBehaviour
                 state == PanelState.Ready,
                 state == PanelState.BlackoutActive,
                 state == PanelState.RestoreWarning,
-                state == PanelState.Locked || state == PanelState.Cooldown || state == PanelState.Restoring);
+                (state == PanelState.Locked && !storyIntroLockActive) || state == PanelState.Cooldown || state == PanelState.Restoring);
             UpdateGaugeNeedleVisuals(gameplayCharge);
             return;
         }
+
+        Renderer activeRenderer = GetActiveChargeFillRenderer();
+        if (activeRenderer == null)
+        {
+            return;
+        }
+
+        CacheChargeBarPose();
 
         float visualCharge = GetVisualCharge01(gameplayCharge);
         Color chargeColor = GetChargeBarColor(visualCharge, fallbackColor);
@@ -761,6 +908,11 @@ public class ElectricPanelController : MonoBehaviour
         if (state == PanelState.Ready)
         {
             return 1f;
+        }
+
+        if (storyIntroLockActive && state == PanelState.Locked)
+        {
+            return Mathf.Clamp01(charge01);
         }
 
         if (state == PanelState.Locked || state == PanelState.Cooldown || state == PanelState.Restoring)
@@ -1718,7 +1870,15 @@ public class ElectricPanelController : MonoBehaviour
         }
 
         string message = $"POWER PANEL: {state}";
-        if (state == PanelState.Charging)
+        if (storyBlackoutActive)
+        {
+            message = "POWER PANEL: STORY BLACKOUT";
+        }
+        else if (storyIntroLockActive && state == PanelState.Locked)
+        {
+            message = $"POWER PANEL: LOCKED {Mathf.RoundToInt(charge01 * 100f)}%";
+        }
+        else if (state == PanelState.Charging)
         {
             message = $"POWER PANEL: CHARGING {Mathf.RoundToInt(charge01 * 100f)}%";
         }

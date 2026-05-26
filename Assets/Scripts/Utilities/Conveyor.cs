@@ -10,6 +10,9 @@ public class Conveyor : MonoBehaviour
     public bool canMove = true;
     public bool visualMoveFlip = false;
     Rigidbody rb;
+    private bool storyPaused;
+    private bool canMoveBeforeStoryPause;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -40,5 +43,24 @@ public class Conveyor : MonoBehaviour
             GetComponent<Renderer>().material.mainTextureOffset += new Vector2(conveyorVisualSpeed * Time.fixedDeltaTime, 0);
         }
         
+    }
+
+    public void SetStoryPaused(bool paused)
+    {
+        if (storyPaused == paused)
+        {
+            return;
+        }
+
+        storyPaused = paused;
+        if (paused)
+        {
+            canMoveBeforeStoryPause = canMove;
+            canMove = false;
+        }
+        else
+        {
+            canMove = canMoveBeforeStoryPause;
+        }
     }
 }

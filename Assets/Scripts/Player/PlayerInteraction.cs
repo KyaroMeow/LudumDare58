@@ -208,6 +208,11 @@ public class PlayerInteraction : MonoBehaviour
 
     private bool CanInteractWith(IInteractable interactable)
     {
+        if (GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked && !IsAllowedDuringStoryLock(interactable))
+        {
+            return false;
+        }
+
         if (currentInteractable == null)
         {
             return true;
@@ -221,6 +226,12 @@ public class PlayerInteraction : MonoBehaviour
         return interactable is TableScaner ||
                interactable is TableFlashlight ||
                interactable is SubmitItemInteractable;
+    }
+
+    private bool IsAllowedDuringStoryLock(IInteractable interactable)
+    {
+        return interactable is VentHandKeyPickup ||
+               interactable is VentHandInteractable;
     }
 }
 
