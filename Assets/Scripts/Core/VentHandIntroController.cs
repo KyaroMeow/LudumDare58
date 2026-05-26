@@ -71,7 +71,8 @@ public class VentHandIntroController : MonoBehaviour
     };
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private CanvasGroup dialogueCanvasGroup;
-    [SerializeField] private float handAutoTalkDelay = 0.75f;
+    [SerializeField] private bool dialogueStartsOnlyByHandClick = true;
+    [SerializeField] private float handAutoTalkDelay = 0f;
     [SerializeField] private float characterDelay = 0.035f;
     [SerializeField] private AudioClip[] defaultVoiceBlips;
     [SerializeField] private AudioSource voiceAudioSource;
@@ -556,19 +557,29 @@ public class VentHandIntroController : MonoBehaviour
     {
         dialogueCanBeStarted = true;
         dialogueStartRequested = false;
-        suppressDialogueInputUntilFrame = Time.frameCount + 1;
+        suppressDialogueInputUntilFrame = Time.frameCount + 2;
 
-        float elapsed = 0f;
-        float delay = Mathf.Max(0f, handAutoTalkDelay);
-        while (elapsed < delay && !dialogueStartRequested)
+        if (dialogueStartsOnlyByHandClick)
         {
-            elapsed += Time.deltaTime;
-            yield return null;
+            while (!dialogueStartRequested)
+            {
+                yield return null;
+            }
+        }
+        else
+        {
+            float elapsed = 0f;
+            float delay = Mathf.Max(0f, handAutoTalkDelay);
+            while (elapsed < delay && !dialogueStartRequested)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
         }
 
         dialogueCanBeStarted = false;
         dialogueStartRequested = false;
-        suppressDialogueInputUntilFrame = Time.frameCount + 1;
+        suppressDialogueInputUntilFrame = Time.frameCount + 2;
     }
 
     private IEnumerator WaitForDialogueAdvanceRoutine()
@@ -764,14 +775,10 @@ public class VentHandIntroController : MonoBehaviour
     private Light[] GetActiveFeedbackLights()
     {
         List<Light> lights = new List<Light>();
-        AddLights(lights, handArrivalLights);
-        AddLights(lights, ventHandLights);
-        AddLights(lights, handHighlightLights);
 
-        if (lights.Count == 0)
-        {
-            AddLights(lights, handFeedbackLights);
-        }
+        // Важно: свет руки назначается только вручную.
+        // Автоподбор и старые массивы не используем, чтобы не включать лампы конвейера.
+        AddLights(lights, handArrivalLights);
 
         return lights.ToArray();
     }

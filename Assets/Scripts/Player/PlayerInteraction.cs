@@ -10,6 +10,9 @@ public class PlayerInteraction : MonoBehaviour
     public Transform holdPosition;
     public float interactionDistance = 10f;
 
+    [Header("Raycast Priority")]
+    [SerializeField] private bool usePriorityRaycast = true;
+
     private IInteractable currentInteractable;
     private OutlineEffect currentInteractableOutline;
     private PlayerHeldItem heldItem;
@@ -56,11 +59,79 @@ public class PlayerInteraction : MonoBehaviour
 
     private void HandleInteraction()
     {
+        if (playerCamera == null)
+        {
+            DisableOutline();
+            return;
+        }
+
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
 
+        if (usePriorityRaycast)
+        {
+            HandlePriorityInteractionRaycast(ray);
+            return;
+        }
+
+        HandleLegacyInteractionRaycast(ray);
+    }
+
+    private void HandlePriorityInteractionRaycast(Ray ray)
+    {
+        RaycastHit[] hits = Physics.RaycastAll(ray, interactionDistance);
+        if (hits == null || hits.Length == 0)
+        {
+            DisableOutline();
+            return;
+        }
+
+        IInteractable bestInteractable = null;
+        RaycastHit bestHit = default;
+        int bestPriority = int.MinValue;
+        float bestDistance = float.MaxValue;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            RaycastHit hit = hits[i];
+            IInteractable interactable = ResolveInteractable(hit.collider);
+            if (interactable == null || !CanInteractWith(interactable))
+            {
+                continue;
+            }
+
+            int priority = GetInteractablePriority(interactable);
+            bool betterPriority = priority > bestPriority;
+            bool samePriorityCloser = priority == bestPriority && hit.distance < bestDistance;
+
+            if (betterPriority || samePriorityCloser)
+            {
+                bestInteractable = interactable;
+                bestHit = hit;
+                bestPriority = priority;
+                bestDistance = hit.distance;
+            }
+        }
+
+        if (bestInteractable == null)
+        {
+            DisableOutline();
+            return;
+        }
+
+        HandleOutline(bestHit);
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            HandleInteractionClick(bestInteractable);
+        }
+    }
+
+    private void HandleLegacyInteractionRaycast(Ray ray)
+    {
         if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance))
         {
-            if (hit.collider.TryGetComponent(out IInteractable interactable) && CanInteractWith(interactable))
+            IInteractable interactable = ResolveInteractable(hit.collider);
+            if (interactable != null && CanInteractWith(interactable))
             {
                 HandleOutline(hit);
 
@@ -78,6 +149,76 @@ public class PlayerInteraction : MonoBehaviour
         {
             DisableOutline();
         }
+    }
+
+    private IInteractable ResolveInteractable(Collider hitCollider)
+    {
+        if (hitCollider == null)
+        {
+            return null;
+        }
+
+        MonoBehaviour[] behaviours = hitCollider.GetComponents<MonoBehaviour>();
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            MonoBehaviour behaviour = behaviours[i];
+            if (behaviour != null && behaviour.enabled && behaviour is IInteractable interactable)
+            {
+                return interactable;
+            }
+        }
+
+        behaviours = hitCollider.GetComponentsInParent<MonoBehaviour>(true);
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            MonoBehaviour behaviour = behaviours[i];
+            if (behaviour != null && behaviour.enabled && behaviour is IInteractable interactable)
+            {
+                return interactable;
+            }
+        }
+
+        return null;
+    }
+
+    private int GetInteractablePriority(IInteractable interactable)
+    {
+        if (interactable is VentHandKeyPickup)
+        {
+            return 1000;
+        }
+
+        if (interactable is Instrument)
+        {
+            return 900;
+        }
+
+        if (interactable is ToolCaseLock)
+        {
+            return 800;
+        }
+
+        if (interactable is VentHandInteractable)
+        {
+            return 700;
+        }
+
+        if (interactable is SubmitItemInteractable)
+        {
+            return 600;
+        }
+
+        if (interactable is TableScaner || interactable is TableFlashlight)
+        {
+            return 500;
+        }
+
+        if (interactable is ConveyorItemInteractable)
+        {
+            return 400;
+        }
+
+        return 100;
     }
 
     private void HandleInteractionClick(IInteractable interactable)
@@ -166,7 +307,18 @@ public class PlayerInteraction : MonoBehaviour
 
     private void HandleOutline(RaycastHit hit)
     {
-        if (hit.collider.TryGetComponent(out OutlineEffect outline) && currentInteractableOutline == null)
+        OutlineEffect outline = hit.collider != null
+            ? hit.collider.GetComponentInParent<OutlineEffect>()
+            : null;
+
+        if (outline == currentInteractableOutline)
+        {
+            return;
+        }
+
+        DisableOutline();
+
+        if (outline != null)
         {
             currentInteractableOutline = outline;
             currentInteractableOutline.enabled = true;
