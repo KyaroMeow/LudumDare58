@@ -27,6 +27,7 @@ public class VentHandIntroController : MonoBehaviour
     [SerializeField] private GameManager gameManager;
     [SerializeField] private ElectricPanelController electricPanelController;
     [SerializeField] private Conveyor conveyor;
+    [SerializeField] private ConveyorExitController conveyorExitController;
     [SerializeField] private ItemSpawner itemSpawner;
     [SerializeField] private ToolCaseLock toolCaseLock;
     [SerializeField] private GameObject handObject;
@@ -42,6 +43,10 @@ public class VentHandIntroController : MonoBehaviour
     [SerializeField] private string ventCloseStateName = "close";
     [SerializeField] private string ventOpenTrigger;
     [SerializeField] private string ventCloseTrigger;
+    [SerializeField] private float ventCrossFadeDuration = 0.2f;
+    [SerializeField] private float ventOpenStartNormalizedTime = 0f;
+    [SerializeField] private float ventCloseStartNormalizedTime = 0f;
+    [SerializeField] private bool resetVentAnimatorBeforePlay = false;
 
     [Header("Hand Animation")]
     [SerializeField] private Animator handAnimator;
@@ -186,7 +191,7 @@ public class VentHandIntroController : MonoBehaviour
 
         if (hasKeyBeenDropped && !hasKeyBeenPickedUp)
         {
-            return true;
+            return false;
         }
 
         PlaySfx(handClickSfx, handClickAudioClip, nameof(handClickSfx));
@@ -285,8 +290,9 @@ public class VentHandIntroController : MonoBehaviour
 
         toolCaseLock?.UnlockCase();
         isToolCaseUnlocked = toolCaseLock == null || toolCaseLock.IsUnlocked;
-        SetHandInteractableEnabled(enableCraftInteractionAfterIntro);
-        SetHandInteractionCollidersEnabled(enableCraftInteractionAfterIntro);
+        SetHandInteractableEnabled(false);
+        SetAllHandCollidersEnabled(false);
+        SetHandOutlineEnabled(false);
         Debug.Log("Vent hand key picked up. Tool case unlocked.");
 
         if (activeIntroRoutine == null)
@@ -309,7 +315,7 @@ public class VentHandIntroController : MonoBehaviour
             return;
         }
 
-        activeIntroRoutine = StartCoroutine(RunIntroRoutine());
+        activeIntroRoutine = StartCoroutine(RunIntroWhenConveyorReadyRoutine());
     }
 
     [ContextMenu("Debug Complete Vent Hand Intro")]
@@ -402,7 +408,51 @@ public class VentHandIntroController : MonoBehaviour
             yield break;
         }
 
-        activeIntroRoutine = StartCoroutine(RunIntroRoutine());
+        activeIntroRoutine = StartCoroutine(RunIntroWhenConveyorReadyRoutine());
+    }
+
+    private IEnumerator RunIntroWhenConveyorReadyRoutine()
+    {
+        yield return WaitForConveyorExitToFinishRoutine();
+
+        if (hasVentHandIntroStarted || hasVentHandIntroCompleted)
+        {
+            activeIntroRoutine = null;
+            yield break;
+        }
+
+        if (gameManager != null && (!gameManager.isGameStarted || gameManager.IsGameOverStarted))
+        {
+            Debug.Log("Vent hand intro skipped because the shift is not active.");
+            activeIntroRoutine = null;
+            yield break;
+        }
+
+        yield return RunIntroRoutine();
+    }
+
+    private IEnumerator WaitForConveyorExitToFinishRoutine()
+    {
+        ResolveReferences();
+        bool loggedWait = false;
+
+        while (IsConveyorExitActive())
+        {
+            if (!loggedWait)
+            {
+                loggedWait = true;
+                Debug.Log("Vent hand intro waiting for conveyor exit to finish.");
+            }
+
+            yield return null;
+            ResolveReferences();
+        }
+    }
+
+    private bool IsConveyorExitActive()
+    {
+        return (gameManager != null && gameManager.IsCompletingCurrentItem) ||
+               (conveyorExitController != null && conveyorExitController.IsRunning);
     }
 
     private IEnumerator RunIntroRoutine()
@@ -464,8 +514,9 @@ public class VentHandIntroController : MonoBehaviour
             SetHandActive(false);
         }
 
-        SetHandInteractableEnabled(enableCraftInteractionAfterIntro);
-        SetHandInteractionCollidersEnabled(enableCraftInteractionAfterIntro);
+        SetHandInteractableEnabled(false);
+        SetAllHandCollidersEnabled(false);
+        SetHandOutlineEnabled(false);
 
         PlayVentClose();
         yield return FadeFeedbackLights(false);
@@ -613,12 +664,41 @@ public class VentHandIntroController : MonoBehaviour
             }
 
             pickup.Configure(this, toolCaseLock, keyPickupSfx, keyPickupAudioClip);
+            EnsureKeyPickupReady(spawnedKey, pickup);
         }
 
-        SetHandInteractionCollidersEnabled(false);
-        SetHandInteractableEnabled(false);
+        DisableHandInteractionForKeyPickup();
         PlaySfx(keyDropSfx, keyDropAudioClip, nameof(keyDropSfx));
         Debug.Log("Vent hand dropped the tool case key.");
+    }
+
+    private void EnsureKeyPickupReady(GameObject keyObject, VentHandKeyPickup pickup)
+    {
+        if (keyObject == null)
+        {
+            return;
+        }
+
+        if (pickup != null)
+        {
+            pickup.enabled = true;
+        }
+
+        Collider[] keyColliders = keyObject.GetComponentsInChildren<Collider>(true);
+        if (keyColliders.Length == 0)
+        {
+            Collider keyCollider = keyObject.AddComponent<SphereCollider>();
+            keyCollider.enabled = true;
+            return;
+        }
+
+        for (int i = 0; i < keyColliders.Length; i++)
+        {
+            if (keyColliders[i] != null)
+            {
+                keyColliders[i].enabled = true;
+            }
+        }
     }
 
     private GameObject CreatePlaceholderKey(Transform dropPoint)
@@ -828,13 +908,25 @@ public class VentHandIntroController : MonoBehaviour
     private void PlayVentOpen()
     {
         PlaySfx(ventOpenSfx, ventOpenAudioClip, nameof(ventOpenSfx));
-        PlayAnimator(ventAnimator, ventOpenTrigger, ventOpenStateName, "vent open");
+        PlayAnimator(
+            ventAnimator,
+            ventOpenTrigger,
+            ventCloseTrigger,
+            ventOpenStateName,
+            "vent open",
+            ventOpenStartNormalizedTime);
     }
 
     private void PlayVentClose()
     {
         PlaySfx(ventCloseSfx, ventCloseAudioClip, nameof(ventCloseSfx));
-        PlayAnimator(ventAnimator, ventCloseTrigger, ventCloseStateName, "vent close");
+        PlayAnimator(
+            ventAnimator,
+            ventCloseTrigger,
+            ventOpenTrigger,
+            ventCloseStateName,
+            "vent close",
+            ventCloseStartNormalizedTime);
     }
 
     private void TriggerHand(string trigger)
@@ -847,7 +939,13 @@ public class VentHandIntroController : MonoBehaviour
         handAnimator.SetTrigger(trigger);
     }
 
-    private void PlayAnimator(Animator animator, string triggerName, string stateName, string actionName)
+    private void PlayAnimator(
+        Animator animator,
+        string triggerName,
+        string oppositeTriggerName,
+        string stateName,
+        string actionName,
+        float startNormalizedTime)
     {
         if (animator == null)
         {
@@ -860,15 +958,35 @@ public class VentHandIntroController : MonoBehaviour
             return;
         }
 
+        if (resetVentAnimatorBeforePlay)
+        {
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
         if (!string.IsNullOrWhiteSpace(triggerName))
         {
+            if (!string.IsNullOrWhiteSpace(oppositeTriggerName))
+            {
+                animator.ResetTrigger(oppositeTriggerName);
+            }
+
             animator.SetTrigger(triggerName);
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(stateName))
         {
-            animator.CrossFade(stateName, 0.08f);
+            float normalizedTime = Mathf.Clamp01(startNormalizedTime);
+            float crossFadeDuration = Mathf.Max(0f, ventCrossFadeDuration);
+            if (crossFadeDuration <= 0f)
+            {
+                animator.Play(stateName, 0, normalizedTime);
+            }
+            else
+            {
+                animator.CrossFade(stateName, crossFadeDuration, 0, normalizedTime);
+            }
         }
     }
 
@@ -1041,11 +1159,67 @@ public class VentHandIntroController : MonoBehaviour
         for (int i = 0; i < handInteractionColliders.Length; i++)
         {
             Collider handCollider = handInteractionColliders[i];
-            if (handCollider != null)
+            if (handCollider != null && !IsPartOfSpawnedKey(handCollider.transform))
             {
                 handCollider.enabled = enabled;
             }
         }
+    }
+
+    private void DisableHandInteractionForKeyPickup()
+    {
+        SetHandInteractableEnabled(false);
+        SetAllHandCollidersEnabled(false);
+        SetHandOutlineEnabled(false);
+    }
+
+    private void SetAllHandCollidersEnabled(bool enabled)
+    {
+        if (handObject == null)
+        {
+            return;
+        }
+
+        Collider[] colliders = handObject.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider handCollider = colliders[i];
+            if (handCollider == null || IsPartOfSpawnedKey(handCollider.transform))
+            {
+                continue;
+            }
+
+            handCollider.enabled = enabled;
+        }
+
+        handInteractionColliders = colliders;
+    }
+
+    private void SetHandOutlineEnabled(bool enabled)
+    {
+        if (handObject == null)
+        {
+            return;
+        }
+
+        OutlineEffect[] outlines = handObject.GetComponentsInChildren<OutlineEffect>(true);
+        for (int i = 0; i < outlines.Length; i++)
+        {
+            OutlineEffect outline = outlines[i];
+            if (outline == null || IsPartOfSpawnedKey(outline.transform))
+            {
+                continue;
+            }
+
+            outline.enabled = enabled;
+        }
+    }
+
+    private bool IsPartOfSpawnedKey(Transform target)
+    {
+        return spawnedKey != null &&
+               target != null &&
+               (target == spawnedKey.transform || target.IsChildOf(spawnedKey.transform));
     }
 
     private void SubscribeElectricPanelEvents()
@@ -1219,6 +1393,11 @@ public class VentHandIntroController : MonoBehaviour
         if (conveyor == null)
         {
             conveyor = FindFirstObjectByType<Conveyor>();
+        }
+
+        if (conveyorExitController == null)
+        {
+            conveyorExitController = FindFirstObjectByType<ConveyorExitController>();
         }
 
         if (toolCaseLock == null)
