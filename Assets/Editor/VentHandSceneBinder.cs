@@ -157,12 +157,6 @@ public static class VentHandSceneBinder
         SetObjectIfNull(so, "ventAnimator", ceilingVent != null ? ceilingVent.GetComponent<Animator>() : null);
         SetObjectIfNull(so, "handAnimator", hand != null ? hand.GetComponentInChildren<Animator>(true) : null);
         SetObjectArrayIfEmpty(so, "handInteractionColliders", hand != null ? hand.GetComponentsInChildren<Collider>(true) : null);
-        Light[] handArrivalLights = FindHandArrivalLights();
-        SetObjectArrayIfEmpty(so, "handArrivalLights", handArrivalLights);
-        if (handArrivalLights != null && handArrivalLights.Length > 0)
-        {
-            SetObjectArray(so, "handFeedbackLights", new Light[0]);
-        }
         SetFloat(so, "minIntroDelay", 15f);
         SetFloat(so, "maxIntroDelay", 30f);
         SetBool(so, "enableCraftInteractionAfterIntro", false);
@@ -175,7 +169,6 @@ public static class VentHandSceneBinder
         if (introPose == null) warnings.Add("VentHand_IntroPose was not found.");
         if (idlePose == null) warnings.Add("VentHand_IdlePose was not found.");
         if (keyDropPoint == null) warnings.Add("KeyDropPoint was not found.");
-        if (handArrivalLights == null || handArrivalLights.Length == 0) warnings.Add("Hand arrival lights were not assigned automatically. Assign LightBulb01 vent lights manually.");
     }
 
     private static void ConfigureHandInteractable(VentHandInteractable handInteractable, VentHandIntroController controller)
@@ -217,40 +210,37 @@ public static class VentHandSceneBinder
             return;
         }
 
-        Animator exitDoorAnimator = FindExitDoorAnimator(conveyorObject, itemSpawnerObject, warnings);
-        Transform exitMoveTarget = null;
-        Transform despawnPoint = null;
-
-        if (conveyorObject != null && exitDoorAnimator != null)
+        Animator exitDoorAnimator = FindExitDoorAnimator(conveyorObject, warnings);
+        GameObject itemTriggerObject = FindSceneObject("ItemTrigger");
+        ConveyorExitTrigger exitTrigger = null;
+        if (itemTriggerObject != null)
         {
-            Vector3 itemSpawnerPosition = itemSpawnerObject != null ? itemSpawnerObject.transform.position : exitDoorAnimator.transform.position + Vector3.right;
-            Vector3 travelDirection = exitDoorAnimator.transform.position - itemSpawnerPosition;
-            if (travelDirection.sqrMagnitude < 0.0001f)
-            {
-                travelDirection = Vector3.left;
-            }
-
-            travelDirection.Normalize();
-            exitMoveTarget = EnsureWorldSpaceChild(
-                conveyorObject.transform,
-                "ConveyorExitMoveTarget",
-                exitDoorAnimator.transform.position - travelDirection * 0.15f);
-            despawnPoint = EnsureWorldSpaceChild(
-                conveyorObject.transform,
-                "ConveyorExitDespawnPoint",
-                exitDoorAnimator.transform.position + travelDirection * 1.25f);
+            exitTrigger = EnsureComponent<ConveyorExitTrigger>(itemTriggerObject);
+            SerializedObject triggerSo = new SerializedObject(exitTrigger);
+            SetObjectIfNull(triggerSo, "controller", exitController);
+            triggerSo.ApplyModifiedProperties();
+            EditorUtility.SetDirty(exitTrigger);
         }
-        else
+
+        if (exitDoorAnimator == null)
         {
-            warnings.Add("Exit conveyor door was not found; assign ConveyorExitController exit door/targets manually.");
+            warnings.Add("Exit conveyor door 'Conveyor/door_conveyo_function (2)' was not found; assign ConveyorExitController.exitDoorAnimator manually.");
+        }
+
+        if (itemTriggerObject == null)
+        {
+            warnings.Add("ItemTrigger was not found; ConveyorExitController will use timeout fallback unless assigned manually.");
         }
 
         SerializedObject so = new SerializedObject(exitController);
         SetObjectIfNull(so, "exitDoorAnimator", exitDoorAnimator);
-        SetObjectIfNull(so, "exitMoveTarget", exitMoveTarget);
-        SetObjectIfNull(so, "despawnPoint", despawnPoint);
-        SetFloat(so, "itemExitSpeed", 1.5f);
+        SetObjectIfNull(so, "exitTrigger", exitTrigger);
         SetFloat(so, "doorOpenDelay", 0.2f);
+        SetFloat(so, "destroyDelayAfterTrigger", 3f);
+        SetFloat(so, "maxExitWaitTime", 12f);
+        SetBool(so, "completeWhenTriggerReached", true);
+        SetBool(so, "closeDoorAfterDestroy", true);
+        SetBool(so, "useAnimatorTriggers", true);
         so.ApplyModifiedProperties();
         EditorUtility.SetDirty(exitController);
     }
@@ -368,35 +358,7 @@ public static class VentHandSceneBinder
         EditorUtility.SetDirty(panel);
     }
 
-    private static Light[] FindHandArrivalLights()
-    {
-        GameObject root = FindByPath("LotosZone_Test/LightFixturesRoot/LightBulb01");
-        if (root == null)
-        {
-            root = FindSceneObject("LightBulb01");
-        }
-
-        if (root == null)
-        {
-            return new Light[0];
-        }
-
-        List<Light> lights = new List<Light>();
-        string[] names = { "PointLight02", "PointLight02 (1)", "PointLight06" };
-        for (int i = 0; i < names.Length; i++)
-        {
-            Transform child = FindChildRecursive(root.transform, names[i]);
-            Light lightItem = child != null ? child.GetComponent<Light>() : null;
-            if (lightItem != null && !lights.Contains(lightItem))
-            {
-                lights.Add(lightItem);
-            }
-        }
-
-        return lights.ToArray();
-    }
-
-    private static Animator FindExitDoorAnimator(GameObject conveyorObject, GameObject itemSpawnerObject, List<string> warnings)
+    private static Animator FindExitDoorAnimator(GameObject conveyorObject, List<string> warnings)
     {
         if (conveyorObject == null)
         {
@@ -404,82 +366,32 @@ public static class VentHandSceneBinder
             return null;
         }
 
-        Animator[] animators = conveyorObject.GetComponentsInChildren<Animator>(true);
-        List<Animator> candidates = new List<Animator>();
-        for (int i = 0; i < animators.Length; i++)
+        Transform exactDoor = FindDirectChild(conveyorObject.transform, "door_conveyo_function (2)");
+        Animator exactAnimator = exactDoor != null ? exactDoor.GetComponent<Animator>() : null;
+        if (exactAnimator != null)
         {
-            Animator animator = animators[i];
-            if (animator == null)
-            {
-                continue;
-            }
-
-            string name = animator.name;
-            if (name.StartsWith("door_conveyo_function") ||
-                name.Contains("ConveyorDoor") ||
-                name.Contains("ExitDoor"))
-            {
-                candidates.Add(animator);
-            }
+            return exactAnimator;
         }
 
-        if (candidates.Count == 0)
-        {
-            warnings.Add("No conveyor exit door animator candidates were found.");
-            return null;
-        }
-
-        if (itemSpawnerObject == null)
-        {
-            Animator leftmost = candidates[0];
-            for (int i = 1; i < candidates.Count; i++)
-            {
-                if (candidates[i].transform.position.x < leftmost.transform.position.x)
-                {
-                    leftmost = candidates[i];
-                }
-            }
-
-            return leftmost;
-        }
-
-        Vector3 spawnerPosition = itemSpawnerObject.transform.position;
-        Animator best = candidates[0];
-        float bestDistance = Vector3.SqrMagnitude(best.transform.position - spawnerPosition);
-        for (int i = 1; i < candidates.Count; i++)
-        {
-            float distance = Vector3.SqrMagnitude(candidates[i].transform.position - spawnerPosition);
-            if (distance > bestDistance ||
-                (Mathf.Approximately(distance, bestDistance) && candidates[i].transform.position.x < best.transform.position.x))
-            {
-                best = candidates[i];
-                bestDistance = distance;
-            }
-        }
-
-        return best;
+        warnings.Add("Exact exit door 'door_conveyo_function (2)' was not found under Conveyor.");
+        return null;
     }
 
-    private static Transform EnsureWorldSpaceChild(Transform parent, string childName, Vector3 worldPosition)
+    private static int GetObjectArraySize(Object target, string propertyName)
     {
-        if (parent == null)
+        if (target == null)
         {
-            return null;
+            return 0;
         }
 
-        Transform existing = FindDirectChild(parent, childName);
-        if (existing != null)
+        SerializedObject so = new SerializedObject(target);
+        SerializedProperty property = so.FindProperty(propertyName);
+        if (property == null || !property.isArray)
         {
-            return existing;
+            return 0;
         }
 
-        GameObject created = new GameObject(childName);
-        Undo.RegisterCreatedObjectUndo(created, $"Create {childName}");
-        created.transform.SetParent(parent, true);
-        created.transform.position = worldPosition;
-        created.transform.rotation = Quaternion.identity;
-        created.transform.localScale = Vector3.one;
-        return created.transform;
+        return property.arraySize;
     }
 
     private static Instrument[] FindControlledInstruments()
@@ -738,11 +650,18 @@ public static class VentHandSceneBinder
         ToolCaseLock caseLock,
         List<string> warnings)
     {
-        Light[] feedbackLights = FindHandArrivalLights();
         Instrument[] instruments = FindControlledInstruments();
         bool closedPoseFound = caseObject != null && FindDirectChild(caseObject.transform, "ToolCase_ClosedPose") != null;
         bool openPoseFound = caseObject != null && FindDirectChild(caseObject.transform, "ToolCase_OpenPose") != null;
         ConveyorExitController exitController = Object.FindFirstObjectByType<ConveyorExitController>();
+        ConveyorExitTrigger exitTrigger = Object.FindFirstObjectByType<ConveyorExitTrigger>();
+        VentHandIntroController introController = Object.FindFirstObjectByType<VentHandIntroController>();
+        int handLightCount = introController != null
+            ? GetObjectArraySize(introController, "handArrivalLights") +
+              GetObjectArraySize(introController, "ventHandLights") +
+              GetObjectArraySize(introController, "handHighlightLights") +
+              GetObjectArraySize(introController, "handFeedbackLights")
+            : 0;
         return
             "Vent hand intro binding complete. Please save Main scene (Ctrl+S).\n" +
             $"CeilingVent found: {ceilingVent != null}\n" +
@@ -753,9 +672,10 @@ public static class VentHandSceneBinder
             $"Tool case poses found/created: Closed={closedPoseFound}, Open={openPoseFound}\n" +
             $"Conveyor found: {conveyorObject != null}, ItemSpawner found: {itemSpawnerObject != null}\n" +
             $"ConveyorExitController found/created: {exitController != null}\n" +
-            $"Conveyor exit targets assigned: {exitController != null && exitController.HasExitTarget}\n" +
+            $"ConveyorExitTrigger found/assigned: {exitTrigger != null}\n" +
+            $"Conveyor exit trigger assigned: {exitController != null && exitController.HasExitTarget}\n" +
             $"ElectricPanelController found: {panelObject != null}\n" +
-            $"Hand arrival lights assigned from LightBulb01: {feedbackLights.Length}\n" +
+            $"Hand lights assigned manually: {handLightCount}\n" +
             $"Controlled instruments assigned: {instruments.Length}\n" +
             $"Warnings: {(warnings.Count == 0 ? "none" : string.Join("; ", warnings))}";
     }

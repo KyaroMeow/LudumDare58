@@ -2147,21 +2147,28 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 193881966}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f102b3113a642e7b87e497acfe1a370, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorExitController
-  exitDoorAnimator: {fileID: 1006615910}
+  exitDoorAnimator: {fileID: 1220472447}
   openTrigger: open
-  openState: 
   closeTrigger: close
+  openState: 
   closeState: 
   doorOpenDelay: 0.2
-  exitMoveTarget: {fileID: 344207034}
-  despawnPoint: {fileID: 217356400}
-  itemExitSpeed: 1.5
+  closeDoorAfterDestroy: 1
+  useAnimatorTriggers: 1
+  disableExitDoorAnimatorUntilTriggered: 1
+  exitTrigger: {fileID: 0}
+  centerStopTrigger: {fileID: 0}
+  destroyDelayAfterTrigger: 3
+  maxExitWaitTime: 12
   destroyAfterExit: 1
+  completeWhenTriggerReached: 1
+  conveyor: {fileID: 0}
+  gameManager: {fileID: 0}
   sfxEmitter: {fileID: 0}
   doorOpenSfx:
     label: 
@@ -2568,8 +2575,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 217356399}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7023834, z: 0, w: 0.7117989}
-  m_LocalPosition: {x: -0.15964834, y: -3.9368002, z: -0.08843261}
+  m_LocalRotation: {x: -0, y: -0.7023834, z: -0, w: 0.7117989}
+  m_LocalPosition: {x: -0.15964851, y: -3.9368002, z: -0.08843269}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7611,7 +7618,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fea29bb7c508c244a1f805a5fd3fc4d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OutlineEffect
-  outlineMode: 0
+  outlineMode: 1
   outlineColor: {r: 1, g: 1, b: 1, a: 1}
   outlineWidth: 2
   precomputeOutline: 0
@@ -15439,6 +15446,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1111655192}
   m_CullTransparentMesh: 1
+--- !u!1 &1115423124 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 7c09769c491f8e9479f883eda6e9056f, type: 3}
+  m_PrefabInstance: {fileID: 1220472445}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1115873528
 GameObject:
   m_ObjectHideFlags: 0
@@ -16732,13 +16744,112 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7c09769c491f8e9479f883eda6e9056f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1767474755}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7c09769c491f8e9479f883eda6e9056f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1220472447}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7c09769c491f8e9479f883eda6e9056f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1220472450}
   m_SourcePrefab: {fileID: 100100000, guid: 7c09769c491f8e9479f883eda6e9056f, type: 3}
 --- !u!4 &1220472446 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7c09769c491f8e9479f883eda6e9056f, type: 3}
   m_PrefabInstance: {fileID: 1220472445}
   m_PrefabAsset: {fileID: 0}
+--- !u!95 &1220472447
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1115423124}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: cdf976055c1f62d4fb4cb9e92dd76b13, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &1220472450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1115423124}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f102b3113a642e7b87e497acfe1a370, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConveyorExitController
+  exitDoorAnimator: {fileID: 1220472447}
+  openTrigger: 
+  closeTrigger: 
+  openState: open 1
+  closeState: 
+  doorOpenDelay: 0.2
+  closeDoorAfterDestroy: 1
+  useAnimatorTriggers: 0
+  disableExitDoorAnimatorUntilTriggered: 1
+  exitTrigger: {fileID: 1904619700}
+  centerStopTrigger: {fileID: 1569307042}
+  destroyDelayAfterTrigger: 3
+  maxExitWaitTime: 12
+  destroyAfterExit: 1
+  completeWhenTriggerReached: 0
+  conveyor: {fileID: 0}
+  gameManager: {fileID: 0}
+  sfxEmitter: {fileID: 0}
+  doorOpenSfx:
+    label: "\u0414\u0432\u0435\u0440\u044C \u043A\u043E\u043D\u0432\u0435\u0439\u0435\u0440\u043D\u043E\u0439
+      \u043B\u0435\u043D\u0442\u044B"
+    clip: {fileID: 8300000, guid: 97a6dfa5c5a125743b8cd516c953dc77, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 0.544
+    randomizeVolume: 1
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 1
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  doorCloseSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  doorOpenAudioClip: {fileID: 0}
+  doorCloseAudioClip: {fileID: 0}
 --- !u!1 &1222997629
 GameObject:
   m_ObjectHideFlags: 0
@@ -17032,6 +17143,7 @@ Transform:
   - {fileID: 344207034}
   - {fileID: 217356400}
   - {fileID: 1904619698}
+  - {fileID: 1569307040}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 89.237, z: 0}
 --- !u!114 &1228305848
@@ -17277,7 +17389,7 @@ MonoBehaviour:
   anomallyController: {fileID: 1959665713}
   itemMarkerUI: {fileID: 1075652592}
   securitySystem: {fileID: 760902351}
-  conveyorExitController: {fileID: 193881967}
+  conveyorExitController: {fileID: 1220472450}
   gameAudioManager: {fileID: 910000102}
   sfxEmitter: {fileID: 0}
   scannerStartSfx:
@@ -21312,6 +21424,75 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &1569307039
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1569307040}
+  - component: {fileID: 1569307041}
+  - component: {fileID: 1569307042}
+  m_Layer: 0
+  m_Name: ItemTrigerCenter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1569307040
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569307039}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.2705, y: 0, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1228305847}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1569307041
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569307039}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.012833674, y: 8.776911, z: 1}
+  m_Center: {x: 0.3496593, y: 3.888456, z: 0.0000000024668179}
+--- !u!114 &1569307042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569307039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d2e9f7ad5894a34cb2b2f0f188c7a6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  conveyor: {fileID: 1228305848}
+  gameManager: {fileID: 1252240130}
+  autoFindReferences: 1
 --- !u!1 &1570340415
 GameObject:
   m_ObjectHideFlags: 0
@@ -25507,6 +25688,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1904619698}
   - component: {fileID: 1904619699}
+  - component: {fileID: 1904619700}
   m_Layer: 0
   m_Name: ItemTriger
   m_TagString: Untagged
@@ -25548,8 +25730,21 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.072265886, y: 8.776911, z: 1}
-  m_Center: {x: 0.32158688, y: 3.888456, z: -5.056586e-10}
+  m_Size: {x: 0.030047117, y: 8.776911, z: 1}
+  m_Center: {x: 0.34269595, y: 3.888456, z: 0.0000000027542466}
+--- !u!114 &1904619700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904619697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3ffcb048e2e44a5a8659a6980718847, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ConveyorExitTrigger
+  controller: {fileID: 1220472450}
 --- !u!1 &1923763134
 GameObject:
   m_ObjectHideFlags: 0
