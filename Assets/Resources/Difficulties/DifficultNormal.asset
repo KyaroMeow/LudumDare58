@@ -19,7 +19,7 @@ MonoBehaviour:
   bombNum: 40
   noBarcodeChance: 0.1
   wrongBarcodeChance: 0.1
-  defectChance: 0.1
+  defectChance: 1
   scratchesChance: 0.1
   protocolViolationPenaltyDefault: 1
   protocolViolationPenaltyHard: 1

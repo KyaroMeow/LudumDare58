@@ -20,6 +20,7 @@ public class Item : MonoBehaviour
     public GameObject[] scratches;
     [HideInInspector] public Renderer stainRenderer;
     public GameObject barcode;
+    private UVRevealable activeUVRevealable;
     private readonly HashSet<ItemMarkerType> expectedMarkers = new HashSet<ItemMarkerType>();
     private readonly HashSet<ItemMarkerType> playerMarkedMarkers = new HashSet<ItemMarkerType>();
 
@@ -49,17 +50,23 @@ public class Item : MonoBehaviour
         if (hasUVStain && stainSpots.Count > 0)
         {
             int randomIndex = Random.Range(0, stainSpots.Count);
+            GameObject selectedStain = stainSpots[randomIndex];
             for (int i = 0; i < stainSpots.Count; i++)
             {
                 if (stainSpots[i] != null)
                 {
                     stainSpots[i].SetActive(i == randomIndex);
-                    stainRenderer = stainSpots[randomIndex].GetComponent<Renderer>();
                 }
             }
+
+            activeUVRevealable = EnsureUVRevealable(selectedStain);
+            stainRenderer = activeUVRevealable != null ? activeUVRevealable.TargetRenderer : null;
+            HideAllUVStains();
         }
         else
         {
+            activeUVRevealable = null;
+            stainRenderer = null;
             foreach (GameObject stain in stainSpots)
             {
                 if (stain != null) stain.SetActive(false);
@@ -78,10 +85,93 @@ public class Item : MonoBehaviour
     }
     public void SetUVVisibility(bool isVisible)
     {
+        if (isVisible)
+        {
+            GetActiveUVRevealable();
+            return;
+        }
+
+        HideAllUVStains();
+    }
+
+    public IEnumerable<UVRevealable> GetUVRevealables()
+    {
+        foreach (GameObject stain in stainSpots)
+        {
+            UVRevealable revealable = EnsureUVRevealable(stain);
+            if (revealable != null)
+            {
+                yield return revealable;
+            }
+        }
+    }
+
+    public UVRevealable GetActiveUVRevealable()
+    {
+        if (activeUVRevealable != null)
+        {
+            return activeUVRevealable;
+        }
+
         if (stainRenderer != null)
         {
-            stainRenderer.enabled = isVisible;
+            activeUVRevealable = stainRenderer.GetComponent<UVRevealable>();
+            if (activeUVRevealable != null)
+            {
+                return activeUVRevealable;
+            }
         }
+
+        foreach (GameObject stain in stainSpots)
+        {
+            if (stain != null && stain.activeInHierarchy)
+            {
+                activeUVRevealable = EnsureUVRevealable(stain);
+                stainRenderer = activeUVRevealable != null ? activeUVRevealable.TargetRenderer : null;
+                return activeUVRevealable;
+            }
+        }
+
+        return null;
+    }
+
+    public void HideAllUVStains()
+    {
+        foreach (UVRevealable revealable in GetUVRevealables())
+        {
+            revealable.ForceHidden();
+        }
+    }
+
+    private UVRevealable EnsureUVRevealable(GameObject stain)
+    {
+        if (stain == null)
+        {
+            return null;
+        }
+
+        UVRevealable revealable = stain.GetComponent<UVRevealable>();
+        if (revealable == null)
+        {
+            Renderer renderer = stain.GetComponent<Renderer>();
+            if (renderer == null)
+            {
+                renderer = stain.GetComponentInChildren<Renderer>(true);
+            }
+
+            if (renderer == null)
+            {
+                return null;
+            }
+
+            revealable = renderer.GetComponent<UVRevealable>();
+            if (revealable == null)
+            {
+                revealable = renderer.gameObject.AddComponent<UVRevealable>();
+            }
+        }
+
+        return revealable;
     }
     public bool ShouldBeAccepted()
     {

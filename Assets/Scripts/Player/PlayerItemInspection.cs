@@ -32,8 +32,19 @@ public class PlayerItemInspection : MonoBehaviour
 
     public void EndInspection()
     {
+        if (_currentHeldItem != null)
+        {
+            Item item = _currentHeldItem.GetComponent<Item>();
+            if (item == null)
+            {
+                item = _currentHeldItem.GetComponentInChildren<Item>(true);
+            }
+
+            item?.HideAllUVStains();
+        }
+
         _currentHeldItem = null;
-        uvLighter.ToggleLighterOff();
+        uvLighter?.ToggleLighterOff();
     }
     
     private void HandleInspection()

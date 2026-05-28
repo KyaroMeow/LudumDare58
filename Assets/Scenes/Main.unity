@@ -4482,6 +4482,7 @@ MonoBehaviour:
   gameManager: {fileID: 1252240130}
   electricPanelController: {fileID: 2086227375}
   conveyor: {fileID: 1228305848}
+  conveyorExitController: {fileID: 0}
   itemSpawner: {fileID: 1935335082}
   toolCaseLock: {fileID: 2130105715}
   handObject: {fileID: 563268288}
@@ -4496,6 +4497,10 @@ MonoBehaviour:
   ventCloseStateName: close
   ventOpenTrigger: 
   ventCloseTrigger: 
+  ventCrossFadeDuration: 0.2
+  ventOpenStartNormalizedTime: 0
+  ventCloseStartNormalizedTime: 0
+  resetVentAnimatorBeforePlay: 0
   handAnimator: {fileID: 0}
   handAppearTrigger: 
   handIdleTrigger: 
@@ -4594,6 +4599,7 @@ MonoBehaviour:
   fallbackDialogueBottomOffset: 55
   keyPrefab: {fileID: 0}
   placeholderKeyScale: {x: 0.08, y: 0.035, z: 0.08}
+  keyPickupFallbackRadius: 0.12
   addOutlineToPlaceholderKey: 1
   appearDuringRegularBlackout: 1
   enableCraftInteractionAfterIntro: 0
@@ -17390,6 +17396,7 @@ MonoBehaviour:
   itemMarkerUI: {fileID: 1075652592}
   securitySystem: {fileID: 760902351}
   conveyorExitController: {fileID: 1220472450}
+  conveyorCenterStopTrigger: {fileID: 0}
   gameAudioManager: {fileID: 910000102}
   sfxEmitter: {fileID: 0}
   scannerStartSfx:
@@ -24821,6 +24828,90 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lighter: {fileID: 1419031427}
   uVOnTable: {fileID: 1634310223}
+  followMouse: 1
+  followSpeed: 16
+  lockWorldX: 1
+  fixedWorldX: 0
+  cursorOffset: {x: 0, y: 0, z: 0}
+  useTableFlashlightAsHeldModel: 1
+  heldVisualLocalPosition: {x: 0, y: 0, z: 0}
+  heldVisualLocalEuler: {x: 0, y: 0, z: -18}
+  heldModelLocalPosition: {x: 0, y: 0, z: 0}
+  heldModelLocalEuler: {x: 0, y: 0, z: 0}
+  heldModelScale: 1
+  centerHeldModelPivot: 1
+  centeredModelOffset: {x: 0, y: 0, z: 0}
+  aimTowardCurrentItem: 1
+  itemAimStrength: 0.65
+  itemAimMaxAngle: 42
+  itemAimSpeed: 9
+  itemAimOffset: {x: 0, y: 0.05, z: 0}
+  itemAimAssistRadius: 1.45
+  itemAimMinimumAssist: 0.15
+  beamLength: 2.8
+  beamRadius: 0.18
+  beamHorizontalRadius: 0.11
+  beamVerticalRadius: 0.48
+  beamLocalOffset: {x: 0, y: 0, z: 0.1}
+  beamLocalEuler: {x: 0, y: 0, z: 0}
+  beamColor: {r: 0.65, g: 0.1, b: 1, a: 0.28}
+  beamVisible: 0
+  beamColliderIsTrigger: 1
+  revealOnStay: 1
+  stopBeamAtObjects: 1
+  minBeamLength: 0.12
+  beamStopPadding: 0.025
+  beamBlockerMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  beamBlockerTriggerInteraction: 1
+  syncLightToBeam: 1
+  decorativeLightRange: 3.25
+  decorativeLightIntensity: 2.2
+  lightSpotAngle: 18
+  revealConeAngleScale: 0.7
+  revealConeSoftness: 0.35
+  uvLightShadows: 2
+  uvLightShadowStrength: 0.65
+  sfxEmitter: {fileID: 0}
+  toggleOnSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  toggleOffSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
 --- !u!1 &1841499170
 GameObject:
   m_ObjectHideFlags: 0

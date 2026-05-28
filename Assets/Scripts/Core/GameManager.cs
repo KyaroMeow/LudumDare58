@@ -189,6 +189,8 @@ public class GameManager : MonoBehaviour
 
     public void ToggleScaner()
     {
+        UVLighter.Instance?.ToggleLighterOff();
+
         scaner.SetActive(!scaner.activeSelf);
         scanerOnTable.SetActive(!scaner.activeSelf);
 
