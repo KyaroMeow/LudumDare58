@@ -29,6 +29,7 @@ public class GameManager : MonoBehaviour
     public ItemMarkerUI itemMarkerUI;
     public SecuritySystem securitySystem;
     [SerializeField] private ConveyorExitController conveyorExitController;
+    [SerializeField] private ConveyorCenterStopTrigger conveyorCenterStopTrigger;
     [SerializeField] private GameAudioManager gameAudioManager;
     [SerializeField] private SfxEmitter sfxEmitter;
     [SerializeField] private SfxCue scannerStartSfx;
@@ -54,10 +55,14 @@ public class GameManager : MonoBehaviour
     private bool isGameOverStarted;
     private bool isStoryInteractionLocked;
     private bool isCompletingCurrentItem;
+    private bool pendingPostCompletionSpawn;
+    private bool pendingPostCompletionSpawnRestartsTimer;
+    private string pendingPostCompletionSpawnLogPrefix = "Post-completion";
     private bool warnedMissingConveyorExitController;
     private bool storyTimerPauseActive;
     private bool storyTimerWasWorking;
     private bool warnedMissingHandsForDamage;
+    private ElectricPanelController subscribedElectricPanel;
     private float nextHandCounterDecayTime;
     private readonly HashSet<int> loggedChildItemRoots = new HashSet<int>();
 
@@ -83,6 +88,7 @@ public class GameManager : MonoBehaviour
     {
         SettingManager.EnsureInstance();
         ResolveGameAudioManager();
+        ResolveElectricPanelSubscription();
 
         if(CutsceneManager.Instance != null)
         {
@@ -96,6 +102,18 @@ public class GameManager : MonoBehaviour
         {
             UpdateTimer();
             UpdateHandCounterDecay();
+        }
+
+        ResolveElectricPanelSubscription();
+        TryRunPendingPostCompletionSpawn();
+    }
+
+    private void OnDestroy()
+    {
+        if (subscribedElectricPanel != null)
+        {
+            subscribedElectricPanel.BlackoutEnded -= HandleBlackoutEnded;
+            subscribedElectricPanel = null;
         }
     }
 
@@ -194,6 +212,12 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        if (IsBlackoutBlockingConveyor())
+        {
+            Debug.Log("Sorting ignored because power is off.");
+            return;
+        }
+
         if (isCompletingCurrentItem)
         {
             Debug.Log("Submit current item ignored because the previous item is still exiting.");
@@ -232,6 +256,12 @@ public class GameManager : MonoBehaviour
         if (isStoryInteractionLocked)
         {
             Debug.Log("Sort item ignored because story interaction is locked.");
+            return;
+        }
+
+        if (IsBlackoutBlockingConveyor())
+        {
+            Debug.Log("Sorting ignored because power is off.");
             return;
         }
 
@@ -468,23 +498,18 @@ public class GameManager : MonoBehaviour
 
     public void SpawnItem()
     {
-        if (isStoryInteractionLocked)
-        {
-            Debug.Log("Spawn item skipped because story interaction is locked.");
-            return;
-        }
+        TrySpawnItem(restartTimerBeforeSpawn: false, logBlocked: true, actionName: "spawn item");
+    }
 
-        if (isCompletingCurrentItem)
-        {
-            Debug.Log("Spawn item skipped because current item exit sequence is still running.");
-            return;
-        }
-
+    private bool SpawnItemInternal()
+    {
         Difficult difficulty = GetCurrentDifficulty("spawn an item");
         if (difficulty == null)
         {
-            return;
+            return false;
         }
+
+        GameObject previousItem = currentItem;
 
         if (totalItemsProcessed == difficulty.anomalyItemNum)
         {
@@ -500,6 +525,8 @@ public class GameManager : MonoBehaviour
             currentTime = difficulty.timePerItem;
             gameAudioManager?.ResetTimerMusicIntensity();
         }
+
+        return currentItem != null && currentItem != previousItem;
     }
 
     private void ResolveGameAudioManager()
@@ -540,10 +567,7 @@ public class GameManager : MonoBehaviour
 
     public void SpawnNextItemAfterBypass()
     {
-        if (isGameStarted && !isStoryInteractionLocked && !isCompletingCurrentItem)
-        {
-            SpawnItem();
-        }
+        RequestPostCompletionSpawn(restartTimerBeforeSpawn: true, "Post-completion");
     }
 
     public void SetStoryInteractionLocked(bool locked)
@@ -555,6 +579,16 @@ public class GameManager : MonoBehaviour
 
         isStoryInteractionLocked = locked;
         Debug.Log(locked ? "Story interaction lock enabled." : "Story interaction lock disabled.");
+
+        if (!locked)
+        {
+            TryRunPendingPostCompletionSpawn();
+        }
+    }
+
+    public bool IsBlackoutBlockingConveyor()
+    {
+        return ElectricPanelController.Instance != null && ElectricPanelController.Instance.IsBlackoutActive;
     }
 
     public void SetTimerPausedForStory(bool paused)
@@ -766,6 +800,44 @@ public class GameManager : MonoBehaviour
             : item.IsMarkerSelected(ItemMarkerType.Defective);
     }
 
+    public void CompleteCurrentItemAfterToolAction(GameObject itemObject)
+    {
+        CompleteCurrentItemAfterToolAction(itemObject, true);
+    }
+
+    public void CompleteCurrentItemAfterToolAction(GameObject itemObject, bool spawnNextWhenAllowed)
+    {
+        if (!IsCurrentItemOrChild(itemObject))
+        {
+            string itemName = itemObject != null ? itemObject.name : "null";
+            Debug.LogWarning($"Tool action completion ignored because '{itemName}' is not the current item.");
+            return;
+        }
+
+        ReleaseHeldCurrentItem();
+        ClearCurrentItemInspectionState();
+        isTimerWork = false;
+        isCompletingCurrentItem = false;
+
+        GameObject itemToDestroy = currentItem;
+        string completedItemName = itemToDestroy != null ? itemToDestroy.name : itemObject.name;
+        ResetCenterStopAfterToolAction(itemToDestroy);
+
+        if (itemToDestroy != null)
+        {
+            Destroy(itemToDestroy);
+        }
+
+        currentItem = null;
+        Debug.Log($"Tool action completed for item '{completedItemName}'.");
+
+        if (spawnNextWhenAllowed)
+        {
+            Debug.Log($"Post-tool spawn requested after item '{completedItemName}'.");
+            RequestPostCompletionSpawn(restartTimerBeforeSpawn: true, "Post-tool");
+        }
+    }
+
     private void CompleteCurrentItem()
     {
         ReleaseHeldCurrentItem();
@@ -809,9 +881,74 @@ public class GameManager : MonoBehaviour
         currentItem = null;
         isCompletingCurrentItem = false;
 
-        if (!canContinue || !isGameStarted || isGameOverStarted || isStoryInteractionLocked)
+        if (!canContinue || !isGameStarted || isGameOverStarted)
         {
             return;
+        }
+
+        RequestPostCompletionSpawn(restartTimerBeforeSpawn, "Post-completion");
+    }
+
+    private void RequestPostCompletionSpawn(bool restartTimerBeforeSpawn, string logPrefix)
+    {
+        if (!isGameStarted || isGameOverStarted)
+        {
+            return;
+        }
+
+        if (currentItem != null)
+        {
+            Debug.Log("Post-completion spawn request ignored because a current item already exists.");
+            return;
+        }
+
+        if (TrySpawnItem(restartTimerBeforeSpawn, logBlocked: false, actionName: "post-completion spawn"))
+        {
+            Debug.Log($"{logPrefix} spawn spawned through normal item spawner path.");
+            return;
+        }
+
+        pendingPostCompletionSpawn = true;
+        pendingPostCompletionSpawnRestartsTimer |= restartTimerBeforeSpawn;
+        pendingPostCompletionSpawnLogPrefix = logPrefix;
+        Debug.Log($"{logPrefix} spawn deferred until conveyor spawning is allowed.");
+    }
+
+    private void TryRunPendingPostCompletionSpawn()
+    {
+        if (!pendingPostCompletionSpawn)
+        {
+            return;
+        }
+
+        if (!isGameStarted || isGameOverStarted || currentItem != null)
+        {
+            return;
+        }
+
+        bool restartTimerBeforeSpawn = pendingPostCompletionSpawnRestartsTimer;
+        string logPrefix = pendingPostCompletionSpawnLogPrefix;
+        if (!TrySpawnItem(restartTimerBeforeSpawn, logBlocked: false, actionName: "pending post-completion spawn"))
+        {
+            return;
+        }
+
+        pendingPostCompletionSpawn = false;
+        pendingPostCompletionSpawnRestartsTimer = false;
+        pendingPostCompletionSpawnLogPrefix = "Post-completion";
+        Debug.Log($"{logPrefix} spawn spawned through normal item spawner path.");
+    }
+
+    private bool TrySpawnItem(bool restartTimerBeforeSpawn, bool logBlocked, string actionName)
+    {
+        if (!CanSpawnItemNow(logBlocked, actionName))
+        {
+            return false;
+        }
+
+        if (!SpawnItemInternal())
+        {
+            return false;
         }
 
         if (restartTimerBeforeSpawn)
@@ -819,7 +956,111 @@ public class GameManager : MonoBehaviour
             StartTimer();
         }
 
-        SpawnItem();
+        return true;
+    }
+
+    private bool CanSpawnItemNow(bool logBlocked, string actionName)
+    {
+        if (isGameOverStarted)
+        {
+            LogSpawnBlocked(logBlocked, actionName, "game over has already started");
+            return false;
+        }
+
+        if (isStoryInteractionLocked)
+        {
+            LogSpawnBlocked(logBlocked, actionName, "story interaction is locked");
+            return false;
+        }
+
+        if (IsBlackoutBlockingConveyor())
+        {
+            LogSpawnBlocked(logBlocked, actionName, "power is off");
+            return false;
+        }
+
+        if (isCompletingCurrentItem)
+        {
+            LogSpawnBlocked(logBlocked, actionName, "current item exit sequence is still running");
+            return false;
+        }
+
+        if (currentItem != null)
+        {
+            LogSpawnBlocked(logBlocked, actionName, "a current item already exists");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void LogSpawnBlocked(bool shouldLog, string actionName, string reason)
+    {
+        if (!shouldLog)
+        {
+            return;
+        }
+
+        Debug.Log($"{actionName} skipped because {reason}.");
+    }
+
+    private bool IsCurrentItemOrChild(GameObject candidate)
+    {
+        if (candidate == null || currentItem == null)
+        {
+            return false;
+        }
+
+        Transform currentTransform = currentItem.transform;
+        Transform candidateTransform = candidate.transform;
+        return candidate == currentItem ||
+               candidateTransform.IsChildOf(currentTransform) ||
+               currentTransform.IsChildOf(candidateTransform);
+    }
+
+    private void ResolveElectricPanelSubscription()
+    {
+        ElectricPanelController panel = ElectricPanelController.Instance;
+        if (subscribedElectricPanel == panel)
+        {
+            return;
+        }
+
+        if (subscribedElectricPanel != null)
+        {
+            subscribedElectricPanel.BlackoutEnded -= HandleBlackoutEnded;
+        }
+
+        subscribedElectricPanel = panel;
+        if (subscribedElectricPanel != null)
+        {
+            subscribedElectricPanel.BlackoutEnded += HandleBlackoutEnded;
+        }
+    }
+
+    private void HandleBlackoutEnded()
+    {
+        TryRunPendingPostCompletionSpawn();
+    }
+
+    private void ResetCenterStopAfterToolAction(GameObject itemObject)
+    {
+        ResolveCenterStopTrigger();
+        if (conveyorCenterStopTrigger != null && conveyorCenterStopTrigger.ClearItem(itemObject))
+        {
+            return;
+        }
+
+        string itemName = itemObject != null ? itemObject.name : "null";
+        Debug.Log($"Center stop reset after tool action for item '{itemName}'.");
+    }
+
+    private void ResolveCenterStopTrigger()
+    {
+        if (conveyorCenterStopTrigger == null)
+        {
+            conveyorCenterStopTrigger = FindFirstObjectByType<ConveyorCenterStopTrigger>();
+        }
     }
 
     private void ResolveConveyorExitController()
@@ -863,10 +1104,22 @@ public class GameManager : MonoBehaviour
         }
 
         ConveyorItemInteractable interactable = currentItem.GetComponent<ConveyorItemInteractable>();
+        if (interactable == null)
+        {
+            interactable = currentItem.GetComponentInChildren<ConveyorItemInteractable>(true);
+        }
+
         if (interactable != null && PlayerInteraction.Instance.IsCurrentInteractable(interactable))
         {
             PlayerInteraction.Instance.HandleStopInteraction();
         }
+    }
+
+    private void ClearCurrentItemInspectionState()
+    {
+        HUDManager.Instance?.hideItemScanHUD();
+        PlayerHeldItem.Instance?.ClearItem();
+        PlayerItemInspection.Instance?.EndInspection();
     }
 
     private void WarnMissingHandsForDamage()

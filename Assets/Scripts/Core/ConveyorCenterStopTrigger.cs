@@ -73,6 +73,37 @@ public class ConveyorCenterStopTrigger : MonoBehaviour
         return true;
     }
 
+    public bool ClearItem(GameObject itemObject)
+    {
+        ResolveReferences();
+
+        bool cleared = false;
+        if (stoppedItem != null && IsSameItem(stoppedItem, itemObject))
+        {
+            stoppedItem = null;
+            cleared = true;
+        }
+
+        if (releasedItem != null && IsSameItem(releasedItem, itemObject))
+        {
+            releasedItem = null;
+            cleared = true;
+        }
+
+        if (conveyor != null)
+        {
+            conveyor.canMove = true;
+        }
+
+        if (cleared)
+        {
+            string itemName = itemObject != null ? itemObject.name : "null";
+            Debug.Log($"Center stop reset after tool action for item '{itemName}'.", this);
+        }
+
+        return cleared;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         ResolveReferences();

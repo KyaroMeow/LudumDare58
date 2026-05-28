@@ -20,9 +20,6 @@ public class TrashBinInteractable : MonoBehaviour, IInteractable
             return;
         }
 
-        SecuritySystem securitySystem = GameManager.Instance != null ? GameManager.Instance.securitySystem : null;
-        securitySystem?.ReportViolation("Trash bin interaction");
-
         OpenTrashUi();
     }
 

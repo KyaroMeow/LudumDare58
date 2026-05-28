@@ -89,6 +89,7 @@ public class VentHandIntroController : MonoBehaviour
     [Header("Key")]
     [SerializeField] private GameObject keyPrefab;
     [SerializeField] private Vector3 placeholderKeyScale = new Vector3(0.08f, 0.035f, 0.08f);
+    [SerializeField] private float keyPickupFallbackRadius = 0.12f;
     [SerializeField] private bool addOutlineToPlaceholderKey = true;
 
     [Header("Future Craft Hook")]
@@ -177,6 +178,8 @@ public class VentHandIntroController : MonoBehaviour
     public bool HasKeyBeenPickedUp => hasKeyBeenPickedUp;
     public bool IsToolCaseUnlocked => isToolCaseUnlocked;
     public bool IsStoryInteractionLocked => storyInteractionLockActive;
+    public bool IsIntroCompleted => hasVentHandIntroCompleted;
+    public bool IsStealUnlocked => hasVentHandIntroCompleted;
     public bool CanStartIntroDialogue => dialogueCanBeStarted && !dialogueRunning;
     public bool IsIntroDialogueRunning => dialogueRunning;
     public bool AppearDuringRegularBlackout => appearDuringRegularBlackout;
@@ -667,6 +670,7 @@ public class VentHandIntroController : MonoBehaviour
             EnsureKeyPickupReady(spawnedKey, pickup);
         }
 
+        PlayerInteraction.Instance?.HandleStopInteraction();
         DisableHandInteractionForKeyPickup();
         PlaySfx(keyDropSfx, keyDropAudioClip, nameof(keyDropSfx));
         Debug.Log("Vent hand dropped the tool case key.");
@@ -684,11 +688,21 @@ public class VentHandIntroController : MonoBehaviour
             pickup.enabled = true;
         }
 
+        Collider rootCollider = keyObject.GetComponent<Collider>();
+        if (rootCollider == null)
+        {
+            SphereCollider fallbackCollider = keyObject.AddComponent<SphereCollider>();
+            fallbackCollider.radius = Mathf.Max(0.01f, keyPickupFallbackRadius);
+            fallbackCollider.enabled = true;
+        }
+        else
+        {
+            rootCollider.enabled = true;
+        }
+
         Collider[] keyColliders = keyObject.GetComponentsInChildren<Collider>(true);
         if (keyColliders.Length == 0)
         {
-            Collider keyCollider = keyObject.AddComponent<SphereCollider>();
-            keyCollider.enabled = true;
             return;
         }
 
@@ -1131,10 +1145,13 @@ public class VentHandIntroController : MonoBehaviour
             return;
         }
 
-        VentHandInteractable interactable = handObject.GetComponent<VentHandInteractable>();
-        if (interactable != null)
+        VentHandInteractable[] interactables = handObject.GetComponentsInChildren<VentHandInteractable>(true);
+        for (int i = 0; i < interactables.Length; i++)
         {
-            interactable.enabled = enabled;
+            if (interactables[i] != null)
+            {
+                interactables[i].enabled = enabled;
+            }
         }
     }
 

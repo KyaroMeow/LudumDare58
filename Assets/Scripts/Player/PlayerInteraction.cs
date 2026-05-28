@@ -365,6 +365,11 @@ public class PlayerInteraction : MonoBehaviour
             return false;
         }
 
+        if (interactable is VentHandKeyPickup)
+        {
+            return true;
+        }
+
         if (currentInteractable == null)
         {
             return true;

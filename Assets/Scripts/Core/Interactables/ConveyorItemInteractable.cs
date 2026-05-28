@@ -19,6 +19,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private Transform originalParent;
     private Collider[] cachedColliders;
     private bool isBeingInspected;
+    private bool warnedStealLocked;
 
     private void Awake()
     {
@@ -90,6 +91,17 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     public bool TryStealFromInspection()
     {
+        if (!IsStealUnlocked())
+        {
+            if (!warnedStealLocked)
+            {
+                warnedStealLocked = true;
+                Debug.Log("Steal is locked until vent hand intro is completed.");
+            }
+
+            return false;
+        }
+
         return TryUseTool(ToolType.Steal);
     }
 
@@ -154,24 +166,13 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
     private void CompleteToolAction()
     {
-        if (PlayerInteraction.Instance != null && PlayerInteraction.Instance.IsCurrentInteractable(this))
+        if (GameManager.Instance != null)
         {
-            StopInteract();
-            PlayerInteraction.Instance.ClearCurrentInteractable(this);
-        }
-        else
-        {
-            PlayerHeldItem.Instance?.ClearItem();
-            isBeingInspected = false;
+            GameManager.Instance.CompleteCurrentItemAfterToolAction(gameObject);
+            return;
         }
 
-        Destroy(gameObject);
-        if (GameManager.Instance != null && GameManager.Instance.currentItem == gameObject)
-        {
-            GameManager.Instance.currentItem = null;
-        }
-
-        GameManager.Instance?.SpawnNextItemAfterBypass();
+        Debug.LogWarning($"Cannot complete tool action for '{gameObject.name}' because GameManager.Instance is missing.");
     }
 
     private void OnGUI()
@@ -186,10 +187,21 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             return;
         }
 
+        if (!IsStealUnlocked())
+        {
+            return;
+        }
+
         if (GUI.Button(new Rect(16f, 104f, 120f, 32f), "Steal"))
         {
             TryStealFromInspection();
         }
+    }
+
+    private bool IsStealUnlocked()
+    {
+        VentHandIntroController introController = VentHandIntroController.Instance;
+        return introController != null && introController.IsStealUnlocked;
     }
 
     private void SetCollidersEnabled(bool isEnabled)
