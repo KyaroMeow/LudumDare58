@@ -5,6 +5,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 {
     public ToolType toolTypeForDisassemble = ToolType.None;
 
+    [SerializeField] private string bookItemName;
     [SerializeField] private InventoryItemDefinition detailReward;
     [SerializeField] private InventoryItemDefinition trashReward;
     [SerializeField] private InventoryItemDefinition stealReward;
@@ -101,6 +102,9 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
             return false;
         }
+        
+        if(PlayerInteraction.Instance.CurrentHeldItem.GetComponent<ConveyorItemInteractable>().itemName == bookItemName)
+            Debug.Log("Add cutscene here"); //TODO Cutscene after stealing the book
 
         return TryUseTool(ToolType.Steal);
     }
@@ -129,7 +133,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
                 Debug.LogWarning($"Cannot steal '{gameObject.name}' because this item is marked as not stealable.");
                 return false;
             }
-
+            
             reward = stealReward;
             actionName = "Steal item";
         }

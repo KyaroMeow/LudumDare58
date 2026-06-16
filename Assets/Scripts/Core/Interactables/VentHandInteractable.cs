@@ -1,12 +1,19 @@
+using System;
+using CraftSystem;
 using UnityEngine;
 
 public class VentHandInteractable : MonoBehaviour, IInteractable, IOneShotInteractable
 {
+    [SerializeField] private InventoryUIController inventoryUIController;
+    [SerializeField] private GameObject craftMenu;
     [SerializeField] private VentHandIntroController introController;
     [SerializeField] private bool logWhenCraftIsUnavailable = true;
-    [SerializeField] private float craftUnavailableLogCooldown = 2f;
-
-    private float lastCraftUnavailableLogTime = -999f;
+    
+    private CursorLockMode previousCursorLockMode;
+    private bool previousCursorVisible;
+    private bool isOpen;
+    
+    public static bool IsCraftUiOpen { get; private set; }
 
     public void Interact(Transform holdPosition)
     {
@@ -22,19 +29,75 @@ public class VentHandInteractable : MonoBehaviour, IInteractable, IOneShotIntera
 
         if (introController == null || !introController.EnableCraftInteractionAfterIntro)
         {
-            if (logWhenCraftIsUnavailable && Time.unscaledTime - lastCraftUnavailableLogTime >= craftUnavailableLogCooldown)
-            {
-                lastCraftUnavailableLogTime = Time.unscaledTime;
-                Debug.Log("Craft interface is not implemented yet.");
-            }
-
             return;
         }
 
-        Debug.Log("Vent hand craft interaction hook reached. Craft UI will be implemented later.");
+        
+        if(!isOpen)
+            OpenCraftUi();
     }
 
     public void StopInteract()
     {
+        if(isOpen)
+            CloseCraftUi();
+    }
+
+    private void OnDisable()
+    {
+        if(isOpen)
+            CloseCraftUi();
+    }
+
+    private void Update()
+    {
+        if (!isOpen)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.E))
+        {
+            CloseCraftUi();
+        }
+    }
+
+    private void OpenCraftUi()
+    {
+        isOpen = true;
+        IsCraftUiOpen = true;
+
+        previousCursorLockMode = Cursor.lockState;
+        previousCursorVisible = Cursor.visible;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        PlayerView.Instance?.BlockMovement();
+        inventoryUIController?.OpenInventory(false);
+        craftMenu.gameObject.SetActive(true);
+        
+        foreach (var c in craftMenu.GetComponentsInChildren<CraftGroupView>())
+            c.Refresh();
+    }
+
+    private void CloseCraftUi()
+    {
+        if (!isOpen)
+        {
+            return;
+        }
+
+        isOpen = false;
+        IsCraftUiOpen = false;
+
+        inventoryUIController?.CloseInventory();
+        PlayerView.Instance?.UnlockMovement();
+
+        Cursor.lockState = previousCursorLockMode;
+        Cursor.visible = previousCursorVisible;
+
+        PlayerInteraction.Instance?.ClearCurrentInteractable(this);
+        craftMenu.gameObject.SetActive(false);
+        Debug.Log("Trash bin UI closed.");
     }
 }

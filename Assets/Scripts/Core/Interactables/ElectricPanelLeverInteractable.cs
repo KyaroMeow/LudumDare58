@@ -1,8 +1,12 @@
+using System.Collections;
 using UnityEngine;
 
 public class ElectricPanelLeverInteractable : MonoBehaviour, IInteractable, IOneShotInteractable
 {
     [SerializeField] private ElectricPanelController panelController;
+    [SerializeField] private Collider ventHandCollider;
+    [SerializeField] private VentHandInteractable  ventHandInteractable;
+    [SerializeField] private float activateHandTimer;
 
     public void Interact(Transform holdPosition)
     {
@@ -16,6 +20,7 @@ public class ElectricPanelLeverInteractable : MonoBehaviour, IInteractable, IOne
         controller.RegisterLeverVisual(transform);
         if (controller.TryActivateBlackout())
         {
+            StartCoroutine(ActivateHandCoroutine());
             Debug.Log("Electric panel lever activated.");
         }
     }
@@ -47,5 +52,13 @@ public class ElectricPanelLeverInteractable : MonoBehaviour, IInteractable, IOne
 
         panelController.EnsureInitialized();
         return panelController;
+    }
+
+    private IEnumerator ActivateHandCoroutine()
+    {
+        yield return new WaitForSeconds(activateHandTimer);
+        
+        ventHandCollider.enabled = true;
+        ventHandInteractable.enabled = true;
     }
 }

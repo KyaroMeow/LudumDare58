@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using CraftSystem;
 using UnityEngine;
 
 public class InventorySystem : MonoBehaviour
@@ -33,7 +35,7 @@ public class InventorySystem : MonoBehaviour
 
         return slots[slotIndex];
     }
-
+    
     public bool TryAddItem(InventoryItemDefinition item)
     {
         if (item == null)
@@ -45,6 +47,7 @@ public class InventorySystem : MonoBehaviour
         {
             if (slots[i] == null)
             {
+                CraftMemory.Instance.RegisterCollectedItem(item);
                 slots[i] = item;
                 NotifyChanged();
                 return true;

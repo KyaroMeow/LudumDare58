@@ -183,7 +183,7 @@ public class VentHandIntroController : MonoBehaviour
     public bool CanStartIntroDialogue => dialogueCanBeStarted && !dialogueRunning;
     public bool IsIntroDialogueRunning => dialogueRunning;
     public bool AppearDuringRegularBlackout => appearDuringRegularBlackout;
-    public bool EnableCraftInteractionAfterIntro => enableCraftInteractionAfterIntro && hasVentHandIntroCompleted;
+    public bool EnableCraftInteractionAfterIntro => hasVentHandIntroCompleted;
 
     public bool HandleHandInteractionClick()
     {
@@ -726,6 +726,9 @@ public class VentHandIntroController : MonoBehaviour
         Rigidbody rb = keyObject.AddComponent<Rigidbody>();
         rb.mass = 0.05f;
         rb.isKinematic = true;
+
+        keyObject.GetComponent<CapsuleCollider>().height *= 10;
+        keyObject.GetComponent<CapsuleCollider>().radius *= 10;
 
         if (addOutlineToPlaceholderKey && keyObject.GetComponent<OutlineEffect>() == null)
         {

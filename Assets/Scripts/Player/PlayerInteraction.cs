@@ -17,6 +17,8 @@ public class PlayerInteraction : MonoBehaviour
     private OutlineEffect currentInteractableOutline;
     private PlayerHeldItem heldItem;
 
+    public PlayerHeldItem CurrentHeldItem => heldItem;
+
     private void Awake()
     {
         if (Instance == null)

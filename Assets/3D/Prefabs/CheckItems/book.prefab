@@ -149,6 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
   toolTypeForDisassemble: 0
+  bookItemName: book
   detailReward: {fileID: 0}
   trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
   stealReward: {fileID: 11400000, guid: 5d2332653ba07b74e8dd7cbc9b1baf82, type: 2}

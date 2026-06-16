@@ -8,11 +8,23 @@ public class InventoryUIController : MonoBehaviour
     [SerializeField] private Image[] slotIcons;
     [SerializeField] private Button[] slotButtons;
     [SerializeField] private TextMeshProUGUI[] slotLabels;
+    [SerializeField] private InventoryItemDefinition cutsceneClickItem;
+    
     public bool IsInventoryOpen => inventoryRoot != null && inventoryRoot.activeSelf;
+
+    private void Start()
+    {
+        Bind();
+    }
+
+    private void OnDestroy()
+    {
+        Expose();
+    }
 
     private void Update()
     {
-        if (TrashBinInteractable.IsTrashUiOpen)
+        if (TrashBinInteractable.IsTrashUiOpen || VentHandInteractable.IsCraftUiOpen)
         {
             return;
         }
@@ -119,5 +131,31 @@ public class InventoryUIController : MonoBehaviour
                 slotIcons[i].sprite = item != null ? item.icon : null;
             }
         }
+    }
+
+    private void OnInventoryButtonClicked(int slotIndex)
+    {
+        var item = InventorySystem.Instance.GetItemInSlot(slotIndex);
+        if(!item)
+            return;
+
+        if (item == cutsceneClickItem)
+            Debug.Log("Start Cutscene After Clicked specified selected item"); //TODO: Cutscene after toaster clicked
+    }
+    
+    private void Bind()
+    {
+        for (var index = 0; index < slotButtons.Length; index++)
+        {
+            var slotButton = slotButtons[index];
+            var i = index;
+            slotButton.onClick.AddListener(() => OnInventoryButtonClicked(i));
+        }
+    }
+
+    private void Expose()
+    {
+        foreach (var b in slotButtons)
+            b.onClick.RemoveAllListeners();
     }
 }
