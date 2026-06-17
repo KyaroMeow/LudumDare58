@@ -14,6 +14,7 @@ public class UVLighter : MonoBehaviour
     [SerializeField] private bool lockWorldX = true;
     [SerializeField] private float fixedWorldX;
     [SerializeField] private Vector3 cursorOffset = new Vector3(0f, -0.55f, 0f);
+    [SerializeField] private bool followCursorByModelCenter = true;
 
     [Header("Held Visual")]
     [SerializeField] private bool useTableFlashlightAsHeldModel = true;
@@ -31,12 +32,16 @@ public class UVLighter : MonoBehaviour
     [SerializeField] private Vector3 itemAimOffset = new Vector3(0f, 0.05f, 0f);
     [SerializeField, Min(0.01f)] private float itemAimAssistRadius = 2.35f;
     [SerializeField, Range(0f, 1f)] private float itemAimMinimumAssist = 0.45f;
+    [SerializeField] private bool alignVisualModelToBeam = true;
+    [SerializeField] private bool useModelBoundsForVisualAim = true;
+    [SerializeField] private bool flipVisualModelAim = true;
+    [SerializeField] private Vector3 visualAimLocalDirection = Vector3.left;
 
     [Header("Beam")]
     [SerializeField, Min(0.05f)] private float beamLength = 1.35f;
     [SerializeField, Min(0.01f)] private float beamRadius = 0.035f;
-    [SerializeField, Min(0.01f)] private float beamHorizontalRadius = 0.035f;
-    [SerializeField, Min(0.01f)] private float beamVerticalRadius = 0.035f;
+    [SerializeField, Min(0.01f)] private float beamHorizontalRadius = 0.06f;
+    [SerializeField, Min(0.01f)] private float beamVerticalRadius = 0.08f;
     [SerializeField] private Vector3 beamLocalOffset = new Vector3(0f, 0f, 0.18f);
     [SerializeField] private Vector3 beamLocalEuler = Vector3.zero;
     [SerializeField] private Color beamColor = new Color(0.42f, 0.08f, 1f, 1f);
@@ -49,15 +54,26 @@ public class UVLighter : MonoBehaviour
     [SerializeField] private LayerMask beamBlockerMask = -1;
     [SerializeField] private QueryTriggerInteraction beamBlockerTriggerInteraction = QueryTriggerInteraction.Ignore;
 
+    [Header("Beam Aim")]
+    [SerializeField] private bool forceBeamToCurrentItem = true;
+    [SerializeField] private bool aimBeamAtMouseProjectedPoint = true;
+    [SerializeField, Min(0f)] private float beamTargetSmoothing = 16f;
+    [SerializeField, Range(0f, 1f)] private float itemTargetFallbackCenterBias = 0.35f;
+    [SerializeField, Range(0f, 1f)] private float nearItemTargetCenterBias = 0.06f;
+    [SerializeField, Range(0f, 1f)] private float farItemTargetCenterBias = 0.48f;
+    [SerializeField, Min(0.01f)] private float centerBiasStartDistance = 0.85f;
+    [SerializeField, Min(0.01f)] private float centerBiasFullDistance = 2.45f;
+    [SerializeField, Min(0f)] private float itemSurfacePadding = 0.02f;
+
     [Header("Light")]
     [SerializeField] private bool syncLightToBeam = true;
-    [SerializeField, Min(0.1f)] private float decorativeLightRange = 4.2f;
-    [SerializeField, Min(0f)] private float decorativeLightIntensity = 4.25f;
-    [SerializeField, Min(1f)] private float lightSpotAngle = 36f;
-    [SerializeField, Range(0.1f, 1.25f)] private float revealConeAngleScale = 0.7f;
-    [SerializeField, Range(0f, 1f)] private float revealConeSoftness = 0.35f;
-    [SerializeField] private LightShadows uvLightShadows = LightShadows.Soft;
-    [SerializeField, Range(0f, 1f)] private float uvLightShadowStrength = 0.65f;
+    [SerializeField, Min(0.1f)] private float decorativeLightRange = 5f;
+    [SerializeField, Min(0f)] private float decorativeLightIntensity = 4f;
+    [SerializeField, Min(1f)] private float lightSpotAngle = 38f;
+    [SerializeField, Range(0.1f, 1.25f)] private float revealConeAngleScale = 0.78f;
+    [SerializeField, Range(0f, 1f)] private float revealConeSoftness = 0.45f;
+    [SerializeField] private LightShadows uvLightShadows = LightShadows.None;
+    [SerializeField, Range(0f, 1f)] private float uvLightShadowStrength = 0f;
 
     [Header("SFX")]
     [SerializeField] private SfxEmitter sfxEmitter;
@@ -75,7 +91,11 @@ public class UVLighter : MonoBehaviour
     private Renderer[] toolRenderers;
     private bool warnedLockedWithoutItem;
     private bool hasFixedWorldX;
+    private bool heldModelCentered;
     private Quaternion baseHeldLocalRotation;
+    private bool hasBeamAim;
+    private Vector3 currentBeamTargetPoint;
+    private Vector3 currentBeamWorldDirection = Vector3.forward;
 
     public bool IsLighterActive { get; private set; }
 
@@ -120,7 +140,7 @@ public class UVLighter : MonoBehaviour
 
         FollowCursorYZ();
         UpdateSmartAim();
-        UpdateBeamShape();
+        UpdateBeamAimAndShape();
     }
 
     public void ToggleLighter()
@@ -150,7 +170,7 @@ public class UVLighter : MonoBehaviour
         FollowCursorYZ(immediate: true);
         SetBeamActive(true);
         UpdateSmartAim(immediate: true);
-        UpdateBeamShape();
+        UpdateBeamAimAndShape(immediate: true);
         TutorialHintSystem.Instance?.NotifyUVActiveChanged(true);
         PlaySfx(toggleOnSfx);
     }
@@ -192,7 +212,8 @@ public class UVLighter : MonoBehaviour
         Vector3 stainPoint = bounds.center;
         Vector3 toStain = stainPoint - origin;
         float distance = toStain.magnitude;
-        if (distance <= 0.001f || distance > decorativeLightRange)
+        float revealRange = Mathf.Max(decorativeLightRange, currentBeamLength + itemSurfacePadding);
+        if (distance <= 0.001f || distance > revealRange)
         {
             return false;
         }
@@ -209,7 +230,7 @@ public class UVLighter : MonoBehaviour
         float angleStrength = angle <= softStart
             ? 1f
             : 1f - Mathf.InverseLerp(softStart, halfAngle, angle);
-        float distanceStrength = 1f - Mathf.Clamp01(distance / decorativeLightRange);
+        float distanceStrength = 1f - Mathf.Clamp01(distance / revealRange);
         strength = Mathf.Clamp01(Mathf.Max(0.25f, angleStrength) * Mathf.Lerp(0.75f, 1f, distanceStrength));
         return strength > 0f;
     }
@@ -290,13 +311,28 @@ public class UVLighter : MonoBehaviour
             worldPos.x = fixedWorldX;
         }
 
+        Vector3 targetPosition = worldPos;
+        if (followCursorByModelCenter && TryGetHeldModelCenter(out Vector3 modelCenter))
+        {
+            targetPosition = transform.position + (worldPos - modelCenter);
+            if (lockWorldX)
+            {
+                targetPosition.x = fixedWorldX;
+            }
+        }
+
         transform.position = immediate || followSpeed <= 0f
-            ? worldPos
-            : Vector3.Lerp(transform.position, worldPos, followSpeed * Time.deltaTime);
+            ? targetPosition
+            : Vector3.Lerp(transform.position, targetPosition, followSpeed * Time.deltaTime);
     }
 
     private void UpdateSmartAim(bool immediate = false)
     {
+        if (alignVisualModelToBeam)
+        {
+            return;
+        }
+
         if (heldVisualRoot == null)
         {
             return;
@@ -449,7 +485,7 @@ public class UVLighter : MonoBehaviour
 
         if (centerHeldModelPivot)
         {
-            CenterHeldModelOnPivot();
+            CenterHeldModelOnPivotOnce();
         }
     }
 
@@ -574,6 +610,90 @@ public class UVLighter : MonoBehaviour
                 beamTrigger.ClearTrackedRevealables();
             }
         }
+
+        if (!active)
+        {
+            hasBeamAim = false;
+        }
+    }
+
+    private void UpdateBeamAimAndShape(bool immediate = false)
+    {
+        if (!IsLighterActive || beamObject == null || heldVisualRoot == null)
+        {
+            return;
+        }
+
+        if (forceBeamToCurrentItem && TryGetCurrentItem(out Item item) && TryCalculateBeamTarget(item, out Vector3 targetPoint))
+        {
+            if (!hasBeamAim || immediate || beamTargetSmoothing <= 0f)
+            {
+                currentBeamTargetPoint = targetPoint;
+            }
+            else
+            {
+                float t = 1f - Mathf.Exp(-beamTargetSmoothing * Time.deltaTime);
+                currentBeamTargetPoint = Vector3.Lerp(currentBeamTargetPoint, targetPoint, t);
+            }
+
+            Vector3 origin = GetBeamWorldOrigin();
+            Vector3 toTarget = currentBeamTargetPoint - origin;
+            if (toTarget.sqrMagnitude > 0.0001f)
+            {
+                currentBeamWorldDirection = toTarget.normalized;
+                hasBeamAim = true;
+                AlignVisualToBeamDirection(immediate);
+            }
+        }
+        else
+        {
+            hasBeamAim = false;
+        }
+
+        UpdateBeamShape();
+    }
+
+    private void AlignVisualToBeamDirection(bool immediate)
+    {
+        if (!alignVisualModelToBeam || currentBeamWorldDirection.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        Transform visualTransform = heldModelInstance != null ? heldModelInstance.transform : heldVisualRoot != null ? heldVisualRoot.transform : null;
+        if (visualTransform == null)
+        {
+            return;
+        }
+
+        Quaternion targetRotation;
+        Vector3 targetVisualDirection = flipVisualModelAim
+            ? -currentBeamWorldDirection.normalized
+            : currentBeamWorldDirection.normalized;
+
+        if (useModelBoundsForVisualAim && TryGetHeldModelCenter(out Vector3 modelCenter))
+        {
+            Vector3 lensDirection = GetBeamWorldOrigin() - modelCenter;
+            if (lensDirection.sqrMagnitude <= 0.0001f)
+            {
+                return;
+            }
+
+            Quaternion correction = Quaternion.FromToRotation(lensDirection.normalized, targetVisualDirection);
+            targetRotation = correction * visualTransform.rotation;
+        }
+        else
+        {
+            Vector3 localAimDirection = visualAimLocalDirection.sqrMagnitude > 0.0001f
+                ? visualAimLocalDirection.normalized
+                : (Quaternion.Euler(beamLocalEuler) * Vector3.forward).normalized;
+            Quaternion localAimToForward = Quaternion.Inverse(Quaternion.LookRotation(localAimDirection, Vector3.up));
+            targetRotation = Quaternion.LookRotation(targetVisualDirection, Vector3.up) * localAimToForward;
+        }
+
+        visualTransform.rotation = immediate || itemAimSpeed <= 0f
+            ? targetRotation
+            : Quaternion.Slerp(visualTransform.rotation, targetRotation, itemAimSpeed * Time.deltaTime);
     }
 
     private void UpdateBeamShape()
@@ -584,7 +704,7 @@ public class UVLighter : MonoBehaviour
         }
 
         float targetLength = CalculateVisibleBeamLength();
-        if (Mathf.Abs(targetLength - currentBeamLength) < 0.005f)
+        if (Mathf.Abs(targetLength - currentBeamLength) < 0.005f && !hasBeamAim)
         {
             return;
         }
@@ -596,6 +716,12 @@ public class UVLighter : MonoBehaviour
     private float CalculateVisibleBeamLength()
     {
         float maxLength = Mathf.Max(minBeamLength, beamLength);
+        if (forceBeamToCurrentItem && hasBeamAim)
+        {
+            float targetDistance = Vector3.Distance(GetBeamWorldOrigin(), currentBeamTargetPoint) + itemSurfacePadding;
+            return Mathf.Clamp(targetDistance, minBeamLength, Mathf.Max(maxLength, targetDistance));
+        }
+
         if (!stopBeamAtObjects || heldVisualRoot == null)
         {
             return maxLength;
@@ -683,6 +809,148 @@ public class UVLighter : MonoBehaviour
         return closest;
     }
 
+    private bool TryCalculateBeamTarget(Item item, out Vector3 targetPoint)
+    {
+        targetPoint = Vector3.zero;
+        if (item == null)
+        {
+            return false;
+        }
+
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (mainCamera != null && aimBeamAtMouseProjectedPoint)
+        {
+            Ray mouseRay = mainCamera.ScreenPointToRay(Input.mousePosition);
+            if (TryRaycastItem(mouseRay, item, out RaycastHit hit))
+            {
+                targetPoint = ApplyDistanceCenterBias(item, hit.point);
+                return true;
+            }
+
+            if (TryGetCurrentItemBounds(item, out Bounds bounds))
+            {
+                float projectedDistance = Mathf.Max(0f, Vector3.Dot(bounds.center - mouseRay.origin, mouseRay.direction));
+                Vector3 projectedPoint = mouseRay.GetPoint(projectedDistance);
+                Vector3 closestPoint = bounds.ClosestPoint(projectedPoint);
+                float fallbackBias = Mathf.Max(itemTargetFallbackCenterBias, CalculateDistanceCenterBias(bounds.center));
+                targetPoint = Vector3.Lerp(closestPoint, bounds.center, fallbackBias);
+                return true;
+            }
+        }
+
+        return TryGetCurrentItemCenter(item, out targetPoint);
+    }
+
+    private Vector3 ApplyDistanceCenterBias(Item item, Vector3 rawTargetPoint)
+    {
+        if (item == null || !TryGetCurrentItemBounds(item, out Bounds bounds))
+        {
+            return rawTargetPoint;
+        }
+
+        Vector3 assistedCenter = bounds.center + itemAimOffset;
+        float centerBias = CalculateDistanceCenterBias(bounds.center);
+        return Vector3.Lerp(rawTargetPoint, assistedCenter, centerBias);
+    }
+
+    private float CalculateDistanceCenterBias(Vector3 itemCenter)
+    {
+        Vector3 origin = GetBeamWorldOrigin();
+        Vector2 originYZ = new Vector2(origin.y, origin.z);
+        Vector2 itemYZ = new Vector2(itemCenter.y, itemCenter.z);
+        float distance = Vector2.Distance(originYZ, itemYZ);
+        float startDistance = Mathf.Max(0.01f, centerBiasStartDistance);
+        float fullDistance = Mathf.Max(startDistance + 0.01f, centerBiasFullDistance);
+        float t = Mathf.InverseLerp(startDistance, fullDistance, distance);
+        return Mathf.Lerp(nearItemTargetCenterBias, farItemTargetCenterBias, t);
+    }
+
+    private bool TryRaycastItem(Ray ray, Item item, out RaycastHit closestHit)
+    {
+        closestHit = default;
+        if (item == null)
+        {
+            return false;
+        }
+
+        bool hasHit = false;
+        float closestDistance = float.MaxValue;
+        Collider[] colliders = item.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider itemCollider = colliders[i];
+            if (itemCollider == null || !itemCollider.enabled || IsUVRevealableCollider(itemCollider))
+            {
+                continue;
+            }
+
+            if (itemCollider.Raycast(ray, out RaycastHit hit, decorativeLightRange * 2f) && hit.distance < closestDistance)
+            {
+                closestHit = hit;
+                closestDistance = hit.distance;
+                hasHit = true;
+            }
+        }
+
+        return hasHit;
+    }
+
+    private static bool TryGetCurrentItemBounds(Item item, out Bounds bounds)
+    {
+        bounds = default;
+        if (item == null)
+        {
+            return false;
+        }
+
+        bool hasBounds = false;
+        Renderer[] renderers = item.GetComponentsInChildren<Renderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer itemRenderer = renderers[i];
+            if (itemRenderer == null || !itemRenderer.enabled || IsUVRevealableRenderer(itemRenderer))
+            {
+                continue;
+            }
+
+            if (!hasBounds)
+            {
+                bounds = itemRenderer.bounds;
+                hasBounds = true;
+            }
+            else
+            {
+                bounds.Encapsulate(itemRenderer.bounds);
+            }
+        }
+
+        Collider[] colliders = item.GetComponentsInChildren<Collider>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider itemCollider = colliders[i];
+            if (itemCollider == null || !itemCollider.enabled || IsUVRevealableCollider(itemCollider))
+            {
+                continue;
+            }
+
+            if (!hasBounds)
+            {
+                bounds = itemCollider.bounds;
+                hasBounds = true;
+            }
+            else
+            {
+                bounds.Encapsulate(itemCollider.bounds);
+            }
+        }
+
+        return hasBounds;
+    }
+
     private bool ShouldIgnoreBeamHit(Collider hitCollider)
     {
         if (hitCollider.transform.IsChildOf(transform))
@@ -695,13 +963,26 @@ public class UVLighter : MonoBehaviour
             return true;
         }
 
-        if (hitCollider.GetComponent<UVRevealable>() != null ||
-            hitCollider.GetComponentInParent<UVRevealable>() != null)
+        if (IsUVRevealableCollider(hitCollider))
         {
             return true;
         }
 
         return false;
+    }
+
+    private static bool IsUVRevealableCollider(Collider itemCollider)
+    {
+        return itemCollider != null &&
+               (itemCollider.GetComponent<UVRevealable>() != null ||
+                itemCollider.GetComponentInParent<UVRevealable>() != null);
+    }
+
+    private static bool IsUVRevealableRenderer(Renderer itemRenderer)
+    {
+        return itemRenderer != null &&
+               (itemRenderer.GetComponent<UVRevealable>() != null ||
+                itemRenderer.GetComponentInParent<UVRevealable>() != null);
     }
 
     private Vector3 GetBeamWorldOrigin()
@@ -713,6 +994,11 @@ public class UVLighter : MonoBehaviour
 
     private Vector3 GetBeamWorldDirection()
     {
+        if (hasBeamAim && currentBeamWorldDirection.sqrMagnitude > 0.0001f)
+        {
+            return currentBeamWorldDirection.normalized;
+        }
+
         Quaternion localRotation = Quaternion.Euler(beamLocalEuler);
         return heldVisualRoot != null
             ? heldVisualRoot.transform.TransformDirection(localRotation * Vector3.forward).normalized
@@ -727,11 +1013,37 @@ public class UVLighter : MonoBehaviour
         }
 
         float clampedLength = Mathf.Max(minBeamLength, visibleLength);
-        beamObject.transform.localPosition = beamLocalOffset + (Quaternion.Euler(beamLocalEuler) * Vector3.forward) * (clampedLength * 0.5f);
-        beamObject.transform.localRotation = Quaternion.Euler(beamLocalEuler) * Quaternion.Euler(90f, 0f, 0f);
         float horizontalRadius = Mathf.Max(0.01f, beamHorizontalRadius > 0f ? beamHorizontalRadius : beamRadius);
         float verticalRadius = Mathf.Max(0.01f, beamVerticalRadius > 0f ? beamVerticalRadius : beamRadius);
+
+        if (forceBeamToCurrentItem && hasBeamAim)
+        {
+            Vector3 origin = GetBeamWorldOrigin();
+            Vector3 direction = GetBeamWorldDirection();
+            Quaternion rotation = Quaternion.FromToRotation(Vector3.up, direction);
+            beamObject.transform.SetPositionAndRotation(origin + direction * (clampedLength * 0.5f), rotation);
+            beamObject.transform.localScale = new Vector3(horizontalRadius * 2f, clampedLength * 0.5f, verticalRadius * 2f);
+            UpdateWorldSpaceLight(origin, direction, clampedLength);
+            return;
+        }
+
+        beamObject.transform.localPosition = beamLocalOffset + (Quaternion.Euler(beamLocalEuler) * Vector3.forward) * (clampedLength * 0.5f);
+        beamObject.transform.localRotation = Quaternion.Euler(beamLocalEuler) * Quaternion.Euler(90f, 0f, 0f);
         beamObject.transform.localScale = new Vector3(horizontalRadius * 2f, clampedLength * 0.5f, verticalRadius * 2f);
+    }
+
+    private void UpdateWorldSpaceLight(Vector3 origin, Vector3 direction, float visibleLength)
+    {
+        if (!syncLightToBeam || lighter == null)
+        {
+            return;
+        }
+
+        lighter.transform.SetPositionAndRotation(origin, Quaternion.LookRotation(direction, Vector3.up));
+        if (uvSpotLight != null)
+        {
+            uvSpotLight.range = Mathf.Max(decorativeLightRange, visibleLength + itemSurfacePadding);
+        }
     }
 
     private void PlaceUVLight()
@@ -777,9 +1089,9 @@ public class UVLighter : MonoBehaviour
         toolRenderers = GetComponentsInChildren<Renderer>(true);
     }
 
-    private void CenterHeldModelOnPivot()
+    private void CenterHeldModelOnPivotOnce()
     {
-        if (heldModelInstance == null || heldVisualRoot == null)
+        if (heldModelCentered || heldModelInstance == null || heldVisualRoot == null)
         {
             return;
         }
@@ -801,6 +1113,48 @@ public class UVLighter : MonoBehaviour
 
         Vector3 localCenter = heldVisualRoot.transform.InverseTransformPoint(worldBounds.center);
         heldModelInstance.transform.localPosition += heldModelLocalPosition + centeredModelOffset - localCenter;
+        heldModelCentered = true;
+    }
+
+    private bool TryGetHeldModelCenter(out Vector3 center)
+    {
+        center = Vector3.zero;
+        GameObject modelRoot = heldModelInstance != null ? heldModelInstance : heldVisualRoot;
+        if (modelRoot == null)
+        {
+            return false;
+        }
+
+        Renderer[] renderers = modelRoot.GetComponentsInChildren<Renderer>(true);
+        bool hasBounds = false;
+        Bounds bounds = default;
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer renderer = renderers[i];
+            if (renderer == null || renderer == beamRenderer || !renderer.enabled)
+            {
+                continue;
+            }
+
+            if (!hasBounds)
+            {
+                bounds = renderer.bounds;
+                hasBounds = true;
+            }
+            else
+            {
+                bounds.Encapsulate(renderer.bounds);
+            }
+        }
+
+        if (!hasBounds)
+        {
+            center = modelRoot.transform.position;
+            return true;
+        }
+
+        center = bounds.center;
+        return true;
     }
 
     private void SetToolRenderersActive(bool active)

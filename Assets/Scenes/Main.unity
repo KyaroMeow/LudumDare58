@@ -18360,9 +18360,9 @@ MonoBehaviour:
     stopPreviousLoopBeforeStart: 0
   currentHandDamageCounter: 0
   handCounterLimit: 10
-  easyHandPenaltyPoints: 1
-  normalHandPenaltyPoints: 2
-  hardHandPenaltyPoints: 5
+  easyHandPenaltyPoints: 3
+  normalHandPenaltyPoints: 5
+  hardHandPenaltyPoints: 10
   enableHandCounterDecay: 1
   handCounterDecayDelay: 5
   handCounterDecayInterval: 3
@@ -25959,6 +25959,7 @@ MonoBehaviour:
   lockWorldX: 1
   fixedWorldX: 0
   cursorOffset: {x: 0, y: 0, z: 0}
+  followCursorByModelCenter: 1
   useTableFlashlightAsHeldModel: 1
   heldVisualLocalPosition: {x: 0, y: 0, z: 0}
   heldVisualLocalEuler: {x: 0, y: 0, z: -18}
@@ -25974,9 +25975,13 @@ MonoBehaviour:
   itemAimOffset: {x: 0, y: 0.05, z: 0}
   itemAimAssistRadius: 1.45
   itemAimMinimumAssist: 0.15
+  alignVisualModelToBeam: 1
+  useModelBoundsForVisualAim: 1
+  flipVisualModelAim: 1
+  visualAimLocalDirection: {x: -1, y: 0, z: 0}
   beamLength: 2.8
-  beamRadius: 0.18
-  beamHorizontalRadius: 0.11
+  beamRadius: 0.16
+  beamHorizontalRadius: 0.13
   beamVerticalRadius: 0.48
   beamLocalOffset: {x: 0, y: 0, z: 0.1}
   beamLocalEuler: {x: 0, y: 0, z: 0}
@@ -25991,14 +25996,23 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   beamBlockerTriggerInteraction: 1
+  forceBeamToCurrentItem: 1
+  aimBeamAtMouseProjectedPoint: 1
+  beamTargetSmoothing: 16
+  itemTargetFallbackCenterBias: 0.35
+  nearItemTargetCenterBias: 0.06
+  farItemTargetCenterBias: 0.48
+  centerBiasStartDistance: 0.85
+  centerBiasFullDistance: 2.45
+  itemSurfacePadding: 0.02
   syncLightToBeam: 1
-  decorativeLightRange: 3.25
-  decorativeLightIntensity: 2.2
-  lightSpotAngle: 18
-  revealConeAngleScale: 0.7
-  revealConeSoftness: 0.35
-  uvLightShadows: 2
-  uvLightShadowStrength: 0.65
+  decorativeLightRange: 5
+  decorativeLightIntensity: 2
+  lightSpotAngle: 38
+  revealConeAngleScale: 0.78
+  revealConeSoftness: 0.45
+  uvLightShadows: 0
+  uvLightShadowStrength: 0
   sfxEmitter: {fileID: 0}
   toggleOnSfx:
     label: 

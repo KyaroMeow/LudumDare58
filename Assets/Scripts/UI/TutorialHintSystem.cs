@@ -14,6 +14,7 @@ public enum TutorialHintIconType
     MistakeCounter,
     Punishment,
     Click,
+    Wheel,
     UV,
     Scan,
     Sort,
@@ -35,6 +36,7 @@ public class TutorialHintSystem : MonoBehaviour
     private const string HintStartShift = "HINT_START_SHIFT";
     private const string HintTakeFirstItem = "HINT_TAKE_FIRST_ITEM";
     private const string HintInspectionOverview = "HINT_INSPECTION_OVERVIEW";
+    private const string HintInspectionZoom = "HINT_INSPECTION_ZOOM";
     private const string HintUseUv = "HINT_USE_UV";
     private const string HintUseScanner = "HINT_USE_SCANNER";
     private const string HintMarkersOverview = "HINT_MARKERS_OVERVIEW";
@@ -55,6 +57,7 @@ public class TutorialHintSystem : MonoBehaviour
         HintStartShift,
         HintTakeFirstItem,
         HintInspectionOverview,
+        HintInspectionZoom,
         HintUseUv,
         HintUseScanner,
         HintMarkersOverview,
@@ -121,6 +124,8 @@ public class TutorialHintSystem : MonoBehaviour
     private bool firstItemTutorialCompleted;
     private bool firstItemTimerPaused;
     private bool firstItemInspectionStarted;
+    private bool zoomWheelForwardUsed;
+    private bool zoomWheelBackwardUsed;
     private bool uvActivatedOnce;
     private bool uvDeactivatedAfterUse;
     private bool scannerActivatedOnce;
@@ -229,6 +234,23 @@ public class TutorialHintSystem : MonoBehaviour
         if (uvActivatedOnce)
         {
             uvDeactivatedAfterUse = true;
+        }
+    }
+
+    public void NotifyInspectionZoomInput(float scrollValue)
+    {
+        if (!firstItemTutorialStarted || firstItemTutorialCompleted || Mathf.Abs(scrollValue) <= 0.001f)
+        {
+            return;
+        }
+
+        if (scrollValue > 0f)
+        {
+            zoomWheelForwardUsed = true;
+        }
+        else
+        {
+            zoomWheelBackwardUsed = true;
         }
     }
 
@@ -508,6 +530,12 @@ public class TutorialHintSystem : MonoBehaviour
                     break;
                 }
 
+                if (!HasShown(HintInspectionZoom))
+                {
+                    ShowHint(HintInspectionZoom, "Приближайте и отдаляйте предмет колесиком мыши", TutorialHintIconType.Wheel);
+                    break;
+                }
+
                 ShowHint(HintUseUv, "Проверьте предмет ультрафиолетом. Возьмите фонарик на столе или нажмите кнопку справа", TutorialHintIconType.UV);
                 HighlightUvTargets(true);
                 sequenceStep = 11;
@@ -632,6 +660,9 @@ public class TutorialHintSystem : MonoBehaviour
                 return HasInspectedItem();
             case HintInspectionOverview:
                 return currentHintEndTime > 0f && Time.unscaledTime >= currentHintEndTime;
+            case HintInspectionZoom:
+                return (zoomWheelForwardUsed && zoomWheelBackwardUsed) ||
+                       (currentHintEndTime > 0f && Time.unscaledTime >= currentHintEndTime);
             case HintUseUv:
                 return uvActivatedOnce && uvDeactivatedAfterUse;
             case HintUseScanner:
@@ -658,6 +689,7 @@ public class TutorialHintSystem : MonoBehaviour
     private bool IsPassiveHint(string id)
     {
         return id == HintInspectionOverview ||
+               id == HintInspectionZoom ||
                id == HintFirstMistake ||
                id == HintPunishmentEnd;
     }
@@ -665,6 +697,7 @@ public class TutorialHintSystem : MonoBehaviour
     private bool IsInspectionHint(string id)
     {
         return id == HintInspectionOverview ||
+               id == HintInspectionZoom ||
                id == HintUseUv ||
                id == HintUseScanner ||
                id == HintMarkersOverview ||
@@ -1333,6 +1366,8 @@ public class TutorialHintSystem : MonoBehaviour
                 return "!";
             case TutorialHintIconType.Click:
                 return "CLICK";
+            case TutorialHintIconType.Wheel:
+                return "WHEEL";
             case TutorialHintIconType.UV:
                 return "UV";
             case TutorialHintIconType.Scan:

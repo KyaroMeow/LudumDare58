@@ -256,6 +256,11 @@ public class VentHandIntroController : MonoBehaviour
 
     public void NotifyFirstSortingMistake()
     {
+        NotifyFirstHandPunishment();
+    }
+
+    public void NotifyFirstHandPunishment()
+    {
         ResolveReferences();
 
         if (hasVentHandIntroStarted || hasVentHandIntroCompleted || scheduledIntroRoutine != null)
@@ -272,7 +277,7 @@ public class VentHandIntroController : MonoBehaviour
         float maxDelay = Mathf.Max(minDelay, Mathf.Max(minIntroDelay, maxIntroDelay));
         float delay = Random.Range(minDelay, maxDelay);
         scheduledIntroRoutine = StartCoroutine(ScheduleIntroRoutine(delay));
-        Debug.Log($"Vent hand intro scheduled after first sorting mistake in {delay:F1} seconds.");
+        Debug.Log($"Vent hand intro scheduled after first hand punishment in {delay:F1} seconds.");
     }
 
     public void NotifyKeyPickedUp(VentHandKeyPickup pickup)

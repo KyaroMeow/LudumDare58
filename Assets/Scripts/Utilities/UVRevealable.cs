@@ -17,13 +17,15 @@ public class UVRevealable : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float hiddenAlpha = 0f;
     [SerializeField, Min(0f)] private float hiddenIntensity = 0f;
     [SerializeField, Range(0f, 1f)] private float revealedAlpha = 1f;
-    [SerializeField, Min(0f)] private float revealedIntensity = 5.5f;
-    [SerializeField, Min(0f)] private float revealSpeed = 1.85f;
-    [SerializeField, Min(0f)] private float hideSpeed = 3.25f;
+    [SerializeField, Min(0f)] private float revealedIntensity = 8f;
+    [SerializeField, Min(0f)] private float revealSpeed = 8f;
+    [SerializeField, Min(0f)] private float hideSpeed = 4.5f;
+    [SerializeField, Range(0f, 1f)] private float minVisibleRevealStrength = 0.65f;
+    [SerializeField] private bool boostRevealStrength = true;
     [SerializeField] private bool keepVisibleWhileRevealed = true;
     [SerializeField] private bool ensureTriggerCollider = true;
     [SerializeField] private bool useRuntimeGlowMaterial = true;
-    [SerializeField] private Color glowColor = new Color(0.55f, 0.12f, 1f, 1f);
+    [SerializeField] private Color glowColor = new Color(1f, 0.18f, 0.95f, 1f);
 
     private MaterialPropertyBlock propertyBlock;
     private Material runtimeGlowMaterial;
@@ -95,7 +97,13 @@ public class UVRevealable : MonoBehaviour
     public void Reveal(float strength = 1f)
     {
         EnsureInitialized();
-        targetReveal = Mathf.Max(targetReveal, Mathf.Clamp01(strength));
+        float revealStrength = Mathf.Clamp01(strength);
+        if (boostRevealStrength && revealStrength > 0f)
+        {
+            revealStrength = Mathf.Max(revealStrength, minVisibleRevealStrength);
+        }
+
+        targetReveal = Mathf.Max(targetReveal, revealStrength);
         ApplyReveal();
     }
 

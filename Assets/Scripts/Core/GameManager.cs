@@ -41,9 +41,9 @@ public class GameManager : MonoBehaviour
     [Header("Hand Damage Counter")]
     [SerializeField] private int currentHandDamageCounter = 0;
     [SerializeField] private int handCounterLimit = 10;
-    [SerializeField] private int easyHandPenaltyPoints = 1;
-    [SerializeField] private int normalHandPenaltyPoints = 2;
-    [SerializeField] private int hardHandPenaltyPoints = 5;
+    [SerializeField] private int easyHandPenaltyPoints = 3;
+    [SerializeField] private int normalHandPenaltyPoints = 5;
+    [SerializeField] private int hardHandPenaltyPoints = 10;
     [SerializeField] private bool enableHandCounterDecay = true;
     [SerializeField] private float handCounterDecayDelay = 5f;
     [SerializeField] private float handCounterDecayInterval = 3f;
@@ -367,10 +367,6 @@ public class GameManager : MonoBehaviour
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
         bool canContinue = AddMistakes(mistakesToAdd);
-        if (canContinue)
-        {
-            VentHandIntroController.Instance?.NotifyFirstSortingMistake();
-        }
 
         CompleteCurrentItemAfterSort(canContinue, true);
     }
@@ -439,6 +435,10 @@ public class GameManager : MonoBehaviour
         {
             handPunishmentsApplied++;
             Debug.Log($"Hand damage applied. Counter reset to {currentHandDamageCounter}/{GetHandCounterLimit()}.");
+            if (handPunishmentsApplied == 1)
+            {
+                VentHandIntroController.Instance?.NotifyFirstHandPunishment();
+            }
             return true;
         }
 
@@ -494,7 +494,11 @@ public class GameManager : MonoBehaviour
             return normalHandPenaltyPoints;
         }
 
-        switch (difficulty.difficultyName)
+        string difficultyName = string.IsNullOrWhiteSpace(difficulty.difficultyName)
+            ? string.Empty
+            : difficulty.difficultyName.Trim().ToUpperInvariant();
+
+        switch (difficultyName)
         {
             case "EASY":
                 return easyHandPenaltyPoints;
