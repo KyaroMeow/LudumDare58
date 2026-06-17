@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerView : MonoBehaviour
@@ -7,6 +8,8 @@ public class PlayerView : MonoBehaviour
 
     [Header("Rotation Settings")] public float rotationDuration = 0.3f;
     public float rotationAngle = 90f;
+    [SerializeField] private bool useDiscreteRotationViews = true;
+    [SerializeField] private float duplicateViewTolerance = 2f;
 
     [Header("Camera Look Settings")] public float cameraLookSpeed = 2f;
     public float maxCameraAngle = 15f;
@@ -26,6 +29,10 @@ public class PlayerView : MonoBehaviour
     private Vector2 currentCameraRotation;
     private Vector2 tutorialCameraHintOffset;
     private Coroutine tutorialCameraHintRoutine;
+    private readonly List<float> rotationViewYaws = new List<float>();
+    private float initialYaw;
+    private int currentRotationViewIndex;
+    private bool ventHandExtraViewsUnlocked;
 
     private void Awake()
     {
@@ -41,6 +48,10 @@ public class PlayerView : MonoBehaviour
 
     private void Start()
     {
+        initialYaw = transform.eulerAngles.y;
+        RebuildRotationViews();
+        currentRotationViewIndex = FindClosestRotationViewIndex(transform.eulerAngles.y);
+
         if (cameraTransform != null)
         {
             cameraStartLocalRotation = cameraTransform.localRotation;
@@ -62,7 +73,13 @@ public class PlayerView : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
+        if (Input.GetKeyDown(KeyCode.Escape) &&
+            !PlayerInteraction.IsCloseContextActive &&
+            !PlayerInteraction.WasCloseActionConsumedThisFrame)
+        {
+            TogglePause();
+        }
+
         if (canLook) HandleCameraLook();
         if (canRotate) HandleRotation();
     }
@@ -147,8 +164,131 @@ public class PlayerView : MonoBehaviour
 
         isRotating = true;
         startRotation = transform.rotation;
-        targetRotation = startRotation * Quaternion.Euler(0, rotationAngle * direction, 0);
+        if (useDiscreteRotationViews && rotationViewYaws.Count > 0)
+        {
+            currentRotationViewIndex = FindClosestRotationViewIndex(transform.eulerAngles.y);
+            currentRotationViewIndex = RepeatIndex(currentRotationViewIndex + direction, rotationViewYaws.Count);
+            targetRotation = Quaternion.Euler(0f, rotationViewYaws[currentRotationViewIndex], 0f);
+        }
+        else
+        {
+            targetRotation = startRotation * Quaternion.Euler(0, rotationAngle * direction, 0);
+        }
         rotationProgress = 0f;
+    }
+
+    public void UnlockVentHandExtraRotationViews(Transform ventTarget, Transform electricPanelTarget, float ventYawOffset = 0f, float panelYawOffset = 0f)
+    {
+        if (ventHandExtraViewsUnlocked)
+        {
+            return;
+        }
+
+        ventHandExtraViewsUnlocked = true;
+        RebuildRotationViews(ventTarget, electricPanelTarget, ventYawOffset, panelYawOffset);
+        currentRotationViewIndex = FindClosestRotationViewIndex(transform.eulerAngles.y);
+    }
+
+    private void RebuildRotationViews(Transform ventTarget = null, Transform electricPanelTarget = null, float ventYawOffset = 0f, float panelYawOffset = 0f)
+    {
+        rotationViewYaws.Clear();
+
+        for (int i = 0; i < 4; i++)
+        {
+            AddRotationViewYaw(initialYaw + rotationAngle * i);
+        }
+
+        if (ventHandExtraViewsUnlocked)
+        {
+            if (TryGetYawToTarget(ventTarget, out float ventYaw))
+            {
+                AddRotationViewYaw(ventYaw + ventYawOffset);
+            }
+
+            if (TryGetYawToTarget(electricPanelTarget, out float panelYaw))
+            {
+                AddRotationViewYaw(panelYaw + panelYawOffset);
+            }
+        }
+
+        rotationViewYaws.Sort(CompareRotationViews);
+    }
+
+    private bool TryGetYawToTarget(Transform target, out float yaw)
+    {
+        yaw = 0f;
+        if (target == null)
+        {
+            return false;
+        }
+
+        Vector3 direction = target.position - transform.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.001f)
+        {
+            return false;
+        }
+
+        yaw = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+        return true;
+    }
+
+    private void AddRotationViewYaw(float yaw)
+    {
+        yaw = NormalizeYaw(yaw);
+        for (int i = 0; i < rotationViewYaws.Count; i++)
+        {
+            if (Mathf.Abs(Mathf.DeltaAngle(rotationViewYaws[i], yaw)) <= duplicateViewTolerance)
+            {
+                return;
+            }
+        }
+
+        rotationViewYaws.Add(yaw);
+    }
+
+    private int FindClosestRotationViewIndex(float yaw)
+    {
+        if (rotationViewYaws.Count == 0)
+        {
+            return 0;
+        }
+
+        int closestIndex = 0;
+        float closestDelta = float.MaxValue;
+        for (int i = 0; i < rotationViewYaws.Count; i++)
+        {
+            float delta = Mathf.Abs(Mathf.DeltaAngle(yaw, rotationViewYaws[i]));
+            if (delta < closestDelta)
+            {
+                closestDelta = delta;
+                closestIndex = i;
+            }
+        }
+
+        return closestIndex;
+    }
+
+    private int CompareRotationViews(float first, float second)
+    {
+        float firstRelative = Mathf.Repeat(first - initialYaw, 360f);
+        float secondRelative = Mathf.Repeat(second - initialYaw, 360f);
+        return firstRelative.CompareTo(secondRelative);
+    }
+
+    private static int RepeatIndex(int index, int count)
+    {
+        if (count <= 0)
+        {
+            return 0;
+        }
+
+        return (index % count + count) % count;
+    }
+
+    private static float NormalizeYaw(float yaw)
+    {
+        return Mathf.Repeat(yaw, 360f);
     }
 
     public void ResetCameraLook()

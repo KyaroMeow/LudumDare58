@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DifficultHard
   m_EditorClassIdentifier: Assembly-CSharp::Difficult
   difficultyName: HARD
-  timePerItem: 30
+  timePerItem: 60
   maxMistakes: 5
   anomalyItemNum: 20
   bombNum: 40

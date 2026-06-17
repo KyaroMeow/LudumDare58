@@ -56,8 +56,9 @@ public class VentHandInteractable : MonoBehaviour, IInteractable, IOneShotIntera
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.E))
+        if (PlayerInteraction.GetCloseActionKeyDown(includeTab: true))
         {
+            PlayerInteraction.MarkCloseActionConsumed();
             CloseCraftUi();
         }
     }

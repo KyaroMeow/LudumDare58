@@ -488,7 +488,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         buttonTransform.anchorMax = new Vector2(0f, 1f);
         buttonTransform.pivot = new Vector2(0f, 1f);
         buttonTransform.anchoredPosition = new Vector2(16f, -104f);
-        buttonTransform.sizeDelta = new Vector2(140f, 40f);
+        buttonTransform.sizeDelta = new Vector2(160f, 40f);
 
         Image buttonImage = buttonObject.GetComponent<Image>();
         buttonImage.color = new Color(0.12f, 0.1f, 0.16f, 0.92f);
@@ -510,9 +510,9 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         labelTransform.offsetMax = Vector2.zero;
 
         Text label = labelObject.GetComponent<Text>();
-        label.text = "Steal";
+        label.text = "Украсть";
         label.alignment = TextAnchor.MiddleCenter;
-        label.color = Color.white;
+        label.color = Color.black;
         label.fontSize = 18;
         label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
     }

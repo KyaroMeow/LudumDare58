@@ -5115,6 +5115,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HUDManager
   itemScanHUD: {fileID: 1115873528}
   itemMarkerUI: {fileID: 1075652592}
+  createRuntimeMistakeCounter: 1
+  mistakeCounterOffset: {x: 28, y: -28}
+  mistakeCounterSize: {x: 260, y: 74}
+  mistakePanelColor: {r: 0.035, g: 0.04, b: 0.05, a: 0.82}
+  mistakeAccentColor: {r: 1, g: 0.22, b: 0.16, a: 1}
+  mistakeSafeColor: {r: 0.28, g: 0.86, b: 0.75, a: 1}
+  mistakeEmptyColor: {r: 0.18, g: 0.19, b: 0.21, a: 0.9}
+  mistakeTextColor: {r: 0.94, g: 0.96, b: 0.98, a: 1}
+  mistakeGlowColor: {r: 1, g: 0.08, b: 0.04, a: 0.24}
 --- !u!1 &396744428
 GameObject:
   m_ObjectHideFlags: 0
@@ -6811,6 +6820,53 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 495917542}
   m_CullTransparentMesh: 1
+--- !u!1 &498909621
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 498909622}
+  - component: {fileID: 498909623}
+  m_Layer: 0
+  m_Name: CursorManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &498909622
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 498909621}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 1336003855}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &498909623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 498909621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd7571a1776dc6e43bffadc7c9a4bda0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SorterCursor
+  cursorTexture: {fileID: 2800000, guid: 32be8974c4e2fcf4f93d0f78cb993450, type: 3}
+  hotspot: {x: 18, y: 16}
+  cursorMode: 0
 --- !u!1 &499088320
 GameObject:
   m_ObjectHideFlags: 0
@@ -8701,6 +8757,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rotationDuration: 0.3
   rotationAngle: 90
+  useDiscreteRotationViews: 1
+  duplicateViewTolerance: 2
   cameraLookSpeed: 3
   maxCameraAngle: 15
   cameraTransform: {fileID: 738370028}
@@ -18515,6 +18573,10 @@ MonoBehaviour:
     delay: 0
     playIfAlreadyPlaying: 1
     stopPreviousLoopBeforeStart: 0
+  enableTimerSpeedScaling: 1
+  easyTimerSpeedIncreasePerItem: 0.05
+  normalTimerSpeedIncreasePerItem: 0.1
+  hardTimerSpeedIncreasePerItem: 0.3
   currentHandDamageCounter: 0
   handCounterLimit: 10
   easyHandPenaltyPoints: 3
@@ -18524,7 +18586,7 @@ MonoBehaviour:
   handCounterDecayDelay: 10
   handCounterDecayInterval: 20
   handCounterDecayAmount: 1
-  showHandPenaltyDebugCounter: 0
+  showHandPenaltyDebugCounter: 1
   handPenaltyDebugPosition: {x: 16, y: 16}
   handPenaltyDebugSize: {x: 220, y: 48}
 --- !u!4 &1252240131
@@ -18861,7 +18923,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1272766440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20129,6 +20191,7 @@ Transform:
   - {fileID: 193881968}
   - {fileID: 410012341}
   - {fileID: 2102000001}
+  - {fileID: 498909622}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1336003856
@@ -28000,15 +28063,15 @@ MonoBehaviour:
   sphereFeedbackEmitter: {fileID: 0}
   sphereClickSfx:
     label: 
-    clip: {fileID: 8300000, guid: a1b9c5ecee3c9984fb2d8dbefd0b9f34, type: 3}
+    clip: {fileID: 8300000, guid: 090cd85a5e494114ca6d1f280ec07661, type: 3}
     useVariations: 0
     variations: []
     loop: 0
     volume: 1
-    randomizeVolume: 0
+    randomizeVolume: 1
     volumeRange: {x: 0.9, y: 1}
     pitch: 1
-    randomizePitch: 0
+    randomizePitch: 1
     pitchRange: {x: 0.95, y: 1.05}
     spatial: 0
     spatialBlend: 0
@@ -28017,7 +28080,7 @@ MonoBehaviour:
     delay: 0
     playIfAlreadyPlaying: 0
     stopPreviousLoopBeforeStart: 0
-  sphereMoveEffectPrefab: {fileID: 3302442364004722511, guid: 10434d6bf3af98b46a88ab696f543ee3, type: 3}
+  sphereMoveEffectPrefab: {fileID: 1855340746554395461, guid: 49011e57640af4346b984abcfb1cf581, type: 3}
   spawnMoveEffectAtNextPosition: 1
   cubeEnergyVisuals: []
 --- !u!4 &1959665714
@@ -32405,6 +32468,18 @@ PrefabInstance:
     - target: {fileID: 4908140128982973255, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561716401388302511, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 6.484
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561716401388302511, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 2.76
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561716401388302511, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 13.205
       objectReference: {fileID: 0}
     - target: {fileID: 5979214185326138408, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       propertyPath: m_LocalPosition.x

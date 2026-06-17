@@ -31,6 +31,8 @@ public class TutorialHintSystem : MonoBehaviour
     private const string HintOpenInventory = "HINT_OPEN_INVENTORY";
     private const string HintCloseInventory = "HINT_CLOSE_INVENTORY";
     private const string HintTakeTablet = "HINT_TAKE_TABLET";
+    private const string HintCloseTablet = "HINT_CLOSE_TABLET";
+    private const string HintReopenTablet = "HINT_REOPEN_TABLET";
     private const string HintTabletMainTabs = "HINT_TABLET_MAIN_TABS";
     private const string HintVisitTabletTabs = "HINT_VISIT_TABLET_TABS";
     private const string HintStartShift = "HINT_START_SHIFT";
@@ -44,6 +46,8 @@ public class TutorialHintSystem : MonoBehaviour
     private const string HintFirstMistake = "HINT_FIRST_MISTAKE";
     private const string HintPunishmentEnd = "HINT_PUNISHMENT_END";
     private const string PlayerPrefsPrefix = "Sorter.TutorialHint.";
+    private const int SequenceWaitTabletClosed = 50;
+    private const int SequenceWaitTabletReopened = 51;
 
     private static readonly string[] AllHintIds =
     {
@@ -52,6 +56,8 @@ public class TutorialHintSystem : MonoBehaviour
         HintOpenInventory,
         HintCloseInventory,
         HintTakeTablet,
+        HintCloseTablet,
+        HintReopenTablet,
         HintTabletMainTabs,
         HintVisitTabletTabs,
         HintStartShift,
@@ -404,7 +410,7 @@ public class TutorialHintSystem : MonoBehaviour
 
     private void TryAdvancePrimarySequence()
     {
-        if (gameManager != null && gameManager.isGameStarted && sequenceStep < 8)
+        if (gameManager != null && gameManager.isGameStarted && !firstItemTutorialStarted)
         {
             sequenceStep = 8;
         }
@@ -420,6 +426,11 @@ public class TutorialHintSystem : MonoBehaviour
 
     private void TryAdvancePreShiftSequence()
     {
+        if (TryAdvanceTabletCloseSequence())
+        {
+            return;
+        }
+
         switch (sequenceStep)
         {
             case 0:
@@ -476,6 +487,44 @@ public class TutorialHintSystem : MonoBehaviour
                 HighlightUiTarget(startShiftButtonTarget, HintStartShift);
                 sequenceStep = 8;
                 break;
+        }
+    }
+
+    private bool TryAdvanceTabletCloseSequence()
+    {
+        switch (sequenceStep)
+        {
+            case 5:
+                if (!IsTabletOpen())
+                {
+                    return false;
+                }
+
+                ShowHint(HintCloseTablet, "Чтобы закрыть планшет, нажмите E, Space или Escape", TutorialHintIconType.CloseE);
+                sequenceStep = SequenceWaitTabletClosed;
+                return true;
+            case SequenceWaitTabletClosed:
+                if (IsTabletOpen())
+                {
+                    return true;
+                }
+
+                ShowHint(HintReopenTablet, "Снова откройте планшет, чтобы продолжить обучение", TutorialHintIconType.MouseLook);
+                HighlightWorldTarget(tabletWorldTarget, HintReopenTablet);
+                sequenceStep = SequenceWaitTabletReopened;
+                return true;
+            case SequenceWaitTabletReopened:
+                if (!IsTabletOpen())
+                {
+                    return true;
+                }
+
+                ShowHint(HintTabletMainTabs, "Изучите вкладки планшета", TutorialHintIconType.Eye);
+                HighlightMainTabletTabs();
+                sequenceStep = 6;
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -649,6 +698,10 @@ public class TutorialHintSystem : MonoBehaviour
             case HintCloseInventory:
                 return inventoryController != null && !inventoryController.IsInventoryOpen;
             case HintTakeTablet:
+                return IsTabletOpen();
+            case HintCloseTablet:
+                return !IsTabletOpen();
+            case HintReopenTablet:
                 return IsTabletOpen();
             case HintTabletMainTabs:
                 return visitedInfoTab || visitedBestiaryTab || visitedMarkersTab;
@@ -1357,7 +1410,7 @@ public class TutorialHintSystem : MonoBehaviour
             case TutorialHintIconType.Eye:
                 return "EYE";
             case TutorialHintIconType.CloseE:
-                return "E";
+                return "E / SPACE / ESC";
             case TutorialHintIconType.StartButton:
                 return "START";
             case TutorialHintIconType.MistakeCounter:

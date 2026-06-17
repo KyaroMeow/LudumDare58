@@ -38,6 +38,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private SfxCue sortingFailSfx;
     [SerializeField] private SfxCue punishmentSfx;
 
+    [Header("Timer Difficulty Scaling")]
+    [SerializeField] private bool enableTimerSpeedScaling = true;
+    [SerializeField] private float easyTimerSpeedIncreasePerItem = 0.1f;
+    [SerializeField] private float normalTimerSpeedIncreasePerItem = 0.33333334f;
+    [SerializeField] private float hardTimerSpeedIncreasePerItem = 0.5f;
+
     [Header("Hand Damage Counter")]
     [SerializeField] private int currentHandDamageCounter = 0;
     [SerializeField] private int handCounterLimit = 10;
@@ -65,6 +71,7 @@ public class GameManager : MonoBehaviour
     private ElectricPanelController subscribedElectricPanel;
     private float nextHandCounterDecayTime;
     private int handPunishmentsApplied;
+    private float timerSpeedBonus;
     private readonly HashSet<int> loggedChildItemRoots = new HashSet<int>();
 
     public int CurrentHandDamageCounter => currentHandDamageCounter;
@@ -73,6 +80,7 @@ public class GameManager : MonoBehaviour
     public bool IsGameOverStarted => isGameOverStarted;
     public bool IsStoryInteractionLocked => isStoryInteractionLocked;
     public bool IsCompletingCurrentItem => isCompletingCurrentItem;
+    public float CurrentTimerSpeedMultiplier => 1f + Mathf.Max(0f, timerSpeedBonus);
 
     private void Awake()
     {
@@ -136,6 +144,7 @@ public class GameManager : MonoBehaviour
         isTimerWork = true;
         currentHandDamageCounter = 0;
         handPunishmentsApplied = 0;
+        timerSpeedBonus = 0f;
         ResetHandCounterDecayTimer();
         ResolveGameAudioManager();
         gameAudioManager?.StartShiftMusic();
@@ -164,7 +173,7 @@ public class GameManager : MonoBehaviour
 
         if (currentTime > 0)
         {
-            currentTime -= Time.deltaTime;
+            currentTime -= Time.deltaTime * CurrentTimerSpeedMultiplier;
             gameAudioManager?.UpdateTimerMusicIntensity(currentTime, difficulty.timePerItem);
         }
         else
@@ -357,6 +366,7 @@ public class GameManager : MonoBehaviour
         PlaySfx(sortingSuccessSfx);
         lights.ChangeColorGreen();
         totalItemsProcessed++;
+        IncreaseTimerSpeedAfterSortedItem();
         securitySystem?.NotifySortingAction();
 
         bool canContinue = true;
@@ -380,6 +390,7 @@ public class GameManager : MonoBehaviour
         PlaySfx(sortingFailSfx);
         lights.ChangeColorRed();
         totalItemsProcessed++;
+        IncreaseTimerSpeedAfterSortedItem();
         securitySystem?.NotifySortingAction();
         bool canContinue = AddMistakes(mistakesToAdd);
 
@@ -523,6 +534,47 @@ public class GameManager : MonoBehaviour
                 return hardHandPenaltyPoints;
             default:
                 return normalHandPenaltyPoints;
+        }
+    }
+
+    private void IncreaseTimerSpeedAfterSortedItem()
+    {
+        if (!enableTimerSpeedScaling)
+        {
+            return;
+        }
+
+        Difficult difficulty = GetCurrentDifficulty("increase timer speed");
+        if (difficulty == null)
+        {
+            return;
+        }
+
+        float increase = GetTimerSpeedIncreasePerItem(difficulty);
+        if (increase <= 0f)
+        {
+            return;
+        }
+
+        timerSpeedBonus += increase;
+        Debug.Log($"Timer speed increased by +{increase:0.###} after sorted item. Current speed: {CurrentTimerSpeedMultiplier:0.###}x.");
+    }
+
+    private float GetTimerSpeedIncreasePerItem(Difficult difficulty)
+    {
+        string difficultyName = difficulty != null && !string.IsNullOrWhiteSpace(difficulty.difficultyName)
+            ? difficulty.difficultyName.Trim().ToUpperInvariant()
+            : string.Empty;
+
+        switch (difficultyName)
+        {
+            case "EASY":
+                return easyTimerSpeedIncreasePerItem;
+            case "HARD":
+                return hardTimerSpeedIncreasePerItem;
+            case "NORMAL":
+            default:
+                return normalTimerSpeedIncreasePerItem;
         }
     }
 

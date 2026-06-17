@@ -40,8 +40,9 @@ public class TrashBinInteractable : MonoBehaviour, IInteractable
             return;
         }
 
-        if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.E))
+        if (PlayerInteraction.GetCloseActionKeyDown(includeTab: true))
         {
+            PlayerInteraction.MarkCloseActionConsumed();
             CloseTrashUi();
         }
     }
@@ -99,7 +100,7 @@ public class TrashBinInteractable : MonoBehaviour, IInteractable
             DiscardSelectedSlot();
         }
 
-        GUI.Label(new Rect(inventoryPanelRect.x, inventoryPanelRect.yMax + 8f, 420f, 24f), "Tab/E: close trash UI");
+        GUI.Label(new Rect(inventoryPanelRect.x, inventoryPanelRect.yMax + 8f, 520f, 24f), "Tab / E / Esc / Space / Enter: close trash UI");
     }
 
     private void DrawInventorySlots()

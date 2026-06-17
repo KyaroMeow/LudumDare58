@@ -4,6 +4,7 @@ using UnityEngine;
 public class PlayerInteraction : MonoBehaviour
 {
     public static PlayerInteraction Instance;
+    private static int closeActionConsumedFrame = -1;
 
     public Camera playerCamera;
     public Hands hands;
@@ -18,6 +19,12 @@ public class PlayerInteraction : MonoBehaviour
     private PlayerHeldItem heldItem;
 
     public PlayerHeldItem CurrentHeldItem => heldItem;
+    public bool HasCurrentInteractable => currentInteractable != null;
+    public static bool WasCloseActionConsumedThisFrame => closeActionConsumedFrame == Time.frameCount;
+    public static bool IsCloseContextActive =>
+        (Instance != null && Instance.HasCurrentInteractable) ||
+        TrashBinInteractable.IsTrashUiOpen ||
+        VentHandInteractable.IsCraftUiOpen;
 
     private void Awake()
     {
@@ -43,10 +50,26 @@ public class PlayerInteraction : MonoBehaviour
         HandleInteraction();
         HandleToolCancelInput();
 
-        if (Input.GetKeyDown(KeyCode.E) && currentInteractable != null)
+        if (GetCloseActionKeyDown() && currentInteractable != null)
         {
+            MarkCloseActionConsumed();
             HandleStopInteraction();
         }
+    }
+
+    public static bool GetCloseActionKeyDown(bool includeTab = false)
+    {
+        return (includeTab && Input.GetKeyDown(KeyCode.Tab)) ||
+               Input.GetKeyDown(KeyCode.E) ||
+               Input.GetKeyDown(KeyCode.Escape) ||
+               Input.GetKeyDown(KeyCode.Space) ||
+               Input.GetKeyDown(KeyCode.Return) ||
+               Input.GetKeyDown(KeyCode.KeypadEnter);
+    }
+
+    public static void MarkCloseActionConsumed()
+    {
+        closeActionConsumedFrame = Time.frameCount;
     }
 
     private void HandleToolCancelInput()
