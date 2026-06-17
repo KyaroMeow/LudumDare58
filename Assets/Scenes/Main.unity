@@ -8287,6 +8287,77 @@ MonoBehaviour:
   scanLayerMask:
     serializedVersion: 2
     m_Bits: 1024
+  scanDuration: 2.35
+  scanProgressDecaySpeed: 1.2
+  scanGraceTime: 0.25
+  scanCompleteAutoDisableDelay: 0.25
+  followSpeed: 14
+  aimAssistStrength: 0.65
+  barcodeAimAssistRadius: 1.2
+  showBeam: 0
+  beamWidth: 0.025
+  idleBeamColor: {r: 0.15, g: 0.65, b: 1, a: 0.75}
+  scanningBeamColor: {r: 1, g: 0.12, b: 0.04, a: 0.95}
+  beamPulseSpeed: 8
+  beamHitPadding: 0.02
+  sfxEmitter: {fileID: 0}
+  scanningLoopSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  scanCompleteSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  scanLostSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
 --- !u!1 &600401345
 GameObject:
   m_ObjectHideFlags: 0
@@ -8756,6 +8827,10 @@ MonoBehaviour:
   lookSmoothTime: 0.045
   minPitch: -89
   maxPitch: 89
+  ctrlMouseWheelChangesFov: 1
+  minFreecamFov: 25
+  maxFreecamFov: 110
+  fovScrollStep: 4
   useSpeedFovEffect: 1
   maxExtraFov: 8
   fovSmoothTime: 0.15
