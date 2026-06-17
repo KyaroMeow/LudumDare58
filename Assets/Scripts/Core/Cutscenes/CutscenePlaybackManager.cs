@@ -18,6 +18,8 @@ public class CutscenePlaybackManager : MonoBehaviour
 
     [SerializeField] private VideoClip bookTheftClip;
     [SerializeField] private VideoClip toasterClip;
+    [SerializeField] private AudioClip bombExplosionSfx;
+    [SerializeField] private float bombExplosionHoldDuration = 2.5f;
     [SerializeField] private string creditsSceneName = "Titrs";
     [SerializeField] private string menuSceneName = "Menu";
     [SerializeField] private bool allowSkip = false;
@@ -36,6 +38,7 @@ public class CutscenePlaybackManager : MonoBehaviour
     private bool warnedMissingBookTheftClip;
     private bool warnedMissingToasterClip;
     private bool warnedMissingGenericClip;
+    private bool warnedMissingBombExplosionSfx;
 
     private GameObject playbackRoot;
     private Image backgroundImage;
@@ -77,6 +80,16 @@ public class CutscenePlaybackManager : MonoBehaviour
     public void PlayToasterCutscene()
     {
         PlayCutscene(toasterClip, ref warnedMissingToasterClip, "toaster");
+    }
+
+    public void PlayBombExplosionEnding()
+    {
+        if (isPlaying)
+        {
+            return;
+        }
+
+        StartCoroutine(PlayBombExplosionEndingRoutine());
     }
 
     public void PlayCutscene(VideoClip clip)
@@ -175,6 +188,53 @@ public class CutscenePlaybackManager : MonoBehaviour
 
         videoPlayer.loopPointReached -= loopHandler;
         videoPlayer.errorReceived -= errorHandler;
+
+        RestoreSceneAudio();
+        CleanupPlaybackObjects();
+        LoadCreditsScene();
+    }
+
+    private IEnumerator PlayBombExplosionEndingRoutine()
+    {
+        isPlaying = true;
+        ApplyLocalPlaybackLock();
+        CreatePlaybackObjects(null);
+
+        audioSource = playbackRoot != null ? playbackRoot.AddComponent<AudioSource>() : null;
+        if (audioSource != null)
+        {
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f;
+        }
+
+        CaptureSceneAudioSources();
+
+        yield return FadeBackgroundToBlackRoutine();
+        yield return MuteSceneAudioRoutine();
+
+        float waitDuration = Mathf.Max(0.1f, bombExplosionHoldDuration);
+        if (bombExplosionSfx != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(bombExplosionSfx);
+            waitDuration = Mathf.Max(waitDuration, bombExplosionSfx.length + 0.25f);
+        }
+        else if (!warnedMissingBombExplosionSfx)
+        {
+            warnedMissingBombExplosionSfx = true;
+            Debug.LogWarning("Bomb explosion ending has no explosion SFX assigned. Loading credits after black screen fallback.");
+        }
+
+        float elapsed = 0f;
+        while (elapsed < waitDuration)
+        {
+            if (allowSkip && Input.GetKeyDown(skipKey))
+            {
+                break;
+            }
+
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
 
         RestoreSceneAudio();
         CleanupPlaybackObjects();

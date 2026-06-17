@@ -31,8 +31,8 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private GameObject stealButtonRoot;
     private Button stealButton;
     private CutsceneHintPulse stealButtonPulse;
-    private static readonly Color BookStealPulseColor = new Color(1f, 0.35f, 0.85f, 1f);
-    private static readonly Color AnomalyFinalStealPulseColor = new Color(0.42f, 0.72f, 1f, 1f);
+    private static readonly Color BookStealPulseColor = new Color(1f, 0.82f, 0.28f, 1f);
+    private static readonly Color AnomalyFinalStealPulseColor = new Color(0.42f, 0.9f, 1f, 1f);
 
     private void Awake()
     {
@@ -446,13 +446,13 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         if (anomalyController != null &&
             anomalyController.CanFinalStealEnergySphere(gameObject))
         {
-            stealButtonPulse?.Configure(AnomalyFinalStealPulseColor, 4.5f, 0.08f);
+            stealButtonPulse?.Configure(AnomalyFinalStealPulseColor, 4.5f, 0.08f, CutsceneHintPulse.PulseStyle.Sparkles);
             return true;
         }
 
         if (IsCurrentHeldBookItem())
         {
-            stealButtonPulse?.Configure(BookStealPulseColor, 3f, 0.06f);
+            stealButtonPulse?.Configure(BookStealPulseColor, 3.6f, 0.06f, CutsceneHintPulse.PulseStyle.Sparkles);
             return true;
         }
 
