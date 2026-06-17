@@ -148,10 +148,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
-  toolTypeForDisassemble: 0
-  detailReward: {fileID: 0}
+  toolTypeForDisassemble: 3
+  bookItemName: 
+  detailReward: {fileID: 11400000, guid: 11ecec58e7357064c874aef46dfb86ba, type: 2}
   trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
   stealReward: {fileID: 11400000, guid: ba707ca9317677040b4242d65e675a91, type: 2}
+  detailDropPrefab: {fileID: 5108094091330379970, guid: 452cb17082ee0f04d9720b27ad2eea17, type: 3}
+  stealDropPrefab: {fileID: 0}
+  rewardDropOffset: {x: 0, y: 0.08, z: 0}
+  alignRewardDropToItemRotation: 1
   canBeStolen: 1
   itemName: cassete
   sfxEmitter: {fileID: 0}

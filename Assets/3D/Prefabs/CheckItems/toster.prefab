@@ -121,10 +121,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2447e373c2345aeb3c6ed8528998083, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ConveyorItemInteractable
-  toolTypeForDisassemble: 0
-  detailReward: {fileID: 0}
+  toolTypeForDisassemble: 2
+  bookItemName: 
+  detailReward: {fileID: 11400000, guid: 4cce434a0f99afb4688260e4b6ce6f1f, type: 2}
   trashReward: {fileID: 11400000, guid: be2e0d50c5e8b6a41af66e1d453972d1, type: 2}
   stealReward: {fileID: 11400000, guid: 79093e84933fbe246a1cb4e52d715392, type: 2}
+  detailDropPrefab: {fileID: 8710276250277653617, guid: 3e8230101b3fa3549abd6dc105fc7fc3, type: 3}
+  stealDropPrefab: {fileID: 0}
+  rewardDropOffset: {x: 0, y: 0.08, z: 0}
+  alignRewardDropToItemRotation: 1
   canBeStolen: 1
   itemName: toaster
   sfxEmitter: {fileID: 0}

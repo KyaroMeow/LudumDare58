@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(Collider))]
 public class ConveyorItemInteractable : MonoBehaviour, IInteractable
@@ -9,6 +11,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     [SerializeField] private InventoryItemDefinition detailReward;
     [SerializeField] private InventoryItemDefinition trashReward;
     [SerializeField] private InventoryItemDefinition stealReward;
+    [Header("Dropped Reward Pickup")]
+    [SerializeField] private GameObject detailDropPrefab;
+    [SerializeField] private GameObject stealDropPrefab;
+    [SerializeField] private Vector3 rewardDropOffset = new Vector3(0f, 0.08f, 0f);
+    [SerializeField] private bool alignRewardDropToItemRotation = true;
     [SerializeField] private bool canBeStolen = true;
     [SerializeField] private string itemName;
     [SerializeField] private SfxEmitter sfxEmitter;
@@ -21,6 +28,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private Collider[] cachedColliders;
     private bool isBeingInspected;
     private bool warnedStealLocked;
+    private GameObject stealButtonRoot;
+    private Button stealButton;
+    private CutsceneHintPulse stealButtonPulse;
+    private static readonly Color BookStealPulseColor = new Color(1f, 0.35f, 0.85f, 1f);
+    private static readonly Color AnomalyFinalStealPulseColor = new Color(0.42f, 0.72f, 1f, 1f);
 
     private void Awake()
     {
@@ -32,6 +44,14 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         if (GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked)
         {
             Debug.Log("Item inspection blocked because vent hand intro is running.");
+            PlayerInteraction.Instance?.ClearCurrentInteractable(this);
+            return;
+        }
+
+        AnomallyController anomalyController = ResolveAnomalyController();
+        if (anomalyController != null && anomalyController.IsChaseActive && anomalyController.IsStoryAnomalyCube(gameObject))
+        {
+            Debug.Log("Anomaly cube inspection is blocked while the sphere chase is active.");
             PlayerInteraction.Instance?.ClearCurrentInteractable(this);
             return;
         }
@@ -61,6 +81,15 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         PlayerItemInspection.Instance?.BeginInspection(gameObject);
         isBeingInspected = true;
         PlaySfx(pickupSfx);
+        RefreshStealButton();
+    }
+
+    private void Update()
+    {
+        if (isBeingInspected)
+        {
+            RefreshStealButton();
+        }
     }
 
     public void StopInteract()
@@ -83,6 +112,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         PlayerHeldItem.Instance?.ClearItem();
         PlayerItemInspection.Instance?.EndInspection();
         isBeingInspected = false;
+        DestroyStealButton();
     }
 
     public bool TryDisassemble(ToolType toolType)
@@ -102,11 +132,68 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
             return false;
         }
-        
-        if(PlayerInteraction.Instance.CurrentHeldItem.GetComponent<ConveyorItemInteractable>().itemName == bookItemName)
-            Debug.Log("Add cutscene here"); //TODO Cutscene after stealing the book
 
-        return TryUseTool(ToolType.Steal);
+        if (TryHandleStoryAnomalySteal(out bool anomalyResult))
+        {
+            return anomalyResult;
+        }
+        
+        bool shouldPlayBookCutscene = IsCurrentHeldBookItem();
+        bool stealSucceeded = TryUseTool(ToolType.Steal);
+
+        if (stealSucceeded)
+        {
+            DestroyStealButton();
+        }
+
+        if (stealSucceeded && shouldPlayBookCutscene)
+        {
+            if (CutscenePlaybackManager.Instance != null)
+            {
+                CutscenePlaybackManager.Instance.PlayBookTheftCutscene();
+            }
+            else
+            {
+                Debug.LogWarning("Cannot start book theft cutscene because CutscenePlaybackManager is missing.");
+            }
+        }
+
+        return stealSucceeded;
+    }
+
+    private bool TryHandleStoryAnomalySteal(out bool result)
+    {
+        result = false;
+
+        AnomallyController anomalyController = ResolveAnomalyController();
+        if (anomalyController == null || !anomalyController.IsStoryAnomalyCube(gameObject))
+        {
+            return false;
+        }
+
+        if (anomalyController.CanFinalStealEnergySphere(gameObject))
+        {
+            result = anomalyController.TryFinalStealEnergySphere(gameObject);
+            if (result)
+            {
+                DestroyStealButton();
+            }
+
+            return true;
+        }
+
+        if (anomalyController.CanStartAnomalySteal(gameObject))
+        {
+            result = anomalyController.TryStartAnomalySteal(gameObject);
+            if (result)
+            {
+                DestroyStealButton();
+            }
+
+            return true;
+        }
+
+        return true;
     }
 
     private bool TryUseTool(ToolType toolType)
@@ -125,8 +212,22 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
 
         InventoryItemDefinition reward = null;
         string actionName = $"Use tool {toolType}";
+        bool isDisassemblyReward = false;
+        bool isStealReward = false;
 
-        if (toolType == ToolType.Steal)
+        if (toolType != ToolType.Steal && TryResolveTargetedDisassembly(out ToolType requiredTool, out string disassemblyTargetName))
+        {
+            if (toolType != requiredTool)
+            {
+                Debug.LogWarning($"Cannot disassemble '{gameObject.name}' with {toolType}. Required tool: {requiredTool}. Item remains in place.");
+                return false;
+            }
+
+            reward = detailReward;
+            actionName = $"Disassemble {disassemblyTargetName}";
+            isDisassemblyReward = true;
+        }
+        else if (toolType == ToolType.Steal)
         {
             if (!canBeStolen)
             {
@@ -136,10 +237,12 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             
             reward = stealReward;
             actionName = "Steal item";
+            isStealReward = true;
         }
         else if (toolTypeForDisassemble == toolType)
         {
             reward = detailReward;
+            isDisassemblyReward = true;
         }
         else
         {
@@ -152,20 +255,121 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
             return false;
         }
 
+        GameObject rewardDropPrefab = ResolveRewardDropPrefab(isDisassemblyReward, isStealReward);
+        if (rewardDropPrefab != null)
+        {
+            if (!SpawnRewardDrop(rewardDropPrefab, reward, toolType))
+            {
+                return false;
+            }
+
+            PlayToolSuccessSfx(toolType);
+            GameManager.Instance?.securitySystem?.ReportViolation(actionName);
+            CompleteToolAction();
+            return true;
+        }
+
         if (!InventorySystem.Instance.TryAddItem(reward))
         {
             Debug.LogWarning($"Inventory is full. Cannot add reward '{reward.displayName}' from item '{gameObject.name}' using tool {toolType}.");
             return false;
         }
 
+        PlayToolSuccessSfx(toolType);
+        GameManager.Instance?.securitySystem?.ReportViolation(actionName);
+        CompleteToolAction();
+        return true;
+    }
+
+    private GameObject ResolveRewardDropPrefab(bool isDisassemblyReward, bool isStealReward)
+    {
+        if (isStealReward)
+        {
+            return stealDropPrefab;
+        }
+
+        if (isDisassemblyReward)
+        {
+            return detailDropPrefab;
+        }
+
+        return null;
+    }
+
+    private bool SpawnRewardDrop(GameObject dropPrefab, InventoryItemDefinition reward, ToolType toolType)
+    {
+        if (dropPrefab == null || reward == null)
+        {
+            return false;
+        }
+
+        Quaternion spawnRotation = alignRewardDropToItemRotation ? transform.rotation : dropPrefab.transform.rotation;
+        GameObject droppedItem = Instantiate(dropPrefab, transform.position + rewardDropOffset, spawnRotation);
+        if (droppedItem == null)
+        {
+            Debug.LogWarning($"Cannot spawn dropped reward '{reward.displayName}' from item '{gameObject.name}' using tool {toolType}.");
+            return false;
+        }
+
+        DroppedInventoryItemInteractable pickup = droppedItem.GetComponentInChildren<DroppedInventoryItemInteractable>(true);
+        if (pickup == null)
+        {
+            pickup = droppedItem.AddComponent<DroppedInventoryItemInteractable>();
+        }
+
+        pickup.Configure(reward, pickupSfx);
+        return true;
+    }
+
+    private void PlayToolSuccessSfx(ToolType toolType)
+    {
         if (toolType == ToolType.Wrench && toolTypeForDisassemble == toolType)
         {
             PlaySfx(wrenchDisassembleSfx);
         }
+    }
 
-        GameManager.Instance?.securitySystem?.ReportViolation(actionName);
-        CompleteToolAction();
-        return true;
+    private bool TryResolveTargetedDisassembly(out ToolType requiredTool, out string targetName)
+    {
+        string identity = $"{itemName} {gameObject.name}".ToLowerInvariant();
+
+        if (ContainsAny(identity, "cassette", "cassete", "casette", "кассета"))
+        {
+            requiredTool = toolTypeForDisassemble;
+            targetName = "cassette";
+            return true;
+        }
+
+        if (ContainsAny(identity, "toaster", "toster", "тостер") &&
+            !ContainsAny(identity, "atomic", "atom", "acid", "атом", "финальный"))
+        {
+            requiredTool = toolTypeForDisassemble;
+            targetName = "toaster";
+            return true;
+        }
+
+        requiredTool = ToolType.None;
+        targetName = string.Empty;
+        return false;
+    }
+
+    private static bool ContainsAny(string value, params string[] tokens)
+    {
+        if (string.IsNullOrEmpty(value) || tokens == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < tokens.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(tokens[i]) &&
+                value.IndexOf(tokens[i], StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void CompleteToolAction()
@@ -179,26 +383,163 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         Debug.LogWarning($"Cannot complete tool action for '{gameObject.name}' because GameManager.Instance is missing.");
     }
 
-    private void OnGUI()
+    private void RefreshStealButton()
+    {
+        bool shouldShow = ShouldShowStealButton();
+        if (!shouldShow)
+        {
+            if (stealButtonRoot != null)
+            {
+                stealButtonRoot.SetActive(false);
+            }
+
+            return;
+        }
+
+        EnsureStealButton();
+
+        if (stealButtonRoot != null && !stealButtonRoot.activeSelf)
+        {
+            stealButtonRoot.SetActive(true);
+        }
+
+        bool managerPlaying = CutscenePlaybackManager.Instance != null && CutscenePlaybackManager.Instance.IsPlaying;
+        if (stealButton != null)
+        {
+            stealButton.interactable = !managerPlaying;
+        }
+
+        if (stealButtonPulse != null)
+        {
+            stealButtonPulse.enabled = ShouldPulseStealButton();
+        }
+    }
+
+    private bool ShouldShowStealButton()
     {
         if (!isBeingInspected)
         {
-            return;
+            return false;
         }
 
         if (GameManager.Instance != null && GameManager.Instance.IsStoryInteractionLocked)
         {
-            return;
+            return false;
         }
 
-        if (!IsStealUnlocked())
+        return IsStealUnlocked();
+    }
+
+    private bool ShouldPulseStealButton()
+    {
+        if (!ShouldShowStealButton() || !canBeStolen)
+        {
+            return false;
+        }
+
+        if (CutscenePlaybackManager.Instance != null && CutscenePlaybackManager.Instance.IsPlaying)
+        {
+            return false;
+        }
+
+        AnomallyController anomalyController = ResolveAnomalyController();
+        if (anomalyController != null &&
+            anomalyController.CanFinalStealEnergySphere(gameObject))
+        {
+            stealButtonPulse?.Configure(AnomalyFinalStealPulseColor, 4.5f, 0.08f);
+            return true;
+        }
+
+        if (IsCurrentHeldBookItem())
+        {
+            stealButtonPulse?.Configure(BookStealPulseColor, 3f, 0.06f);
+            return true;
+        }
+
+        return false;
+    }
+
+    private void EnsureStealButton()
+    {
+        if (stealButtonRoot != null)
         {
             return;
         }
 
-        if (GUI.Button(new Rect(16f, 104f, 120f, 32f), "Steal"))
+        stealButtonRoot = new GameObject("Steal Inspection Button", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+
+        Canvas canvas = stealButtonRoot.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = 30000;
+
+        CanvasScaler scaler = stealButtonRoot.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        GameObject buttonObject = new GameObject("Steal Button", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(CutsceneHintPulse));
+        buttonObject.transform.SetParent(stealButtonRoot.transform, false);
+
+        RectTransform buttonTransform = buttonObject.GetComponent<RectTransform>();
+        buttonTransform.anchorMin = new Vector2(0f, 1f);
+        buttonTransform.anchorMax = new Vector2(0f, 1f);
+        buttonTransform.pivot = new Vector2(0f, 1f);
+        buttonTransform.anchoredPosition = new Vector2(16f, -104f);
+        buttonTransform.sizeDelta = new Vector2(140f, 40f);
+
+        Image buttonImage = buttonObject.GetComponent<Image>();
+        buttonImage.color = new Color(0.12f, 0.1f, 0.16f, 0.92f);
+
+        stealButton = buttonObject.GetComponent<Button>();
+        stealButton.targetGraphic = buttonImage;
+        stealButton.onClick.AddListener(HandleStealButtonClicked);
+
+        stealButtonPulse = buttonObject.GetComponent<CutsceneHintPulse>();
+        stealButtonPulse.enabled = false;
+
+        GameObject labelObject = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+        labelObject.transform.SetParent(buttonObject.transform, false);
+
+        RectTransform labelTransform = labelObject.GetComponent<RectTransform>();
+        labelTransform.anchorMin = Vector2.zero;
+        labelTransform.anchorMax = Vector2.one;
+        labelTransform.offsetMin = Vector2.zero;
+        labelTransform.offsetMax = Vector2.zero;
+
+        Text label = labelObject.GetComponent<Text>();
+        label.text = "Steal";
+        label.alignment = TextAnchor.MiddleCenter;
+        label.color = Color.white;
+        label.fontSize = 18;
+        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+    }
+
+    private void HandleStealButtonClicked()
+    {
+        if (CutscenePlaybackManager.Instance != null && CutscenePlaybackManager.Instance.IsPlaying)
         {
-            TryStealFromInspection();
+            return;
+        }
+
+        TryStealFromInspection();
+    }
+
+    private void DestroyStealButton()
+    {
+        if (stealButton != null)
+        {
+            stealButton.onClick.RemoveListener(HandleStealButtonClicked);
+            stealButton = null;
+        }
+
+        stealButtonPulse = null;
+
+        if (stealButtonRoot != null)
+        {
+            Destroy(stealButtonRoot);
+            stealButtonRoot = null;
         }
     }
 
@@ -206,6 +547,45 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     {
         VentHandIntroController introController = VentHandIntroController.Instance;
         return introController != null && introController.IsStealUnlocked;
+    }
+
+    private AnomallyController ResolveAnomalyController()
+    {
+        return GameManager.Instance != null ? GameManager.Instance.anomallyController : null;
+    }
+
+    private bool IsCurrentHeldBookItem()
+    {
+        if (string.IsNullOrEmpty(bookItemName))
+        {
+            return false;
+        }
+
+        ConveyorItemInteractable currentInteractable = ResolveCurrentHeldInteractable();
+        return currentInteractable != null && currentInteractable.itemName == bookItemName;
+    }
+
+    private ConveyorItemInteractable ResolveCurrentHeldInteractable()
+    {
+        PlayerHeldItem heldItem = PlayerInteraction.Instance != null ? PlayerInteraction.Instance.CurrentHeldItem : null;
+        Item currentItem = heldItem != null ? heldItem.CurrentItem : null;
+
+        if (currentItem != null)
+        {
+            ConveyorItemInteractable interactable = currentItem.GetComponentInParent<ConveyorItemInteractable>();
+            if (interactable != null)
+            {
+                return interactable;
+            }
+
+            interactable = currentItem.GetComponentInChildren<ConveyorItemInteractable>(true);
+            if (interactable != null)
+            {
+                return interactable;
+            }
+        }
+
+        return this;
     }
 
     private void SetCollidersEnabled(bool isEnabled)

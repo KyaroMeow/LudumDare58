@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -130,6 +131,8 @@ public class InventoryUIController : MonoBehaviour
                 slotIcons[i].enabled = item != null && item.icon != null;
                 slotIcons[i].sprite = item != null ? item.icon : null;
             }
+
+            SetSlotPulse(i, IsCutsceneToasterItem(item));
         }
     }
 
@@ -139,8 +142,98 @@ public class InventoryUIController : MonoBehaviour
         if(!item)
             return;
 
-        if (item == cutsceneClickItem)
-            Debug.Log("Start Cutscene After Clicked specified selected item"); //TODO: Cutscene after toaster clicked
+        if (IsCutsceneToasterItem(item))
+        {
+            CutscenePlaybackManager manager = CutscenePlaybackManager.Instance;
+            if (manager == null)
+            {
+                Debug.LogWarning("Cannot start toaster cutscene because CutscenePlaybackManager is missing.");
+                return;
+            }
+
+            if (manager.IsPlaying)
+            {
+                return;
+            }
+
+            CloseInventory();
+            manager.PlayToasterCutscene();
+        }
+    }
+
+    private bool IsCutsceneToasterItem(InventoryItemDefinition item)
+    {
+        if (item == null)
+        {
+            return false;
+        }
+
+        if (cutsceneClickItem != null && item == cutsceneClickItem)
+        {
+            return true;
+        }
+
+        return MatchesToasterAlias(item.name) ||
+               MatchesToasterAlias(item.displayName) ||
+               MatchesToasterAlias(item.itemId);
+    }
+
+    private bool MatchesToasterAlias(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        string normalized = NormalizeToasterName(value);
+        return normalized == "toaster" ||
+               normalized == "atomtoster" ||
+               normalized == "atomtoaster" ||
+               normalized == "acidtoaster" ||
+               normalized == "атомныйтостер";
+    }
+
+    private static string NormalizeToasterName(string value)
+    {
+        return value.Trim()
+            .ToLowerInvariant()
+            .Replace(" ", string.Empty)
+            .Replace("_", string.Empty)
+            .Replace("-", string.Empty);
+    }
+
+    private void SetSlotPulse(int slotIndex, bool shouldPulse)
+    {
+        bool canPulse = shouldPulse && (CutscenePlaybackManager.Instance == null || !CutscenePlaybackManager.Instance.IsPlaying);
+
+        SetPulse(slotButtons != null && slotIndex < slotButtons.Length ? slotButtons[slotIndex] : null, canPulse);
+        SetPulse(slotIcons != null && slotIndex < slotIcons.Length ? slotIcons[slotIndex] : null, canPulse);
+        SetPulse(slotLabels != null && slotIndex < slotLabels.Length ? slotLabels[slotIndex] : null, canPulse);
+    }
+
+    private void SetPulse(Component target, bool shouldPulse)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        CutsceneHintPulse pulse = target.GetComponent<CutsceneHintPulse>();
+        if (shouldPulse)
+        {
+            if (pulse == null)
+            {
+                pulse = target.gameObject.AddComponent<CutsceneHintPulse>();
+            }
+
+            pulse.enabled = true;
+            return;
+        }
+
+        if (pulse != null)
+        {
+            pulse.enabled = false;
+        }
     }
     
     private void Bind()

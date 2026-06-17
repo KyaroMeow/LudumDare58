@@ -513,11 +513,7 @@ public class GameManager : MonoBehaviour
 
         GameObject previousItem = currentItem;
 
-        if (totalItemsProcessed == difficulty.anomalyItemNum)
-        {
-            itemSpawner.SpawnAnomalyItem();
-        }
-        else if (totalItemsProcessed == difficulty.bombNum)
+        if (totalItemsProcessed == difficulty.bombNum)
         {
             itemSpawner.SpawnBomb();
         }

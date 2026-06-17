@@ -5462,6 +5462,86 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 398486359}
   m_CullTransparentMesh: 1
+--- !u!1 &410012340
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 410012341}
+  - component: {fileID: 410012342}
+  m_Layer: 0
+  m_Name: CutscenePlaybackManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &410012341
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410012340}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1336003855}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &410012342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 410012340}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36a2a3e4238d44b3aa516d6e965524d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bookTheftClip: {fileID: 32900000, guid: 2d8ccea986db9394f9059d1e49aadf5b, type: 3}
+  toasterClip: {fileID: 32900000, guid: 1d347c88a8a6a53489451eea4993f2f5, type: 3}
+  creditsSceneName: Titrs
+  menuSceneName: Menu
+  allowSkip: 0
+  skipKey: 32
+  backgroundColor: {r: 0, g: 0, b: 0, a: 1}
+  failSafeExtraDelay: 1
+  preCutsceneFadeDuration: 0.6
+  fadeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  fadeToBlackBeforeVideo: 1
+  muteSceneAudioDuringCutscene: 1
+  audioMuteFadeDuration: 0.25
 --- !u!1 &410498277
 GameObject:
   m_ObjectHideFlags: 0
@@ -19887,6 +19967,7 @@ Transform:
   - {fileID: 1570937982}
   - {fileID: 360404416}
   - {fileID: 193881968}
+  - {fileID: 410012341}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1336003856
@@ -22840,6 +22921,7 @@ MonoBehaviour:
   slotLabels:
   - {fileID: 1164374196}
   - {fileID: 551271158}
+  cutsceneClickItem: {fileID: 11400000, guid: 79093e84933fbe246a1cb4e52d715392, type: 2}
 --- !u!114 &1579158898
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27059,6 +27141,7 @@ MonoBehaviour:
   - {fileID: 8840865448692158591, guid: 62bbca7b9b5e32c40a7b830beab1c60d, type: 3}
   - {fileID: 762366456301422993, guid: 323e1397169e57a43814a203006ba551, type: 3}
   - {fileID: 6788298872375677185, guid: 7afccfa8694a4db4992c65c14fc7189f, type: 3}
+  - {fileID: 8554604064987432285, guid: b31bc64bd6442f744b19c721194641ec, type: 3}
   doorAnimator: {fileID: 1006615910}
   conveyorDoorSfx:
     label: 
@@ -27080,7 +27163,7 @@ MonoBehaviour:
     playIfAlreadyPlaying: 0
     stopPreviousLoopBeforeStart: 0
   doorSfxEmitter: {fileID: 0}
-  bomb: {fileID: 9005380443188864438, guid: 394f80c016aaf9240aa2b81051b368a2, type: 3}
+  bomb: {fileID: 0}
   anomalyItem: {fileID: 8554604064987432285, guid: b31bc64bd6442f744b19c721194641ec, type: 3}
 --- !u!1 &1942384898
 GameObject:
@@ -27729,6 +27812,29 @@ MonoBehaviour:
   endCube: {fileID: 1596017786}
   EnergySphere: {fileID: 11400000, guid: e31d39192e355a148b33aa4ac76b50f7, type: 2}
   inventory: {fileID: 1570937983}
+  sphereFeedbackEmitter: {fileID: 0}
+  sphereClickSfx:
+    label: 
+    clip: {fileID: 8300000, guid: a1b9c5ecee3c9984fb2d8dbefd0b9f34, type: 3}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
+  sphereMoveEffectPrefab: {fileID: 3302442364004722511, guid: 10434d6bf3af98b46a88ab696f543ee3, type: 3}
+  spawnMoveEffectAtNextPosition: 1
+  cubeEnergyVisuals: []
 --- !u!4 &1959665714
 Transform:
   m_ObjectHideFlags: 0
@@ -31764,6 +31870,8 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 3017140737932620811, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
     - {fileID: 4785704611404860140, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+    - {fileID: 1312953247072480476, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
+    - {fileID: 605256940920253707, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7437149999082959812, guid: 9440cb58b77945f4ae35bd0156477449, type: 3}
       insertIndex: -1

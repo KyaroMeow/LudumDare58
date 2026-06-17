@@ -55,6 +55,7 @@ public class ItemSpawner : MonoBehaviour
         }
 
         GameObject spawnedItem = Instantiate(anomalyItem, transform.position, Quaternion.identity);
+        SetupAnomalyItem(spawnedItem);
         AssignCurrentItem(spawnedItem, "Anomaly item");
     }
 
@@ -65,23 +66,37 @@ public class ItemSpawner : MonoBehaviour
             return;
         }
 
-        if (itemPrefabs == null || itemPrefabs.Length == 0)
+        int regularItemCount = itemPrefabs != null ? itemPrefabs.Length : 0;
+        int randomPoolSize = regularItemCount + (anomalyItem != null ? 1 : 0);
+
+        if (randomPoolSize == 0)
         {
             Debug.LogError("No item prefabs assigned!");
             return;
         }
 
-        int randomIndex = Random.Range(0, itemPrefabs.Length);
-        if (itemPrefabs[randomIndex] == null)
+        int randomIndex = Random.Range(0, randomPoolSize);
+        bool shouldSpawnAnomaly = anomalyItem != null && randomIndex == regularItemCount;
+        GameObject prefabToSpawn = shouldSpawnAnomaly ? anomalyItem : itemPrefabs[randomIndex];
+
+        if (prefabToSpawn == null)
         {
             Debug.LogWarning($"Cannot spawn item because item prefab at index {randomIndex} is not assigned.");
             return;
         }
 
-        GameObject itemToSpawn = Instantiate(itemPrefabs[randomIndex], transform.position, Quaternion.identity);
+        GameObject itemToSpawn = Instantiate(prefabToSpawn, transform.position, Quaternion.identity);
 
-        SetupItem(itemToSpawn);
-        AssignCurrentItem(itemToSpawn, "Item");
+        if (shouldSpawnAnomaly)
+        {
+            SetupAnomalyItem(itemToSpawn);
+            AssignCurrentItem(itemToSpawn, "Anomaly item");
+        }
+        else
+        {
+            SetupItem(itemToSpawn);
+            AssignCurrentItem(itemToSpawn, "Item");
+        }
 
         if(doorAnimator != null)
         {
@@ -201,6 +216,33 @@ public class ItemSpawner : MonoBehaviour
         bool isDefective = hasStain || !hasBarcode || !barcodeShowsGood || hasScratches;
 
         item.InitializeItem(isDefective, hasBarcode, barcodeShowsGood, hasStain, hasScratches);
+    }
+
+    private void SetupAnomalyItem(GameObject itemObject)
+    {
+        if (itemObject == null)
+        {
+            return;
+        }
+
+        if (!itemObject.TryGetComponent<ConveyorItemInteractable>(out _))
+        {
+            itemObject.AddComponent<ConveyorItemInteractable>();
+        }
+
+        Item item = itemObject.GetComponent<Item>();
+        if (item == null)
+        {
+            item = itemObject.GetComponentInChildren<Item>(true);
+        }
+
+        if (item == null)
+        {
+            Debug.LogWarning($"Spawned anomaly item '{itemObject.name}' has no Item component on root or children.");
+            return;
+        }
+
+        item.InitializeItem(defective: true, barcode: true, barcodeGood: true, stain: false, Scratches: false);
     }
 
     private void AssignCurrentItem(GameObject spawnedObject, string spawnType)

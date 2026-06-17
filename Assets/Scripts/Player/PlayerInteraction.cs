@@ -185,6 +185,11 @@ public class PlayerInteraction : MonoBehaviour
 
     private int GetInteractablePriority(IInteractable interactable)
     {
+        if (interactable is AnomalyBallInteractable)
+        {
+            return 1100;
+        }
+
         if (interactable is VentHandKeyPickup)
         {
             return 1000;
