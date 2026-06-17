@@ -21,6 +21,11 @@ public class TabletInteractable : MonoBehaviour, IInteractable
     private Vector3 _originalPosition;
     private Quaternion _originalRotation;
     private Transform _originalParent;
+    private bool isOpen;
+
+    public bool IsOpen => isOpen;
+    public string CurrentHeader => headerText != null ? headerText.text : string.Empty;
+    public bool IsHomePageActive => homePage != null && homePage.activeInHierarchy;
 
     private void Awake()
     {
@@ -56,6 +61,7 @@ public class TabletInteractable : MonoBehaviour, IInteractable
         transform.SetParent(holdTabletPosition);
         transform.localPosition = Vector3.zero;
         transform.localRotation = Quaternion.identity;
+        isOpen = true;
     }
 
     private void SavePosition()
@@ -78,6 +84,7 @@ public class TabletInteractable : MonoBehaviour, IInteractable
     {
         PlayerView.Instance.UnlockMovement();
         SetDefaultPosition();
+        isOpen = false;
     }
 
     private void SetDefaultPosition()

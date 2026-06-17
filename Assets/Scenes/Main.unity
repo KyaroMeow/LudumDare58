@@ -19971,6 +19971,7 @@ Transform:
   - {fileID: 360404416}
   - {fileID: 193881968}
   - {fileID: 410012341}
+  - {fileID: 2102000001}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1336003856
@@ -20014,6 +20015,79 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abc6619b44da472c8184e649bb08cd17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CraftSystem.CraftMemory
+--- !u!1 &2102000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2102000001}
+  - component: {fileID: 2102000002}
+  - component: {fileID: 2102000003}
+  m_Layer: 0
+  m_Name: TutorialHintSystem
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2102000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1336003855}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2102000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ac1dfaa70f141149890bcb48d468fde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialHintSystem
+  targetCanvas: {fileID: 1579158900}
+  startShiftButtonTarget: {fileID: 1870212375}
+  markerTabTarget: {fileID: 1300584431}
+  infoTabTarget: {fileID: 1217642294}
+  bestiaryTabTarget: {fileID: 577061468}
+  homeButtonTarget: {fileID: 759117508}
+  tabletWorldTarget: {fileID: 5820527004146139856}
+  showOnlyOnce: 1
+  persistHintsInPlayerPrefs: 0
+  useUnscaledTime: 1
+  screenOffset: {x: 28, y: 34}
+  panelColor: {r: 0.04, g: 0.04, b: 0.045, a: 0.88}
+  accentColor: {r: 1, g: 0.78, b: 0.22, a: 1}
+  dangerColor: {r: 1, g: 0.22, b: 0.14, a: 1}
+  outlineWidth: 5
+  enableDebugLogs: 0
+--- !u!114 &2102000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3855a95df734175a320f95bb4a0f19e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialWorldHighlight
 --- !u!1 &1343066159
 GameObject:
   m_ObjectHideFlags: 0

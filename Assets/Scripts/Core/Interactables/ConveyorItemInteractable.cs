@@ -80,6 +80,7 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         HUDManager.Instance?.showItemScanHUD(item);
         PlayerItemInspection.Instance?.BeginInspection(gameObject);
         isBeingInspected = true;
+        TutorialHintSystem.Instance?.NotifyItemInspectionStarted(gameObject);
         PlaySfx(pickupSfx);
         RefreshStealButton();
     }

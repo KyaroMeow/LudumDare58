@@ -135,6 +135,7 @@ public class ItemMarkerUI : MonoBehaviour
 
         currentItem.SetMarkerSelected(markerType, selectedMarkers.Contains(markerType));
         RefreshVisuals();
+        TutorialHintSystem.Instance?.NotifyMarkerClicked();
         PlaySfx(markerToggleSfx);
     }
 

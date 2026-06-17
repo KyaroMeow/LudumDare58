@@ -151,6 +151,7 @@ public class UVLighter : MonoBehaviour
         SetBeamActive(true);
         UpdateSmartAim(immediate: true);
         UpdateBeamShape();
+        TutorialHintSystem.Instance?.NotifyUVActiveChanged(true);
         PlaySfx(toggleOnSfx);
     }
 
@@ -164,6 +165,7 @@ public class UVLighter : MonoBehaviour
 
         SetBeamActive(false);
         SetActiveState(false);
+        TutorialHintSystem.Instance?.NotifyUVActiveChanged(false);
         if (wasActive)
         {
             PlaySfx(toggleOffSfx);

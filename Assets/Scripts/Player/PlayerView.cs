@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerView : MonoBehaviour
@@ -23,6 +24,8 @@ public class PlayerView : MonoBehaviour
     private Quaternion targetRotation;
     private Quaternion cameraStartLocalRotation;
     private Vector2 currentCameraRotation;
+    private Vector2 tutorialCameraHintOffset;
+    private Coroutine tutorialCameraHintRoutine;
 
     private void Awake()
     {
@@ -101,7 +104,10 @@ public class PlayerView : MonoBehaviour
         );
 
         Quaternion newRotation = cameraStartLocalRotation *
-                                 Quaternion.Euler(currentCameraRotation.x, currentCameraRotation.y, 0);
+                                 Quaternion.Euler(
+                                     currentCameraRotation.x + tutorialCameraHintOffset.x,
+                                     currentCameraRotation.y + tutorialCameraHintOffset.y,
+                                     0);
         cameraTransform.localRotation = newRotation;
     }
 
@@ -148,9 +154,70 @@ public class PlayerView : MonoBehaviour
     public void ResetCameraLook()
     {
         currentCameraRotation = Vector2.zero;
+        tutorialCameraHintOffset = Vector2.zero;
         if (cameraTransform != null)
         {
             cameraTransform.localRotation = cameraStartLocalRotation;
         }
+    }
+
+    public void PlayTutorialMouseLookHint()
+    {
+        StartTutorialCameraHint(true);
+    }
+
+    public void PlayTutorialRotateHint()
+    {
+        StartTutorialCameraHint(false);
+    }
+
+    private void StartTutorialCameraHint(bool circularMotion)
+    {
+        if (cameraTransform == null || !canLook)
+        {
+            return;
+        }
+
+        if (tutorialCameraHintRoutine != null)
+        {
+            StopCoroutine(tutorialCameraHintRoutine);
+        }
+
+        tutorialCameraHintRoutine = StartCoroutine(TutorialCameraHintRoutine(circularMotion));
+    }
+
+    private IEnumerator TutorialCameraHintRoutine(bool circularMotion)
+    {
+        float duration = 1.8f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            if ((circularMotion && Mathf.Abs(Input.GetAxisRaw("Mouse X")) + Mathf.Abs(Input.GetAxisRaw("Mouse Y")) > 0.15f) ||
+                (!circularMotion && (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))))
+            {
+                break;
+            }
+
+            elapsed += Time.deltaTime;
+            float normalized = Mathf.Clamp01(elapsed / duration);
+            float easeOut = 1f - normalized;
+
+            if (circularMotion)
+            {
+                float phase = normalized * Mathf.PI * 2f;
+                tutorialCameraHintOffset = new Vector2(Mathf.Sin(phase) * 0.55f, Mathf.Cos(phase) * 0.75f) * easeOut;
+            }
+            else
+            {
+                float sway = Mathf.Sin(normalized * Mathf.PI * 4f) * 1.1f * easeOut;
+                tutorialCameraHintOffset = new Vector2(0f, sway);
+            }
+
+            yield return null;
+        }
+
+        tutorialCameraHintOffset = Vector2.zero;
+        tutorialCameraHintRoutine = null;
     }
 }

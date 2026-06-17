@@ -64,10 +64,12 @@ public class GameManager : MonoBehaviour
     private bool warnedMissingHandsForDamage;
     private ElectricPanelController subscribedElectricPanel;
     private float nextHandCounterDecayTime;
+    private int handPunishmentsApplied;
     private readonly HashSet<int> loggedChildItemRoots = new HashSet<int>();
 
     public int CurrentHandDamageCounter => currentHandDamageCounter;
     public int CurrentHandDamageThreshold => GetHandCounterLimit();
+    public int HandPunishmentsApplied => handPunishmentsApplied;
     public bool IsGameOverStarted => isGameOverStarted;
     public bool IsStoryInteractionLocked => isStoryInteractionLocked;
     public bool IsCompletingCurrentItem => isCompletingCurrentItem;
@@ -133,6 +135,7 @@ public class GameManager : MonoBehaviour
         isGameStarted = true;
         isTimerWork = true;
         currentHandDamageCounter = 0;
+        handPunishmentsApplied = 0;
         ResetHandCounterDecayTimer();
         ResolveGameAudioManager();
         gameAudioManager?.StartShiftMusic();
@@ -193,6 +196,7 @@ public class GameManager : MonoBehaviour
 
         scaner.SetActive(!scaner.activeSelf);
         scanerOnTable.SetActive(!scaner.activeSelf);
+        TutorialHintSystem.Instance?.NotifyScannerActiveChanged(scaner.activeSelf);
 
         if (scaner.activeSelf)
         {
@@ -202,8 +206,21 @@ public class GameManager : MonoBehaviour
 
     public void ToggleScanerOff()
     {
-        scaner.SetActive(false);
-        scanerOnTable.SetActive(true);
+        bool wasActive = scaner != null && scaner.activeSelf;
+        if (scaner != null)
+        {
+            scaner.SetActive(false);
+        }
+
+        if (scanerOnTable != null)
+        {
+            scanerOnTable.SetActive(true);
+        }
+
+        if (wasActive)
+        {
+            TutorialHintSystem.Instance?.NotifyScannerActiveChanged(false);
+        }
     }
 
     public void SubmitCurrentItem()
@@ -231,6 +248,8 @@ public class GameManager : MonoBehaviour
             HandleCurrentItemWithoutItem("submit");
             return;
         }
+
+        TutorialHintSystem.Instance?.NotifySortButtonPressed();
 
         bool hasAcceptMarker = item.IsMarkerSelected(ItemMarkerType.Ideal);
         bool hasRejectMarker = item.IsMarkerSelected(ItemMarkerType.Defective);
@@ -278,6 +297,8 @@ public class GameManager : MonoBehaviour
             HandleCurrentItemWithoutItem("sort");
             return;
         }
+
+        TutorialHintSystem.Instance?.NotifySortButtonPressed();
 
         if (HasConflictingFinalMarkers(item))
         {
@@ -416,6 +437,7 @@ public class GameManager : MonoBehaviour
         PlaySfx(punishmentSfx);
         if (hands.TryPlayTakeDamage())
         {
+            handPunishmentsApplied++;
             Debug.Log($"Hand damage applied. Counter reset to {currentHandDamageCounter}/{GetHandCounterLimit()}.");
             return true;
         }
@@ -1087,7 +1109,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        Debug.LogWarning($"Cannot {actionName} current item '{currentItem.name}' because it has no Item component on root or children. Skipping broken item without player penalty.");
+            Debug.LogWarning($"Cannot {actionName} current item '{currentItem.name}' because it has no Item component on root or children. Skipping broken item without player penalty.");
 
         totalItemsProcessed++;
         securitySystem?.NotifySortingAction();
