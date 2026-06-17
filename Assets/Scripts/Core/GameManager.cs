@@ -323,12 +323,27 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        scanUI.ShowResult(item.barcodeShowsGood);
+        scanUI?.ShowResult(item.barcodeShowsGood);
 
         if (!item.barcodeShowsGood)
         {
             PlaySfx(scannerErrorSfx);
         }
+    }
+
+    public void ShowScanProgress(float progress)
+    {
+        scanUI?.ShowScanning(progress);
+    }
+
+    public void HideScanProgress()
+    {
+        scanUI?.HideScanningOnly();
+    }
+
+    public void CancelScanProgress()
+    {
+        scanUI?.HideScanningOnly();
     }
 
     public void CorrectSort(int additionalMistakes = 0)

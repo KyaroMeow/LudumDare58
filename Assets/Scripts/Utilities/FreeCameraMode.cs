@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [DisallowMultipleComponent]
 public class FreeCameraMode : MonoBehaviour
@@ -8,44 +11,92 @@ public class FreeCameraMode : MonoBehaviour
     [SerializeField] private Camera controlledCamera;
 
     [Header("Toggle")]
-    [Tooltip("Ctrl + RightBracket. На русской раскладке это клавиша твердого знака.")]
+    [Tooltip("Ctrl + RightBracket. Russian hard sign key on RU layout.")]
     [SerializeField] private KeyCode toggleKey = KeyCode.RightBracket;
-
-    [SerializeField] private KeyCode secondaryToggleKey = KeyCode.None;
     [SerializeField] private bool escapeExitsFreecam = true;
 
-    [Header("Objects Isolation")]
-    [Tooltip("Сюда можно кинуть Player, PlayerController, UI, руки, риг и любые объекты, которые надо выключить во время фрикама.")]
+    [Header("Do NOT Disable Canvases")]
+    [Tooltip("Keep false if world-space monitors use Canvas.")]
+    [SerializeField] private bool disableAllCanvases = false;
+
+    [Tooltip("Disables EventSystem. UI stays visible, but does not receive clicks.")]
+    [SerializeField] private bool disableEventSystems = true;
+
+    [Header("Hide Specific UI / Hint Text")]
+    [SerializeField] private bool autoHideTextByContent = true;
+
+    [SerializeField]
+    private string[] textContentPatternsToHide =
+    {
+        "POWER PANEL",
+        "Hand penalty",
+        "Total mistakes",
+        "mistakes",
+        "LOCKED"
+    };
+
+    [SerializeField] private bool autoDisableHintLikeComponents = true;
+
+    [SerializeField]
+    private string[] componentNamePatternsToDisable =
+    {
+        "HUD",
+        "Hint",
+        "Prompt",
+        "Tooltip",
+        "PowerPanel",
+        "InteractionHint",
+        "InteractionPrompt",
+        "DebugUI",
+        "DebugHud"
+    };
+
+    [Header("Manual Hide / Disable")]
+    [Tooltip("Objects to fully disable through SetActive(false). Do not put monitor Canvas here.")]
     [SerializeField] private GameObject[] objectsToDisableWhileFreecam;
 
-    [Tooltip("Эти объекты останутся активными. Камера и объект с этим скриптом защищаются автоматически.")]
+    [Tooltip("Objects to hide without full GameObject disabling. Use for hands, arms, hint objects.")]
+    [SerializeField] private GameObject[] objectsToHideWhileFreecam;
+
+    [SerializeField] private Renderer[] renderersToHideWhileFreecam;
+
+    [Tooltip("Specific scripts/components to disable during freecam.")]
+    [SerializeField] private Behaviour[] componentsToDisableWhileFreecam;
+
+    [SerializeField] private bool hideRenderers = true;
+    [SerializeField] private bool disableCanvasesOnHiddenObjects = false;
+    [SerializeField] private bool disableCollidersOnHiddenObjects = true;
+    [SerializeField] private bool disableLightsOnHiddenObjects = false;
+
+    [Tooltip("Keeps selected objects hidden/disabled every frame if other scripts turn them on.")]
+    [SerializeField] private bool forceIsolationEveryFrame = true;
+
+    [Header("Keep Alive")]
     [SerializeField] private GameObject[] keepAliveObjects;
 
-    [Tooltip("Если камера лежит внутри объекта игрока, она будет временно отцеплена перед выключением игрока.")]
+    [Tooltip("If camera is inside disabled player object, it will be temporarily detached.")]
     [SerializeField] private bool detachKeepAliveObjectsFromDisabledParents = true;
 
     [Header("Movement")]
     [SerializeField] private float baseMoveSpeed = 5f;
     [SerializeField] private float minMoveSpeed = 0.15f;
     [SerializeField] private float maxMoveSpeed = 120f;
-
-    [Tooltip("Множитель изменения скорости колесиком. 1.25 = плавное увеличение/уменьшение.")]
     [SerializeField] private float scrollSpeedMultiplier = 1.25f;
-
     [SerializeField] private float sprintMultiplier = 3f;
     [SerializeField] private float precisionMultiplier = 0.25f;
-
-    [Tooltip("Чем меньше значение, тем резче старт движения.")]
     [SerializeField] private float movementSmoothTime = 0.12f;
 
     [Header("Mouse Look")]
     [SerializeField] private float mouseSensitivity = 2.1f;
-
-    [Tooltip("Чем меньше значение, тем резче поворот камеры.")]
     [SerializeField] private float lookSmoothTime = 0.045f;
-
     [SerializeField] private float minPitch = -89f;
     [SerializeField] private float maxPitch = 89f;
+
+    [Header("Manual FOV Control")]
+    [SerializeField] private bool ctrlMouseWheelChangesFov = true;
+    [SerializeField] private float minFreecamFov = 25f;
+    [SerializeField] private float maxFreecamFov = 110f;
+    [SerializeField] private float fovScrollStep = 4f;
 
     [Header("Visual Feel")]
     [SerializeField] private bool useSpeedFovEffect = true;
@@ -83,10 +134,20 @@ public class FreeCameraMode : MonoBehaviour
     private float currentPitch;
     private float yawSmoothRef;
     private float pitchSmoothRef;
+
+    private float targetFreecamFov;
     private float fovSmoothRef;
 
-    private readonly List<GameObjectState> savedObjectStates = new List<GameObjectState>();
+    private readonly List<GameObjectState> savedGameObjectStates = new List<GameObjectState>();
     private readonly List<TransformState> savedTransformStates = new List<TransformState>();
+    private readonly List<RendererState> savedRendererStates = new List<RendererState>();
+    private readonly List<ColliderState> savedColliderStates = new List<ColliderState>();
+    private readonly List<BehaviourState> savedBehaviourStates = new List<BehaviourState>();
+
+    private readonly HashSet<GameObject> savedGameObjects = new HashSet<GameObject>();
+    private readonly HashSet<Renderer> savedRenderers = new HashSet<Renderer>();
+    private readonly HashSet<Collider> savedColliders = new HashSet<Collider>();
+    private readonly HashSet<Behaviour> savedBehaviours = new HashSet<Behaviour>();
 
     private struct GameObjectState
     {
@@ -117,6 +178,42 @@ public class FreeCameraMode : MonoBehaviour
             LocalPosition = transform.localPosition;
             LocalRotation = transform.localRotation;
             LocalScale = transform.localScale;
+        }
+    }
+
+    private struct RendererState
+    {
+        public Renderer Renderer;
+        public bool Enabled;
+
+        public RendererState(Renderer renderer, bool enabled)
+        {
+            Renderer = renderer;
+            Enabled = enabled;
+        }
+    }
+
+    private struct ColliderState
+    {
+        public Collider Collider;
+        public bool Enabled;
+
+        public ColliderState(Collider collider, bool enabled)
+        {
+            Collider = collider;
+            Enabled = enabled;
+        }
+    }
+
+    private struct BehaviourState
+    {
+        public Behaviour Behaviour;
+        public bool Enabled;
+
+        public BehaviourState(Behaviour behaviour, bool enabled)
+        {
+            Behaviour = behaviour;
+            Enabled = enabled;
         }
     }
 
@@ -158,6 +255,20 @@ public class FreeCameraMode : MonoBehaviour
         HandleFov();
     }
 
+    private void LateUpdate()
+    {
+        if (!isFreecam)
+            return;
+
+        if (!forceIsolationEveryFrame)
+            return;
+
+        ApplyTargetedUiIsolation();
+        EnforceDisabledObjects();
+        EnforceHiddenStates();
+        ApplyHiddenTargets();
+    }
+
     private void OnDisable()
     {
         if (isFreecam && !isRestoring)
@@ -183,22 +294,14 @@ public class FreeCameraMode : MonoBehaviour
         return true;
     }
 
+    private bool IsCtrlHeld()
+    {
+        return Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+    }
+
     private bool WasTogglePressed()
     {
-        bool ctrlHeld =
-            Input.GetKey(KeyCode.LeftControl) ||
-            Input.GetKey(KeyCode.RightControl);
-
-        if (!ctrlHeld)
-            return false;
-
-        bool mainKeyPressed = Input.GetKeyDown(toggleKey);
-
-        bool secondaryKeyPressed =
-            secondaryToggleKey != KeyCode.None &&
-            Input.GetKeyDown(secondaryToggleKey);
-
-        return mainKeyPressed || secondaryKeyPressed;
+        return IsCtrlHeld() && Input.GetKeyDown(toggleKey);
     }
 
     private void EnableFreecam()
@@ -212,6 +315,7 @@ public class FreeCameraMode : MonoBehaviour
         savedCameraWorldPosition = cameraTransform.position;
         savedCameraWorldRotation = cameraTransform.rotation;
         savedCameraFov = controlledCamera.fieldOfView;
+        targetFreecamFov = savedCameraFov;
 
         savedCursorLockMode = Cursor.lockState;
         savedCursorVisible = Cursor.visible;
@@ -232,6 +336,7 @@ public class FreeCameraMode : MonoBehaviour
 
         currentVelocity = Vector3.zero;
         velocitySmoothRef = Vector3.zero;
+
         moveSpeedSmoothRef = 0f;
         yawSmoothRef = 0f;
         pitchSmoothRef = 0f;
@@ -250,6 +355,7 @@ public class FreeCameraMode : MonoBehaviour
 
         RestoreDisabledObjects();
         RestoreKeptTransforms();
+        RestoreHiddenTargets();
 
         cameraTransform.position = savedCameraWorldPosition;
         cameraTransform.rotation = savedCameraWorldRotation;
@@ -264,16 +370,14 @@ public class FreeCameraMode : MonoBehaviour
         if (changeTimeScaleWhileFreecam)
             Time.timeScale = savedTimeScale;
 
-        savedObjectStates.Clear();
-        savedTransformStates.Clear();
+        ClearSavedStates();
 
         isRestoring = false;
     }
 
     private void PrepareIsolation()
     {
-        savedObjectStates.Clear();
-        savedTransformStates.Clear();
+        ClearSavedStates();
 
         List<Transform> protectedTransforms = CollectProtectedTransforms();
 
@@ -282,7 +386,129 @@ public class FreeCameraMode : MonoBehaviour
         if (detachKeepAliveObjectsFromDisabledParents)
             DetachProtectedChildrenFromDisabledParents(protectedTransforms);
 
+        ApplyTargetedUiIsolation();
+        ApplyHiddenTargets();
         DisableSelectedObjects(protectedTransforms);
+    }
+
+    private void ApplyTargetedUiIsolation()
+    {
+        if (disableAllCanvases)
+        {
+            Canvas[] canvases = FindObjectsOfType<Canvas>(true);
+
+            for (int i = 0; i < canvases.Length; i++)
+                SaveAndDisableBehaviour(canvases[i]);
+        }
+
+        if (disableEventSystems)
+        {
+            EventSystem[] eventSystems = FindObjectsOfType<EventSystem>(true);
+
+            for (int i = 0; i < eventSystems.Length; i++)
+                SaveAndDisableBehaviour(eventSystems[i]);
+        }
+
+        if (autoHideTextByContent)
+            HideTextComponentsByContent();
+
+        if (autoDisableHintLikeComponents)
+            DisableHintLikeComponentsByName();
+    }
+
+    private void HideTextComponentsByContent()
+    {
+        Behaviour[] behaviours = FindObjectsOfType<Behaviour>(true);
+
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            Behaviour behaviour = behaviours[i];
+
+            if (behaviour == null)
+                continue;
+
+            if (behaviour == this || behaviour == controlledCamera)
+                continue;
+
+            string text = TryGetTextValue(behaviour);
+
+            if (string.IsNullOrEmpty(text))
+                continue;
+
+            if (!ContainsAnyPattern(text, textContentPatternsToHide))
+                continue;
+
+            SaveAndDisableBehaviour(behaviour);
+        }
+    }
+
+    private void DisableHintLikeComponentsByName()
+    {
+        Behaviour[] behaviours = FindObjectsOfType<Behaviour>(true);
+
+        for (int i = 0; i < behaviours.Length; i++)
+        {
+            Behaviour behaviour = behaviours[i];
+
+            if (behaviour == null)
+                continue;
+
+            if (behaviour == this || behaviour == controlledCamera)
+                continue;
+
+            string typeName = behaviour.GetType().Name;
+            string objectName = behaviour.gameObject.name;
+
+            bool matchesType = ContainsAnyPattern(typeName, componentNamePatternsToDisable);
+            bool matchesObject = ContainsAnyPattern(objectName, componentNamePatternsToDisable);
+
+            if (!matchesType && !matchesObject)
+                continue;
+
+            SaveAndDisableBehaviour(behaviour);
+        }
+    }
+
+    private string TryGetTextValue(Behaviour behaviour)
+    {
+        Type type = behaviour.GetType();
+
+        PropertyInfo property = type.GetProperty(
+            "text",
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+        );
+
+        if (property == null || property.PropertyType != typeof(string))
+            return null;
+
+        try
+        {
+            object value = property.GetValue(behaviour, null);
+            return value as string;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private bool ContainsAnyPattern(string value, string[] patterns)
+    {
+        if (string.IsNullOrEmpty(value) || patterns == null)
+            return false;
+
+        for (int i = 0; i < patterns.Length; i++)
+        {
+            string pattern = patterns[i];
+
+            if (string.IsNullOrEmpty(pattern))
+                continue;
+
+            if (value.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+        }
+
+        return false;
     }
 
     private List<Transform> CollectProtectedTransforms()
@@ -355,8 +581,6 @@ public class FreeCameraMode : MonoBehaviour
         if (objectsToDisableWhileFreecam == null)
             return;
 
-        HashSet<GameObject> alreadyProcessed = new HashSet<GameObject>();
-
         for (int i = 0; i < objectsToDisableWhileFreecam.Length; i++)
         {
             GameObject target = objectsToDisableWhileFreecam[i];
@@ -364,16 +588,10 @@ public class FreeCameraMode : MonoBehaviour
             if (target == null)
                 continue;
 
-            if (alreadyProcessed.Contains(target))
-                continue;
-
-            alreadyProcessed.Add(target);
-
             if (ShouldSkipDisable(target.transform, protectedTransforms))
                 continue;
 
-            savedObjectStates.Add(new GameObjectState(target, target.activeSelf));
-            target.SetActive(false);
+            SaveAndDisableGameObject(target);
         }
     }
 
@@ -396,11 +614,180 @@ public class FreeCameraMode : MonoBehaviour
         return false;
     }
 
+    private void ApplyHiddenTargets()
+    {
+        if (objectsToHideWhileFreecam != null)
+        {
+            for (int i = 0; i < objectsToHideWhileFreecam.Length; i++)
+            {
+                GameObject target = objectsToHideWhileFreecam[i];
+
+                if (target == null)
+                    continue;
+
+                HideObjectContent(target);
+            }
+        }
+
+        if (renderersToHideWhileFreecam != null)
+        {
+            for (int i = 0; i < renderersToHideWhileFreecam.Length; i++)
+                SaveAndDisableRenderer(renderersToHideWhileFreecam[i]);
+        }
+
+        if (componentsToDisableWhileFreecam != null)
+        {
+            for (int i = 0; i < componentsToDisableWhileFreecam.Length; i++)
+                SaveAndDisableBehaviour(componentsToDisableWhileFreecam[i]);
+        }
+    }
+
+    private void HideObjectContent(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        if (hideRenderers)
+        {
+            Renderer[] renderers = target.GetComponentsInChildren<Renderer>(true);
+
+            for (int i = 0; i < renderers.Length; i++)
+                SaveAndDisableRenderer(renderers[i]);
+        }
+
+        if (disableCanvasesOnHiddenObjects)
+        {
+            Canvas[] canvases = target.GetComponentsInChildren<Canvas>(true);
+
+            for (int i = 0; i < canvases.Length; i++)
+                SaveAndDisableBehaviour(canvases[i]);
+        }
+
+        if (disableCollidersOnHiddenObjects)
+        {
+            Collider[] colliders = target.GetComponentsInChildren<Collider>(true);
+
+            for (int i = 0; i < colliders.Length; i++)
+                SaveAndDisableCollider(colliders[i]);
+        }
+
+        if (disableLightsOnHiddenObjects)
+        {
+            Light[] lights = target.GetComponentsInChildren<Light>(true);
+
+            for (int i = 0; i < lights.Length; i++)
+                SaveAndDisableBehaviour(lights[i]);
+        }
+    }
+
+    private void SaveAndDisableGameObject(GameObject target)
+    {
+        if (target == null)
+            return;
+
+        if (!savedGameObjects.Contains(target))
+        {
+            savedGameObjects.Add(target);
+            savedGameObjectStates.Add(new GameObjectState(target, target.activeSelf));
+        }
+
+        target.SetActive(false);
+    }
+
+    private void SaveAndDisableRenderer(Renderer target)
+    {
+        if (target == null)
+            return;
+
+        if (!savedRenderers.Contains(target))
+        {
+            savedRenderers.Add(target);
+            savedRendererStates.Add(new RendererState(target, target.enabled));
+        }
+
+        target.enabled = false;
+    }
+
+    private void SaveAndDisableCollider(Collider target)
+    {
+        if (target == null)
+            return;
+
+        if (!savedColliders.Contains(target))
+        {
+            savedColliders.Add(target);
+            savedColliderStates.Add(new ColliderState(target, target.enabled));
+        }
+
+        target.enabled = false;
+    }
+
+    private void SaveAndDisableBehaviour(Behaviour target)
+    {
+        if (target == null)
+            return;
+
+        if (target == this)
+            return;
+
+        if (controlledCamera != null && target == controlledCamera)
+            return;
+
+        if (!savedBehaviours.Contains(target))
+        {
+            savedBehaviours.Add(target);
+            savedBehaviourStates.Add(new BehaviourState(target, target.enabled));
+        }
+
+        target.enabled = false;
+    }
+
+    private void EnforceDisabledObjects()
+    {
+        for (int i = 0; i < savedGameObjectStates.Count; i++)
+        {
+            GameObject target = savedGameObjectStates[i].GameObject;
+
+            if (target == null)
+                continue;
+
+            if (target.activeSelf)
+                target.SetActive(false);
+        }
+    }
+
+    private void EnforceHiddenStates()
+    {
+        for (int i = 0; i < savedRendererStates.Count; i++)
+        {
+            Renderer target = savedRendererStates[i].Renderer;
+
+            if (target != null && target.enabled)
+                target.enabled = false;
+        }
+
+        for (int i = 0; i < savedColliderStates.Count; i++)
+        {
+            Collider target = savedColliderStates[i].Collider;
+
+            if (target != null && target.enabled)
+                target.enabled = false;
+        }
+
+        for (int i = 0; i < savedBehaviourStates.Count; i++)
+        {
+            Behaviour target = savedBehaviourStates[i].Behaviour;
+
+            if (target != null && target.enabled)
+                target.enabled = false;
+        }
+    }
+
     private void RestoreDisabledObjects()
     {
-        for (int i = 0; i < savedObjectStates.Count; i++)
+        for (int i = 0; i < savedGameObjectStates.Count; i++)
         {
-            GameObjectState state = savedObjectStates[i];
+            GameObjectState state = savedGameObjectStates[i];
 
             if (state.GameObject == null)
                 continue;
@@ -433,14 +820,69 @@ public class FreeCameraMode : MonoBehaviour
         }
     }
 
+    private void RestoreHiddenTargets()
+    {
+        for (int i = 0; i < savedRendererStates.Count; i++)
+        {
+            RendererState state = savedRendererStates[i];
+
+            if (state.Renderer == null)
+                continue;
+
+            state.Renderer.enabled = state.Enabled;
+        }
+
+        for (int i = 0; i < savedColliderStates.Count; i++)
+        {
+            ColliderState state = savedColliderStates[i];
+
+            if (state.Collider == null)
+                continue;
+
+            state.Collider.enabled = state.Enabled;
+        }
+
+        for (int i = 0; i < savedBehaviourStates.Count; i++)
+        {
+            BehaviourState state = savedBehaviourStates[i];
+
+            if (state.Behaviour == null)
+                continue;
+
+            state.Behaviour.enabled = state.Enabled;
+        }
+    }
+
+    private void ClearSavedStates()
+    {
+        savedGameObjectStates.Clear();
+        savedTransformStates.Clear();
+        savedRendererStates.Clear();
+        savedColliderStates.Clear();
+        savedBehaviourStates.Clear();
+
+        savedGameObjects.Clear();
+        savedRenderers.Clear();
+        savedColliders.Clear();
+        savedBehaviours.Clear();
+    }
+
     private void HandleSpeed()
     {
         float scroll = Input.mouseScrollDelta.y;
 
         if (Mathf.Abs(scroll) > 0.01f)
         {
-            targetMoveSpeed *= Mathf.Pow(scrollSpeedMultiplier, scroll);
-            targetMoveSpeed = Mathf.Clamp(targetMoveSpeed, minMoveSpeed, maxMoveSpeed);
+            if (ctrlMouseWheelChangesFov && IsCtrlHeld())
+            {
+                targetFreecamFov -= scroll * fovScrollStep;
+                targetFreecamFov = Mathf.Clamp(targetFreecamFov, minFreecamFov, maxFreecamFov);
+            }
+            else
+            {
+                targetMoveSpeed *= Mathf.Pow(scrollSpeedMultiplier, scroll);
+                targetMoveSpeed = Mathf.Clamp(targetMoveSpeed, minMoveSpeed, maxMoveSpeed);
+            }
         }
 
         currentMoveSpeed = Mathf.SmoothDamp(
@@ -528,15 +970,22 @@ public class FreeCameraMode : MonoBehaviour
 
     private void HandleFov()
     {
-        if (!useSpeedFovEffect || controlledCamera == null)
+        if (controlledCamera == null)
             return;
 
-        float speed01 = Mathf.InverseLerp(minMoveSpeed, maxMoveSpeed, currentMoveSpeed);
-        float targetFov = savedCameraFov + speed01 * maxExtraFov;
+        float desiredFov = targetFreecamFov;
+
+        if (useSpeedFovEffect)
+        {
+            float speed01 = Mathf.InverseLerp(minMoveSpeed, maxMoveSpeed, currentMoveSpeed);
+            desiredFov += speed01 * maxExtraFov;
+        }
+
+        desiredFov = Mathf.Clamp(desiredFov, minFreecamFov, maxFreecamFov);
 
         controlledCamera.fieldOfView = Mathf.SmoothDamp(
             controlledCamera.fieldOfView,
-            targetFov,
+            desiredFov,
             ref fovSmoothRef,
             fovSmoothTime,
             Mathf.Infinity,
