@@ -12,14 +12,27 @@ namespace CraftSystem
         [SerializeField] private bool showRecipeSymbols = true;
         [SerializeField] private Color symbolColor = new Color(0.9f, 0.9f, 0.9f, 0.92f);
         [SerializeField] private int symbolFontSize = 34;
+        [Header("Recipe UI Text")]
+        [SerializeField] private string recipeTitle;
+        [SerializeField] private string recipeCode;
+        [SerializeField] private string craftActionText = "СОБРАТЬ";
+        [SerializeField] private string readyText = "ДОСТУПНО";
+        [SerializeField] private string unavailableText = "НЕТ КОМПОНЕНТОВ";
 
         private RectTransform rectTransform;
         private Text plusSymbol;
         private Text equalsSymbol;
+        private Text recipeTitleText;
+        private Text recipeCodeText;
+        private Text statusText;
+        private Text actionText;
+        private Image panelImage;
+        private CutsceneHintPulse readyPulse;
 
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
+            EnsureTerminalVisual();
             EnsureRecipeSymbols();
         }
 
@@ -27,11 +40,13 @@ namespace CraftSystem
         {
             EnsureRecipeSymbols();
             PositionRecipeSymbols();
+            EnsureTerminalVisual();
+            RefreshTerminalState();
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!CanCraft())
+            if (!CanCraft(false))
             {
                 return;
             }
@@ -44,8 +59,27 @@ namespace CraftSystem
             input1?.Refresh();
             input2?.Refresh();
             result?.Refresh();
+            EnsureTerminalVisual();
             EnsureRecipeSymbols();
             PositionRecipeSymbols();
+            RefreshTerminalState();
+        }
+
+        public void ConfigureTerminalLayout(int index)
+        {
+            EnsureTerminalVisual();
+            TechUiTheme.SetRect(
+                rectTransform,
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0.5f, 0.5f),
+                new Vector2(0f, 92f - index * 188f),
+                new Vector2(554f, 168f));
+
+            input1?.ConfigureTerminalLayout(new Vector2(-178f, -20f), "INPUT A");
+            input2?.ConfigureTerminalLayout(new Vector2(-42f, -20f), "INPUT B");
+            result?.ConfigureTerminalLayout(new Vector2(126f, -20f), "RESULT");
+            PositionRecipeSymbols();
+            RefreshTerminalState();
         }
 
         private void Craft()
@@ -63,7 +97,7 @@ namespace CraftSystem
                 return;
             }
 
-            if (!CanCraft())
+            if (!CanCraft(false))
             {
                 return;
             }
@@ -89,18 +123,29 @@ namespace CraftSystem
             RefreshAllGroups();
         }
 
-        private bool CanCraft()
+        public bool CanCraftNow()
+        {
+            return CanCraft(false);
+        }
+
+        private bool CanCraft(bool logWarnings)
         {
             InventorySystem inventory = InventorySystem.Instance;
             if (inventory == null)
             {
-                Debug.LogWarning("Cannot craft because InventorySystem is missing.");
+                if (logWarnings)
+                {
+                    Debug.LogWarning("Cannot craft because InventorySystem is missing.");
+                }
                 return false;
             }
 
             if (input1 == null || input2 == null || result == null)
             {
-                Debug.LogWarning($"Cannot craft from '{name}' because one or more CraftCell references are missing.");
+                if (logWarnings)
+                {
+                    Debug.LogWarning($"Cannot craft from '{name}' because one or more CraftCell references are missing.");
+                }
                 return false;
             }
 
@@ -108,7 +153,10 @@ namespace CraftSystem
             InventoryItemDefinition inputItem2 = input2.Item;
             if (inputItem1 == null || inputItem2 == null)
             {
-                Debug.LogWarning($"Cannot craft from '{name}' because one or more input items are not assigned.");
+                if (logWarnings)
+                {
+                    Debug.LogWarning($"Cannot craft from '{name}' because one or more input items are not assigned.");
+                }
                 return false;
             }
 
@@ -159,6 +207,84 @@ namespace CraftSystem
             {
                 equalsSymbol = CreateSymbol("CraftSymbol_Equals", "=");
             }
+        }
+
+        private void EnsureTerminalVisual()
+        {
+            if (rectTransform == null)
+            {
+                rectTransform = GetComponent<RectTransform>();
+            }
+
+            panelImage = GetComponent<Image>();
+            if (panelImage == null)
+            {
+                panelImage = gameObject.AddComponent<Image>();
+            }
+
+            panelImage.sprite = null;
+            panelImage.color = TechUiTheme.PanelSoft;
+            panelImage.raycastTarget = true;
+            TechUiTheme.AddOutline(gameObject, new Color(TechUiTheme.Danger.r, TechUiTheme.Danger.g, TechUiTheme.Danger.b, 0.34f), new Vector2(1f, -1f));
+
+            if (recipeTitleText != null)
+            {
+                return;
+            }
+
+            recipeTitleText = TechUiTheme.CreateText("RecipeTitle", transform, string.Empty, 14, TechUiTheme.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
+            TechUiTheme.SetRect(recipeTitleText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(14f, -10f), new Vector2(290f, 24f));
+
+            recipeCodeText = TechUiTheme.CreateText("RecipeCode", transform, string.Empty, 9, TechUiTheme.Muted, TextAnchor.MiddleRight);
+            TechUiTheme.SetRect(recipeCodeText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-14f, -10f), new Vector2(190f, 20f));
+
+            statusText = TechUiTheme.CreateText("RecipeStatus", transform, unavailableText, 10, TechUiTheme.Muted, TextAnchor.MiddleRight, FontStyle.Bold);
+            TechUiTheme.SetRect(statusText.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-18f, 14f), new Vector2(190f, 22f));
+
+            actionText = TechUiTheme.CreateText("CraftAction", transform, craftActionText, 12, TechUiTheme.Accent, TextAnchor.MiddleCenter, FontStyle.Bold);
+            TechUiTheme.SetRect(actionText.rectTransform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-66f, -14f), new Vector2(116f, 42f));
+            Image actionBackground = TechUiTheme.CreateImage("ActionBackground", actionText.transform, new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.12f));
+            TechUiTheme.Stretch(actionBackground.rectTransform, Vector2.zero, Vector2.zero);
+            actionBackground.transform.SetAsFirstSibling();
+            TechUiTheme.AddOutline(actionBackground.gameObject, new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.5f), new Vector2(1f, -1f));
+
+            readyPulse = actionText.gameObject.AddComponent<CutsceneHintPulse>();
+            readyPulse.Configure(TechUiTheme.Safe, 3.6f, 0.035f, CutsceneHintPulse.PulseStyle.Glow);
+            readyPulse.enabled = false;
+        }
+
+        private void RefreshTerminalState()
+        {
+            if (recipeTitleText == null)
+            {
+                return;
+            }
+
+            string fallbackTitle = result != null && result.Item != null && !string.IsNullOrWhiteSpace(result.Item.displayName)
+                ? result.Item.displayName.ToUpperInvariant()
+                : name.ToUpperInvariant();
+            recipeTitleText.text = string.IsNullOrWhiteSpace(recipeTitle) ? fallbackTitle : recipeTitle;
+            recipeCodeText.text = string.IsNullOrWhiteSpace(recipeCode)
+                ? name.ToUpperInvariant().Replace("CRAFTRECIPE_", "SCHEMA // ")
+                : recipeCode;
+            actionText.text = craftActionText;
+
+            bool ready = CanCraft(false);
+            statusText.text = ready ? readyText : unavailableText;
+            statusText.color = ready ? TechUiTheme.Safe : TechUiTheme.Muted;
+            if (panelImage != null)
+            {
+                panelImage.color = ready
+                    ? new Color(0.11f, 0.04f, 0.02f, 0.96f)
+                    : TechUiTheme.PanelSoft;
+            }
+
+            if (readyPulse != null)
+            {
+                readyPulse.enabled = ready;
+            }
+
+            actionText.color = ready ? TechUiTheme.Accent : TechUiTheme.Muted;
         }
 
         private Text CreateSymbol(string symbolName, string value)

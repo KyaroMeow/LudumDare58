@@ -418,7 +418,10 @@ public class PlayerInteraction : MonoBehaviour
     private bool IsAllowedDuringStoryLock(IInteractable interactable)
     {
         return interactable is VentHandKeyPickup ||
-               interactable is VentHandInteractable;
+               interactable is VentHandInteractable ||
+               (interactable is TrashBinInteractable &&
+                VentHandIntroController.Instance != null &&
+                VentHandIntroController.Instance.IsWaitingForKeyInventorySpace);
     }
 }
 

@@ -223,6 +223,7 @@ public class ElectricPanelController : MonoBehaviour
     public PanelState CurrentState => state;
     public bool IsStoryIntroLockActive => storyIntroLockActive;
     public bool IsStoryBlackoutActive => storyBlackoutActive || storyBlackoutRestoring;
+    public Transform LeverTransform => leverVisual;
 
     private static Gradient CreateDefaultChargeGradient()
     {

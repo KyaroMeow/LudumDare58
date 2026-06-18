@@ -47,11 +47,33 @@ public class InventorySystem : MonoBehaviour
         {
             if (slots[i] == null)
             {
-                CraftMemory.Instance.RegisterCollectedItem(item);
+                CraftMemory.Instance?.RegisterCollectedItem(item);
                 slots[i] = item;
                 NotifyChanged();
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    public bool TryRemoveItem(InventoryItemDefinition item)
+    {
+        if (item == null || slots == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] != item)
+            {
+                continue;
+            }
+
+            slots[i] = null;
+            NotifyChanged();
+            return true;
         }
 
         return false;

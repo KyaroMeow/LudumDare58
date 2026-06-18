@@ -748,6 +748,40 @@ public class GameManager : MonoBehaviour
         AddMistakes(mistakesToAdd);
     }
 
+    public void ApplySecurityPenalty(int counterPoints)
+    {
+        if (isGameOverStarted)
+        {
+            Debug.LogWarning($"Security penalty {counterPoints} ignored because game over has already started.");
+            return;
+        }
+
+        if (counterPoints <= 0)
+        {
+            return;
+        }
+
+        int counterLimit = GetHandCounterLimit();
+        if (counterLimit <= 0)
+        {
+            Debug.LogWarning($"Security penalty skipped because the hand counter limit is invalid: {counterLimit}.");
+            return;
+        }
+
+        currentHandDamageCounter += counterPoints;
+        ResetHandCounterDecayTimer();
+        Debug.Log($"Security penalty added {counterPoints} direct counter points: {currentHandDamageCounter}/{counterLimit}.");
+
+        while (currentHandDamageCounter >= counterLimit && !isGameOverStarted)
+        {
+            currentHandDamageCounter -= counterLimit;
+            if (!ApplyHandPunishment())
+            {
+                break;
+            }
+        }
+    }
+
     public void SetCameraState(bool isEnabled)
     {
         isCameraWorking = isEnabled;
@@ -1226,7 +1260,7 @@ public class GameManager : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!showHandPenaltyDebugCounter || !isGameStarted)
+        if (!showHandPenaltyDebugCounter || !isGameStarted || HUDManager.Instance != null)
         {
             return;
         }

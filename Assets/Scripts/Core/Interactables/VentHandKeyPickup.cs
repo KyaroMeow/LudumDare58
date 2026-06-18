@@ -5,6 +5,7 @@ public class VentHandKeyPickup : MonoBehaviour, IInteractable, IOneShotInteracta
 {
     [SerializeField] private VentHandIntroController introController;
     [SerializeField] private ToolCaseLock toolCaseLock;
+    [SerializeField] private InventoryItemDefinition inventoryItem;
     [SerializeField] private SfxCue pickupSfx;
     [SerializeField] private AudioClip pickupAudioClip;
 
@@ -15,11 +16,13 @@ public class VentHandKeyPickup : MonoBehaviour, IInteractable, IOneShotInteracta
     public void Configure(
         VentHandIntroController controller,
         ToolCaseLock targetCase,
+        InventoryItemDefinition item,
         SfxCue sfxCue,
         AudioClip fallbackClip)
     {
         introController = controller;
         toolCaseLock = targetCase;
+        inventoryItem = item;
         pickupSfx = sfxCue;
         pickupAudioClip = fallbackClip;
     }
@@ -31,16 +34,22 @@ public class VentHandKeyPickup : MonoBehaviour, IInteractable, IOneShotInteracta
             return;
         }
 
-        pickedUp = true;
-
         if (introController != null)
         {
-            introController.NotifyKeyPickedUp(this);
+            pickedUp = introController.NotifyKeyPickedUp(this, inventoryItem);
         }
         else
         {
+            if (inventoryItem != null &&
+                (InventorySystem.Instance == null || !InventorySystem.Instance.TryAddItem(inventoryItem)))
+            {
+                Debug.LogWarning("The tool case key remains in the world because the inventory is full.", this);
+                return;
+            }
+
+            pickedUp = true;
             PlayPickupSfx();
-            toolCaseLock?.UnlockCase();
+            toolCaseLock?.UnlockCase(inventoryItem);
             Destroy(gameObject);
         }
     }

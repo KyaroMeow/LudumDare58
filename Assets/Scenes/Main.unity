@@ -770,7 +770,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: coments wwww
+  m_text: 'SORTER '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7cc63051d68252b41870db899867be97, type: 2}
   m_sharedMaterial: {fileID: -857184400890992257, guid: 7cc63051d68252b41870db899867be97, type: 2}
@@ -3927,6 +3927,8 @@ MonoBehaviour:
   itemIcon: {fileID: 944968909}
   lockedColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.64}
+  slotCode: 
+  showItemName: 1
 --- !u!1 &313271553
 GameObject:
   m_ObjectHideFlags: 0
@@ -4635,6 +4637,8 @@ MonoBehaviour:
   itemIcon: {fileID: 1452634490}
   lockedColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.64}
+  slotCode: 
+  showItemName: 1
 --- !u!1 &360404414
 GameObject:
   m_ObjectHideFlags: 0
@@ -4726,54 +4730,69 @@ MonoBehaviour:
   hideHandBeforeIntro: 1
   hideHandAfterIntro: 1
   introLines:
-  - text: "\u041D\u0435 \u0434\u0435\u0440\u0433\u0430\u0439\u0441\u044F. \u042F
-      \u043D\u0435 \u0437\u0430 \u043D\u0438\u043C\u0438."
+  - text: "\u0422\u0438\u0448\u0435. \u042F \u043D\u0435 \u043E\u043D\u0438."
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.05
     giveKeyAfterThisLine: 0
-  - text: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u0441\u0435\u0439\u0447\u0430\u0441
-      \u0441\u043B\u0435\u043F\u0430\u044F. \u041D\u0435\u043D\u0430\u0434\u043E\u043B\u0433\u043E."
+  - text: "\u042F \u043E\u0441\u043B\u0435\u043F\u043B\u0438\u043B \u0438\u0445 \u043D\u0435\u043D\u0430\u0434\u043E\u043B\u0433\u043E.
+      \u0422\u0430\u043A \u0447\u0442\u043E \u0441\u043B\u0443\u0448\u0430\u0439."
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.05
     giveKeyAfterThisLine: 0
-  - text: "\u042F \u043C\u043E\u0433\u0443 \u043F\u043E\u043C\u043E\u0447\u044C \u0442\u0435\u0431\u0435
-      \u0432\u044B\u0431\u0440\u0430\u0442\u044C\u0441\u044F. \u041D\u043E \u043C\u043D\u0435
-      \u043D\u0443\u0436\u043D\u044B \u0434\u0435\u0442\u0430\u043B\u0438."
+  - text: "\u0425\u043E\u0447\u0435\u0448\u044C \u0432\u044B\u0431\u0440\u0430\u0442\u044C\u0441\u044F
+      \u2014 \u0441\u043E\u0431\u0438\u0440\u0430\u0439 \u0434\u0435\u0442\u0430\u043B\u0438
+      \u0438 \u043E\u0442\u0434\u0430\u0432\u0430\u0439 \u043C\u043D\u0435. \u042F
+      \u043F\u043E\u0441\u0442\u0430\u0440\u0430\u044E\u0441\u044C \u0441\u0434\u0435\u043B\u0430\u0442\u044C
+      \u0438\u0437 \u043D\u0438\u0445 \u0447\u0442\u043E-\u0442\u043E \u043F\u043E\u043B\u0435\u0437\u043D\u043E\u0435."
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.045
     giveKeyAfterThisLine: 0
-  - text: "\u041E\u0442\u0434\u0430\u0432\u0430\u0439 \u043C\u043D\u0435 \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u044B,
-      \u043A\u043E\u0433\u0434\u0430 \u043A\u0430\u043C\u0435\u0440\u0430 \u043D\u0435
-      \u0441\u043C\u043E\u0442\u0440\u0438\u0442. \u042F \u0443\u043C\u0435\u044E
-      \u043C\u0430\u0441\u0442\u0435\u0440\u0438\u0442\u044C."
+  - text: "\u041D\u043E \u043A\u0440\u0430\u0434\u0438 \u0438 \u0440\u0430\u0437\u0431\u0438\u0440\u0430\u0439
+      \u0442\u043E\u043B\u044C\u043A\u043E \u0432 \u0442\u0435\u043C\u043D\u043E\u0442\u0435.
+      \u041F\u0440\u0438 \u0441\u0432\u0435\u0442\u0435 \u0441\u0438\u0441\u0442\u0435\u043C\u0430
+      \u0431\u044C\u0451\u0442 \u0431\u0435\u0437 \u043F\u0440\u0435\u0434\u0443\u043F\u0440\u0435\u0436\u0434\u0435\u043D\u0438\u044F."
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.045
     giveKeyAfterThisLine: 0
-  - text: "\u042F \u0431\u0443\u0434\u0443 \u0438\u043D\u043E\u0433\u0434\u0430 \u043F\u0435\u0440\u0435\u0433\u0440\u0443\u0436\u0430\u0442\u044C
-      \u043F\u0438\u0442\u0430\u043D\u0438\u0435. \u0412 \u044D\u0442\u0438 \u043E\u043A\u043D\u0430
-      \u043A\u0430\u043C\u0435\u0440\u0430 \u043E\u0442\u043A\u043B\u044E\u0447\u0430\u0435\u0442\u0441\u044F."
+  - text: "\u042F \u0431\u0443\u0434\u0443 \u043F\u0435\u0440\u0435\u0433\u0440\u0435\u0432\u0430\u0442\u044C
+      \u0449\u0438\u0442\u043E\u043A, \u043A\u0430\u043A \u0442\u043E\u043B\u044C\u043A\u043E
+      \u0441\u043C\u043E\u0436\u0435\u0448\u044C  \u2014 \u0434\u0451\u0440\u043D\u0438
+      \u0440\u044B\u0447\u0430\u0433, \u043F\u0438\u0442\u0430\u043D\u0438\u0435
+      \u043B\u044F\u0436\u0435\u0442. \u041F\u043E\u043A\u0430 \u043E\u043D\u043E
+      \u043B\u0435\u0436\u0438\u0442, \u043A\u0430\u043C\u0435\u0440\u0430 \u043D\u0438\u0447\u0435\u0433\u043E
+      \u043D\u0435 \u0443\u0432\u0438\u0434\u0438\u0442."
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.045
     giveKeyAfterThisLine: 0
-  - text: "\u0414\u0435\u0439\u0441\u0442\u0432\u0443\u0439 \u0431\u044B\u0441\u0442\u0440\u043E.
-      \u041A\u043E\u0433\u0434\u0430 \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0432\u0435\u0440\u043D\u0435\u0442\u0441\u044F,
-      \u043E\u043D\u0438 \u0441\u043D\u043E\u0432\u0430 \u0443\u0432\u0438\u0434\u044F\u0442
-      \u0432\u0441\u0435."
+  - text: "\u042D\u0442\u0438 \u0441\u0443\u043A\u0438... \u041E\u043D\u0438 \u0443\u0441\u043A\u043E\u0440\u044F\u044E\u0442
+      \u0442\u0430\u0439\u043C\u0435\u0440 \u0441 \u043A\u0430\u0436\u0434\u044B\u043C
+      \u043F\u0440\u0435\u0434\u043C\u0435\u0442\u043E\u043C. \u0412\u044B\u0436\u0438\u043C\u0430\u044E\u0442
+      \u0440\u0430\u0431\u043E\u0447\u0438\u0445, \u043F\u043E\u043A\u0430 \u0442\u0435
+      \u043D\u0435 \u0441\u043B\u043E\u043C\u0430\u044E\u0442\u0441\u044F. \u0422\u0430\u043A
+      \u0447\u0442\u043E \u0442\u0435\u0431\u0435 \u043D\u0430\u0434\u043E \u0442\u043E\u0440\u043E\u043F\u0438\u0442\u044C\u0441\u044F"
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.045
     giveKeyAfterThisLine: 0
-  - text: "\u0414\u0435\u0440\u0436\u0438. \u042D\u0442\u043E \u043E\u0442 \u043A\u0435\u0439\u0441\u0430
-      \u0441 \u0438\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u0430\u043C\u0438."
+  - text: "\u0414\u0435\u0440\u0436\u0438 \u043A\u043B\u044E\u0447. \u0418\u043D\u0441\u0442\u0440\u0443\u043C\u0435\u043D\u0442\u044B
+      \u0432 \u043A\u0435\u0439\u0441\u0435. \u0418 \u043D\u0435 \u0437\u0430\u0441\u0442\u0430\u0432\u043B\u044F\u0439
+      \u043C\u0435\u043D\u044F \u0436\u0430\u043B\u0435\u0442\u044C \u043E\u0431
+      \u043F\u043E\u043C\u043E\u0449\u0438 \u0442\u0435\u0431\u0435. \u0422\u044B
+      \u0432\u044B\u0433\u043B\u044F\u0434\u0435\u0448\u044C \u043F\u043E\u043A\u0430
+      \u0431\u043E\u043B\u0435\u0435 \u0436\u0438\u0432\u0435\u0435, \u0447\u0435\u043C
+      \u043E\u0441\u0442\u0430\u043B\u044C\u043D\u044B\u0435"
     holdTime: 1.6
     voiceBlips: []
-    blipInterval: 0.055
+    blipInterval: 0.045
     giveKeyAfterThisLine: 1
+  dialogueContactLabel: "\u041D\u0415\u0418\u0417\u0412\u0415\u0421\u0422\u041D\u042B\u0419 "
+  dialogueChannelLabel: "\u0421\u043F\u0430\u0441\u0435\u043D\u0438\u0435???"
+  dialogueAdvanceHint: "CLICK / E / SPACE  //  \u0414\u0410\u041B\u0415\u0415"
   dialogueText: {fileID: 0}
   dialogueCanvasGroup: {fileID: 0}
   dialogueStartsOnlyByHandClick: 1
@@ -4785,7 +4804,12 @@ MonoBehaviour:
   fallbackDialogueWidth01: 0.7
   fallbackDialogueHeight: 150
   fallbackDialogueBottomOffset: 55
+  createRuntimeDialoguePanel: 1
+  dialoguePanelColor: {r: 0.012, g: 0.014, b: 0.02, a: 0.94}
+  dialogueAccentColor: {r: 1, g: 0.78, b: 0.22, a: 1}
+  dialogueDangerColor: {r: 1, g: 0.12, b: 0.08, a: 1}
   keyPrefab: {fileID: 0}
+  keyInventoryItem: {fileID: 11400000, guid: a2872cb058a047f3aebe0ac5ef51a6c2, type: 2}
   placeholderKeyScale: {x: 0.08, y: 0.035, z: 0.08}
   keyPickupFallbackRadius: 0.12
   addOutlineToPlaceholderKey: 1
@@ -5117,13 +5141,15 @@ MonoBehaviour:
   itemMarkerUI: {fileID: 1075652592}
   createRuntimeMistakeCounter: 1
   mistakeCounterOffset: {x: 28, y: -28}
-  mistakeCounterSize: {x: 260, y: 74}
-  mistakePanelColor: {r: 0.035, g: 0.04, b: 0.05, a: 0.82}
-  mistakeAccentColor: {r: 1, g: 0.22, b: 0.16, a: 1}
-  mistakeSafeColor: {r: 0.28, g: 0.86, b: 0.75, a: 1}
-  mistakeEmptyColor: {r: 0.18, g: 0.19, b: 0.21, a: 0.9}
-  mistakeTextColor: {r: 0.94, g: 0.96, b: 0.98, a: 1}
-  mistakeGlowColor: {r: 1, g: 0.08, b: 0.04, a: 0.24}
+  mistakeMeterSize: {x: 286, y: 70}
+  meterPanelColor: {r: 0.012, g: 0.014, b: 0.02, a: 0.6}
+  meterSafeColor: {r: 0.16, g: 0.88, b: 0.78, a: 1}
+  meterWarningColor: {r: 0.95, g: 0.63, b: 0.25, a: 1}
+  meterDangerColor: {r: 1, g: 0.12, b: 0.08, a: 1}
+  meterEmptyColor: {r: 0.11, g: 0.125, b: 0.145, a: 1}
+  mistakeCounterSortingOrder: 32000
+  pointerRiseTime: 0.14
+  pointerFallTime: 0.75
 --- !u!1 &396744428
 GameObject:
   m_ObjectHideFlags: 0
@@ -5908,18 +5934,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TrashBinInteractable
   inventoryUIController: {fileID: 1579158897}
-  inventoryPanelRect:
-    serializedVersion: 2
-    x: 24
-    y: 120
-    width: 280
-    height: 260
-  trashSlotRect:
-    serializedVersion: 2
-    x: 328
-    y: 190
-    width: 160
-    height: 80
+  trashTitle: "\u0423\u0422\u0418\u041B\u0418\u0417\u0410\u0426\u0418\u042F"
+  trashChannel: MODULE 03 // WASTE
+  trashDescription: "\u0412\u042B\u0411\u0415\u0420\u0418\u0422\u0415 \u041F\u0420\u0415\u0414\u041C\u0415\u0422
+    \u0412 \u0418\u041D\u0412\u0415\u041D\u0422\u0410\u0420\u0415"
+  noSelectionText: "\u041F\u0420\u0415\u0414\u041C\u0415\u0422 \u041D\u0415 \u0412\u042B\u0411\u0420\u0410\u041D"
+  warningText: "\u0412\u041D\u0418\u041C\u0410\u041D\u0418\u0415 // \u041E\u041F\u0415\u0420\u0410\u0426\u0418\u042F
+    \u041D\u0415\u041E\u0411\u0420\u0410\u0422\u0418\u041C\u0410"
+  discardButtonText: "\u0423\u041D\u0418\u0427\u0422\u041E\u0416\u0418\u0422\u042C"
+  closeHintText: "TAB / E / ESC / SPACE / ENTER  //  \u0417\u0410\u041A\u0420\u042B\u0422\u042C"
 --- !u!1 &435771322
 GameObject:
   m_ObjectHideFlags: 0
@@ -7939,6 +7962,11 @@ MonoBehaviour:
   craftMenu: {fileID: 1064683465}
   introController: {fileID: 360404415}
   logWhenCraftIsUnavailable: 1
+  craftTitle: "\u0421\u0411\u041E\u0420\u041A\u0410"
+  craftChannel: MODULE 02 // HAND LINK
+  craftDescription: "\u0412\u042B\u0411\u0415\u0420\u0418\u0422\u0415 \u0414\u041E\u0421\u0422\u0423\u041F\u041D\u0423\u042E
+    \u0421\u0425\u0415\u041C\u0423"
+  closeHintText: "TAB / E / ESC / SPACE / ENTER  //  \u0417\u0410\u041A\u0420\u042B\u0422\u042C"
 --- !u!114 &563268293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10204,6 +10232,11 @@ MonoBehaviour:
   showRecipeSymbols: 1
   symbolColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.92}
   symbolFontSize: 34
+  recipeTitle: "\u0410\u0422\u041E\u041C\u041D\u042B\u0419 \u0422\u041E\u0421\u0422\u0415\u0420"
+  recipeCode: SCHEMA 01 // THERMAL
+  craftActionText: "\u0421\u041E\u0411\u0420\u0410\u0422\u042C"
+  readyText: "\u0414\u041E\u0421\u0422\u0423\u041F\u041D\u041E"
+  unavailableText: "\u041D\u0415\u0422 \u041A\u041E\u041C\u041F\u041E\u041D\u0415\u041D\u0422\u041E\u0412"
 --- !u!1 &713654969
 GameObject:
   m_ObjectHideFlags: 0
@@ -11225,6 +11258,7 @@ MonoBehaviour:
     playIfAlreadyPlaying: 1
     stopPreviousLoopBeforeStart: 0
   duplicateViolationSuppressSeconds: 0.75
+  violationCounterPoints: 10
 --- !u!4 &760902352
 Transform:
   m_ObjectHideFlags: 0
@@ -13926,7 +13960,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 52
+  m_text: 67
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7cc63051d68252b41870db899867be97, type: 2}
   m_sharedMaterial: {fileID: -857184400890992257, guid: 7cc63051d68252b41870db899867be97, type: 2}
@@ -15154,6 +15188,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::VentHandKeyPickup
   introController: {fileID: 360404415}
   toolCaseLock: {fileID: 2130105715}
+  inventoryItem: {fileID: 0}
   pickupSfx:
     label: 
     clip: {fileID: 8300000, guid: b2c88db60f0874d42ac4911b0acaf327, type: 3}
@@ -18923,7 +18958,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1272766440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23148,6 +23183,20 @@ MonoBehaviour:
   cutsceneClickItem: {fileID: 11400000, guid: 79093e84933fbe246a1cb4e52d715392, type: 2}
   bombCutsceneClickItem: {fileID: 11400000, guid: c87b371d13bdf494cbc3c4a1da7a0cec, type: 2}
   bombDoubleClickInterval: 1.5
+  inventoryTitle: "\u041B\u0418\u0427\u041D\u042B\u0419 \u0418\u041D\u0412\u0415\u041D\u0422\u0410\u0420\u042C"
+  inventoryChannel: MODULE 01 // CARGO
+  inventoryDescription: "\u0421\u041B\u0423\u0416\u0415\u0411\u041D\u041E\u0415 \u0425\u0420\u0410\u041D\u0418\u041B\u0418\u0429\u0415
+    // 2 \u042F\u0427\u0415\u0419\u041A\u0418"
+  emptySlotText: "\u041F\u0423\u0421\u0422\u041E"
+  closeHintText: "TAB / E / ESC / SPACE / ENTER  //  \u0417\u0410\u041A\u0420\u042B\u0422\u042C"
+  inventoryModuleSize: {x: 500, y: 430}
+  standaloneModulePosition: {x: -310, y: 0}
+  contextModulePosition: {x: 330, y: 0}
+  contextModuleSize: {x: 610, y: 500}
+  panelColor: {r: 0.045, g: 0.008, b: 0.01, a: 0.94}
+  accentColor: {r: 1, g: 0.78, b: 0.22, a: 1}
+  dangerColor: {r: 1, g: 0.08, b: 0.045, a: 1}
+  selectedSlotColor: {r: 0.24, g: 0.055, b: 0.03, a: 0.98}
 --- !u!114 &1579158898
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23177,12 +23226,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 0.5
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -24673,6 +24722,8 @@ MonoBehaviour:
   itemIcon: {fileID: 1126786683}
   lockedColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.64}
+  slotCode: 
+  showItemName: 1
 --- !u!1 &1674915463
 GameObject:
   m_ObjectHideFlags: 0
@@ -30077,6 +30128,11 @@ MonoBehaviour:
   showRecipeSymbols: 1
   symbolColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.92}
   symbolFontSize: 34
+  recipeTitle: "\u0412\u0417\u0420\u042B\u0412\u041D\u041E\u0419 \u041C\u041E\u0414\u0423\u041B\u042C"
+  recipeCode: SCHEMA 02 // IMPULSE
+  craftActionText: "\u0421\u041E\u0411\u0420\u0410\u0422\u042C"
+  readyText: "\u0414\u041E\u0421\u0422\u0423\u041F\u041D\u041E"
+  unavailableText: "\u041D\u0415\u0422 \u041A\u041E\u041C\u041F\u041E\u041D\u0415\u041D\u0422\u041E\u0412"
 --- !u!1 &2101000010
 GameObject:
   m_ObjectHideFlags: 0
@@ -30169,6 +30225,8 @@ MonoBehaviour:
   itemIcon: {fileID: 2101000013}
   lockedColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.64}
+  slotCode: 
+  showItemName: 1
 --- !u!1 &2101000020
 GameObject:
   m_ObjectHideFlags: 0
@@ -30261,6 +30319,8 @@ MonoBehaviour:
   itemIcon: {fileID: 2101000023}
   lockedColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.64}
+  slotCode: 
+  showItemName: 1
 --- !u!1 &2101000030
 GameObject:
   m_ObjectHideFlags: 0
@@ -30353,6 +30413,8 @@ MonoBehaviour:
   itemIcon: {fileID: 2101000033}
   lockedColor: {r: 0.14150941, g: 0.14150941, b: 0.14150941, a: 1}
   backgroundColor: {r: 0, g: 0, b: 0, a: 0.64}
+  slotCode: 
+  showItemName: 1
 --- !u!1 &2102000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -30790,7 +30852,7 @@ MonoBehaviour:
   caseAnimator: {fileID: 0}
   openTrigger: 
   closeTrigger: 
-  disableCaseColliderWhenOpen: 1
+  disableCaseColliderWhenOpen: 0
   caseClosedCollider: {fileID: 2130105716}
   interactCollider: {fileID: 2130105716}
   disableControlledToolsWhileClosed: 1
@@ -30800,6 +30862,8 @@ MonoBehaviour:
   - {fileID: 8221859789386461276}
   - {fileID: 3469889557724060868}
   controlledToolColliders: []
+  keyToConsume: {fileID: 0}
+  securitySystem: {fileID: 760902351}
   sfxEmitter: {fileID: 0}
   lockedSfx:
     label: 
@@ -30858,9 +30922,29 @@ MonoBehaviour:
     delay: 0
     playIfAlreadyPlaying: 0
     stopPreviousLoopBeforeStart: 0
+  closeSfx:
+    label: 
+    clip: {fileID: 0}
+    useVariations: 0
+    variations: []
+    loop: 0
+    volume: 1
+    randomizeVolume: 0
+    volumeRange: {x: 0.9, y: 1}
+    pitch: 1
+    randomizePitch: 0
+    pitchRange: {x: 0.95, y: 1.05}
+    spatial: 0
+    spatialBlend: 0
+    minDistance: 1
+    maxDistance: 15
+    delay: 0
+    playIfAlreadyPlaying: 0
+    stopPreviousLoopBeforeStart: 0
   lockedAudioClip: {fileID: 0}
   unlockAudioClip: {fileID: 0}
   openAudioClip: {fileID: 0}
+  closeAudioClip: {fileID: 0}
 --- !u!65 &2130105716
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -33914,13 +33998,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2739511133355638628, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3276839011974567112, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 78f0f9f80079b33408a51830a422324f, type: 3}
     - target: {fileID: 7843383863544379064, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
+      propertyPath: m_fontSize
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 7843383863544379064, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
       propertyPath: m_fontColor.g
       value: 0.52156866
+      objectReference: {fileID: 0}
+    - target: {fileID: 7843383863544379064, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 7843383863544379064, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1318813204952936020, guid: afbfaeca8298a324bbc6f4918e7c1218, type: 3}

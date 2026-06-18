@@ -31,8 +31,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
     private GameObject stealButtonRoot;
     private Button stealButton;
     private CutsceneHintPulse stealButtonPulse;
+    private RectTransform stealButtonTutorialTarget;
     private static readonly Color BookStealPulseColor = new Color(1f, 0.82f, 0.28f, 1f);
     private static readonly Color AnomalyFinalStealPulseColor = new Color(0.42f, 0.9f, 1f, 1f);
+
+    public static RectTransform ActiveStealButtonTutorialTarget { get; private set; }
 
     private void Awake()
     {
@@ -389,6 +392,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         bool shouldShow = ShouldShowStealButton();
         if (!shouldShow)
         {
+            if (ActiveStealButtonTutorialTarget == stealButtonTutorialTarget)
+            {
+                ActiveStealButtonTutorialTarget = null;
+            }
+
             if (stealButtonRoot != null)
             {
                 stealButtonRoot.SetActive(false);
@@ -402,6 +410,11 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         if (stealButtonRoot != null && !stealButtonRoot.activeSelf)
         {
             stealButtonRoot.SetActive(true);
+        }
+
+        if (canBeStolen && stealButtonTutorialTarget != null)
+        {
+            ActiveStealButtonTutorialTarget = stealButtonTutorialTarget;
         }
 
         bool managerPlaying = CutscenePlaybackManager.Instance != null && CutscenePlaybackManager.Instance.IsPlaying;
@@ -480,21 +493,58 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
 
+        GameObject moduleObject = new GameObject("Steal Scanner Module", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        moduleObject.transform.SetParent(stealButtonRoot.transform, false);
+
+        RectTransform moduleTransform = moduleObject.GetComponent<RectTransform>();
+        moduleTransform.anchorMin = moduleTransform.anchorMax = new Vector2(0f, 1f);
+        moduleTransform.pivot = new Vector2(0f, 1f);
+        moduleTransform.anchoredPosition = new Vector2(28f, -108f);
+        moduleTransform.sizeDelta = new Vector2(286f, 78f);
+
+        Image moduleImage = moduleObject.GetComponent<Image>();
+        moduleImage.color = new Color(0.012f, 0.014f, 0.02f, 0.9f);
+        moduleImage.raycastTarget = false;
+        Outline moduleOutline = moduleObject.AddComponent<Outline>();
+        moduleOutline.effectColor = new Color(1f, 0.12f, 0.08f, 0.52f);
+        moduleOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+        CreateStealScannerCorners(moduleTransform);
+        Text header = CreateStealText("Header", moduleTransform, new Vector2(14f, -6f), new Vector2(258f, 18f), "КОНТРАБАНДА // ДОСТУПНО", 10);
+        header.color = new Color(0.78f, 0.82f, 0.86f, 0.82f);
+
         GameObject buttonObject = new GameObject("Steal Button", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(CutsceneHintPulse));
-        buttonObject.transform.SetParent(stealButtonRoot.transform, false);
+        buttonObject.transform.SetParent(moduleTransform, false);
 
         RectTransform buttonTransform = buttonObject.GetComponent<RectTransform>();
-        buttonTransform.anchorMin = new Vector2(0f, 1f);
-        buttonTransform.anchorMax = new Vector2(0f, 1f);
-        buttonTransform.pivot = new Vector2(0f, 1f);
-        buttonTransform.anchoredPosition = new Vector2(16f, -104f);
-        buttonTransform.sizeDelta = new Vector2(160f, 40f);
+        buttonTransform.anchorMin = new Vector2(0f, 0f);
+        buttonTransform.anchorMax = new Vector2(1f, 0f);
+        buttonTransform.pivot = new Vector2(0.5f, 0f);
+        buttonTransform.anchoredPosition = new Vector2(0f, 11f);
+        buttonTransform.sizeDelta = new Vector2(-24f, 38f);
+        stealButtonTutorialTarget = buttonTransform;
+        if (canBeStolen)
+        {
+            ActiveStealButtonTutorialTarget = buttonTransform;
+        }
 
         Image buttonImage = buttonObject.GetComponent<Image>();
-        buttonImage.color = new Color(0.12f, 0.1f, 0.16f, 0.92f);
+        Color normalColor = new Color(1f, 0.76f, 0.18f, 0.96f);
+        buttonImage.color = Color.white;
 
         stealButton = buttonObject.GetComponent<Button>();
         stealButton.targetGraphic = buttonImage;
+        stealButton.transition = Selectable.Transition.ColorTint;
+        ColorBlock colors = stealButton.colors;
+        colors.normalColor = normalColor;
+        colors.highlightedColor = new Color(1f, 0.9f, 0.42f, 1f);
+        colors.pressedColor = new Color(0.82f, 0.48f, 0.08f, 1f);
+        colors.selectedColor = colors.highlightedColor;
+        colors.disabledColor = new Color(0.32f, 0.31f, 0.28f, 0.72f);
+        colors.colorMultiplier = 1f;
+        colors.fadeDuration = 0.08f;
+        stealButton.colors = colors;
+        buttonImage.color = normalColor;
         stealButton.onClick.AddListener(HandleStealButtonClicked);
 
         stealButtonPulse = buttonObject.GetComponent<CutsceneHintPulse>();
@@ -510,11 +560,13 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         labelTransform.offsetMax = Vector2.zero;
 
         Text label = labelObject.GetComponent<Text>();
-        label.text = "Украсть";
+        label.text = "УКРАСТЬ";
         label.alignment = TextAnchor.MiddleCenter;
         label.color = Color.black;
-        label.fontSize = 18;
+        label.fontSize = 19;
+        label.fontStyle = FontStyle.Bold;
         label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        label.raycastTarget = false;
     }
 
     private void HandleStealButtonClicked()
@@ -536,12 +588,74 @@ public class ConveyorItemInteractable : MonoBehaviour, IInteractable
         }
 
         stealButtonPulse = null;
+        if (ActiveStealButtonTutorialTarget == stealButtonTutorialTarget)
+        {
+            ActiveStealButtonTutorialTarget = null;
+        }
+        stealButtonTutorialTarget = null;
 
         if (stealButtonRoot != null)
         {
             Destroy(stealButtonRoot);
             stealButtonRoot = null;
         }
+    }
+
+    private static void CreateStealScannerCorners(RectTransform parent)
+    {
+        Color color = new Color(1f, 0.12f, 0.08f, 0.92f);
+        CreateStealLine("CornerTop", parent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(58f, 2f), color);
+        CreateStealLine("CornerLeft", parent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(2f, 24f), color);
+        CreateStealLine("CornerBottom", parent, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(58f, 2f), color);
+        CreateStealLine("CornerRight", parent, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(2f, 24f), color);
+    }
+
+    private static Image CreateStealLine(
+        string objectName,
+        Transform parent,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 position,
+        Vector2 size,
+        Color color)
+    {
+        GameObject lineObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        lineObject.transform.SetParent(parent, false);
+        RectTransform rect = lineObject.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+        Image line = lineObject.GetComponent<Image>();
+        line.color = color;
+        line.raycastTarget = false;
+        return line;
+    }
+
+    private static Text CreateStealText(
+        string objectName,
+        Transform parent,
+        Vector2 position,
+        Vector2 size,
+        string text,
+        int fontSize)
+    {
+        GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+        textObject.transform.SetParent(parent, false);
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+        Text label = textObject.GetComponent<Text>();
+        label.text = text;
+        label.fontSize = fontSize;
+        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        label.alignment = TextAnchor.MiddleLeft;
+        label.raycastTarget = false;
+        return label;
     }
 
     private bool IsStealUnlocked()

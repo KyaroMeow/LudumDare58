@@ -68,15 +68,17 @@ public class VentHandIntroController : MonoBehaviour
     [Header("Dialogue")]
     [SerializeField] private VentHandDialogueLine[] introLines =
     {
-        new VentHandDialogueLine { text = "Не дергайся. Я не за ними." },
-        new VentHandDialogueLine { text = "Система сейчас слепая. Ненадолго." },
-        new VentHandDialogueLine { text = "Я могу помочь тебе выбраться. Но мне нужны детали." },
-        new VentHandDialogueLine { text = "Отдавай мне предметы, когда камера не смотрит. Я умею мастерить." },
-        new VentHandDialogueLine { text = "Я буду иногда перегружать питание. В эти окна камера отключается." },
-        new VentHandDialogueLine { text = "Действуй быстро. Когда питание вернется, они снова увидят все." },
-        new VentHandDialogueLine { text = "Держи. Это от кейса с инструментами.", giveKeyAfterThisLine = true }
-        , new VentHandDialogueLine { text = "\u041e\u043d\u0438 \u0443\u0441\u043a\u043e\u0440\u044f\u044e\u0442 \u0442\u0430\u0439\u043c\u0435\u0440 \u0441 \u043a\u0430\u0436\u0434\u044b\u043c \u043f\u0440\u0435\u0434\u043c\u0435\u0442\u043e\u043c. \u0421\u0432\u043e\u043b\u043e\u0447\u0438 \u0432\u044b\u0436\u0438\u043c\u0430\u044e\u0442 \u0440\u0430\u0431\u043e\u0447\u0438\u0445, \u043f\u043e\u043a\u0430 \u0442\u0435 \u043d\u0435 \u0441\u043b\u043e\u043c\u0430\u044e\u0442\u0441\u044f." }
+        new VentHandDialogueLine { text = "Тише. Я не охрана.", blipInterval = 0.05f },
+        new VentHandDialogueLine { text = "Камеры ослепли ненадолго. Так что слушай.", blipInterval = 0.05f },
+        new VentHandDialogueLine { text = "Хочешь выбраться — собирай детали. Я сделаю из них кое-что полезное.", blipInterval = 0.045f },
+        new VentHandDialogueLine { text = "Но кради и разбирай только в темноте. При свете система бьёт без предупреждения.", blipInterval = 0.045f },
+        new VentHandDialogueLine { text = "Щиток перегреется — дёрни рычаг. Пока питание лежит, камера ничего не увидит.", blipInterval = 0.045f },
+        new VentHandDialogueLine { text = "Они ускоряют таймер с каждым предметом. Выжимают рабочих, пока те не сломаются.", blipInterval = 0.045f },
+        new VentHandDialogueLine { text = "Держи ключ. Инструменты в кейсе. И не заставляй меня жалеть об этом.", blipInterval = 0.045f, giveKeyAfterThisLine = true }
     };
+    [SerializeField] private string dialogueContactLabel = "НЕИЗВЕСТНЫЙ КОНТАКТ";
+    [SerializeField] private string dialogueChannelLabel = "КАНАЛ 03 // ЗАШИФРОВАНО";
+    [SerializeField] private string dialogueAdvanceHint = "CLICK / E / SPACE  //  ДАЛЕЕ";
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private CanvasGroup dialogueCanvasGroup;
     [SerializeField] private bool dialogueStartsOnlyByHandClick = true;
@@ -88,9 +90,14 @@ public class VentHandIntroController : MonoBehaviour
     [SerializeField, Range(0.35f, 0.95f)] private float fallbackDialogueWidth01 = 0.7f;
     [SerializeField] private float fallbackDialogueHeight = 150f;
     [SerializeField] private float fallbackDialogueBottomOffset = 55f;
+    [SerializeField] private bool createRuntimeDialoguePanel = true;
+    [SerializeField] private Color dialoguePanelColor = new Color(0.012f, 0.014f, 0.02f, 0.94f);
+    [SerializeField] private Color dialogueAccentColor = new Color(1f, 0.78f, 0.22f, 1f);
+    [SerializeField] private Color dialogueDangerColor = new Color(1f, 0.12f, 0.08f, 1f);
 
     [Header("Key")]
     [SerializeField] private GameObject keyPrefab;
+    [SerializeField] private InventoryItemDefinition keyInventoryItem;
     [SerializeField] private Vector3 placeholderKeyScale = new Vector3(0.08f, 0.035f, 0.08f);
     [SerializeField] private float keyPickupFallbackRadius = 0.12f;
     [SerializeField] private bool addOutlineToPlaceholderKey = true;
@@ -162,8 +169,11 @@ public class VentHandIntroController : MonoBehaviour
     private bool dialogueAdvanceRequested;
     private int suppressDialogueInputUntilFrame;
     private GameObject runtimeUiInputBlocker;
+    private GameObject runtimeDialogueCanvas;
+    private Text runtimeDialogueText;
     private ElectricPanelController subscribedPanel;
     private Coroutine regularBlackoutHandRoutine;
+    private bool isWaitingForKeyInventorySpace;
 
     private struct LightSnapshot
     {
@@ -187,6 +197,9 @@ public class VentHandIntroController : MonoBehaviour
     public bool IsIntroDialogueRunning => dialogueRunning;
     public bool AppearDuringRegularBlackout => appearDuringRegularBlackout;
     public bool EnableCraftInteractionAfterIntro => hasVentHandIntroCompleted;
+    public bool IsWaitingForKeyInventorySpace => isWaitingForKeyInventorySpace;
+    public Transform HandTransform => handObject != null ? handObject.transform : null;
+    public Transform SpawnedKeyTransform => spawnedKey != null ? spawnedKey.transform : null;
 
     public bool HandleHandInteractionClick()
     {
@@ -231,8 +244,10 @@ public class VentHandIntroController : MonoBehaviour
 
         ResolveReferences();
         ResolveHandInteractionColliders();
+        DisableKeyDropPointInteraction();
         SubscribeElectricPanelEvents();
         CacheFeedbackLights();
+        EnsureRuntimeDialoguePanel();
         if (turnHandLightsOffBeforeIntro)
         {
             SetFeedbackLightsImmediate(false);
@@ -283,13 +298,24 @@ public class VentHandIntroController : MonoBehaviour
         Debug.Log($"Vent hand intro scheduled after first hand punishment in {delay:F1} seconds.");
     }
 
-    public void NotifyKeyPickedUp(VentHandKeyPickup pickup)
+    public bool NotifyKeyPickedUp(VentHandKeyPickup pickup, InventoryItemDefinition pickupItem)
     {
         if (!hasKeyBeenDropped || hasKeyBeenPickedUp)
         {
-            return;
+            return false;
         }
 
+        InventoryItemDefinition itemToAdd = pickupItem != null ? pickupItem : keyInventoryItem;
+        if (itemToAdd != null &&
+            (InventorySystem.Instance == null || !InventorySystem.Instance.TryAddItem(itemToAdd)))
+        {
+            isWaitingForKeyInventorySpace = true;
+            SetRuntimeUiInputBlockerActive(false);
+            Debug.LogWarning("The tool case key remains in the world until the player frees an inventory slot.", this);
+            return false;
+        }
+
+        isWaitingForKeyInventorySpace = false;
         hasKeyBeenPickedUp = true;
         PlaySfx(keyPickupSfx, keyPickupAudioClip, nameof(keyPickupSfx));
 
@@ -299,7 +325,7 @@ public class VentHandIntroController : MonoBehaviour
             spawnedKey = null;
         }
 
-        toolCaseLock?.UnlockCase();
+        toolCaseLock?.UnlockCase(itemToAdd);
         isToolCaseUnlocked = toolCaseLock == null || toolCaseLock.IsUnlocked;
         SetHandInteractableEnabled(false);
         SetAllHandCollidersEnabled(false);
@@ -310,6 +336,8 @@ public class VentHandIntroController : MonoBehaviour
         {
             activeIntroRoutine = StartCoroutine(CompleteIntroRoutine());
         }
+
+        return true;
     }
 
     [ContextMenu("Debug Trigger Vent Hand Intro")]
@@ -368,6 +396,7 @@ public class VentHandIntroController : MonoBehaviour
         hasVentHandIntroCompleted = false;
         hasKeyBeenDropped = false;
         hasKeyBeenPickedUp = false;
+        isWaitingForKeyInventorySpace = false;
         isToolCaseUnlocked = false;
         storyInteractionLockActive = false;
         dialogueCanBeStarted = false;
@@ -699,7 +728,7 @@ public class VentHandIntroController : MonoBehaviour
                 pickup = spawnedKey.AddComponent<VentHandKeyPickup>();
             }
 
-            pickup.Configure(this, toolCaseLock, keyPickupSfx, keyPickupAudioClip);
+            pickup.Configure(this, toolCaseLock, keyInventoryItem, keyPickupSfx, keyPickupAudioClip);
             EnsureKeyPickupReady(spawnedKey, pickup);
         }
 
@@ -748,20 +777,119 @@ public class VentHandIntroController : MonoBehaviour
         }
     }
 
+    private void DisableKeyDropPointInteraction()
+    {
+        if (keyDropPoint == null)
+        {
+            return;
+        }
+
+        VentHandKeyPickup helperPickup = keyDropPoint.GetComponent<VentHandKeyPickup>();
+        if (helperPickup != null)
+        {
+            helperPickup.enabled = false;
+        }
+
+        Collider helperCollider = keyDropPoint.GetComponent<Collider>();
+        if (helperCollider != null)
+        {
+            helperCollider.enabled = false;
+        }
+    }
+
     private GameObject CreatePlaceholderKey(Transform dropPoint)
     {
-        GameObject keyObject = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        keyObject.name = "VentHand_Key_Placeholder";
+        GameObject keyObject = new GameObject("VentHand_ToolCaseKey");
         keyObject.transform.position = dropPoint.position;
         keyObject.transform.rotation = dropPoint.rotation;
-        keyObject.transform.localScale = placeholderKeyScale;
+
+        float scale = Mathf.Max(0.25f, placeholderKeyScale.x / 0.08f);
+        Color metalColor = new Color(0.64f, 0.43f, 0.13f, 1f);
+        Color edgeColor = new Color(0.92f, 0.72f, 0.28f, 1f);
+        Color ribbonColor = new Color(0.58f, 0.025f, 0.035f, 1f);
+
+        const int ringSegments = 12;
+        Vector3 ringCenter = new Vector3(-0.045f, 0f, 0f) * scale;
+        float ringRadius = 0.035f * scale;
+        float segmentLength = 2f * Mathf.PI * ringRadius / ringSegments * 1.08f;
+        for (int i = 0; i < ringSegments; i++)
+        {
+            float angle = i * Mathf.PI * 2f / ringSegments;
+            Vector3 position = ringCenter + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * ringRadius;
+            CreateKeyPart(
+                keyObject.transform,
+                $"Ring_{i:00}",
+                PrimitiveType.Cylinder,
+                position,
+                new Vector3(0.007f * scale, segmentLength * 0.5f, 0.007f * scale),
+                new Vector3(0f, 0f, angle * Mathf.Rad2Deg - 90f),
+                edgeColor,
+                true);
+        }
+
+        CreateKeyPart(
+            keyObject.transform,
+            "Shaft",
+            PrimitiveType.Cylinder,
+            new Vector3(0.035f, 0f, 0f) * scale,
+            new Vector3(0.009f, 0.055f, 0.009f) * scale,
+            new Vector3(0f, 0f, 90f),
+            metalColor,
+            true);
+        CreateKeyPart(
+            keyObject.transform,
+            "Bit",
+            PrimitiveType.Cube,
+            new Vector3(0.09f, -0.006f, 0f) * scale,
+            new Vector3(0.032f, 0.018f, 0.018f) * scale,
+            Vector3.zero,
+            edgeColor,
+            true);
+        CreateKeyPart(
+            keyObject.transform,
+            "Tooth_A",
+            PrimitiveType.Cube,
+            new Vector3(0.087f, -0.025f, 0f) * scale,
+            new Vector3(0.012f, 0.024f, 0.018f) * scale,
+            Vector3.zero,
+            metalColor,
+            true);
+        CreateKeyPart(
+            keyObject.transform,
+            "Tooth_B",
+            PrimitiveType.Cube,
+            new Vector3(0.105f, -0.019f, 0f) * scale,
+            new Vector3(0.01f, 0.018f, 0.018f) * scale,
+            Vector3.zero,
+            metalColor,
+            true);
+
+        CreateKeyPart(
+            keyObject.transform,
+            "Ribbon_Left",
+            PrimitiveType.Cube,
+            new Vector3(-0.068f, 0.045f, 0.006f) * scale,
+            new Vector3(0.018f, 0.055f, 0.005f) * scale,
+            new Vector3(0f, 0f, 24f),
+            ribbonColor,
+            false);
+        CreateKeyPart(
+            keyObject.transform,
+            "Ribbon_Right",
+            PrimitiveType.Cube,
+            new Vector3(-0.037f, 0.046f, 0.004f) * scale,
+            new Vector3(0.017f, 0.052f, 0.005f) * scale,
+            new Vector3(0f, 0f, -18f),
+            ribbonColor,
+            false);
 
         Rigidbody rb = keyObject.AddComponent<Rigidbody>();
         rb.mass = 0.05f;
         rb.isKinematic = true;
 
-        keyObject.GetComponent<CapsuleCollider>().height *= 10;
-        keyObject.GetComponent<CapsuleCollider>().radius *= 10;
+        SphereCollider pickupCollider = keyObject.AddComponent<SphereCollider>();
+        pickupCollider.center = new Vector3(0.02f, 0f, 0f) * scale;
+        pickupCollider.radius = 0.105f * scale;
 
         if (addOutlineToPlaceholderKey && keyObject.GetComponent<OutlineEffect>() == null)
         {
@@ -769,6 +897,44 @@ public class VentHandIntroController : MonoBehaviour
         }
 
         return keyObject;
+    }
+
+    private static GameObject CreateKeyPart(
+        Transform parent,
+        string objectName,
+        PrimitiveType primitiveType,
+        Vector3 localPosition,
+        Vector3 localScale,
+        Vector3 localEulerAngles,
+        Color color,
+        bool metallic)
+    {
+        GameObject part = GameObject.CreatePrimitive(primitiveType);
+        part.name = objectName;
+        part.transform.SetParent(parent, false);
+        part.transform.localPosition = localPosition;
+        part.transform.localEulerAngles = localEulerAngles;
+        part.transform.localScale = localScale;
+
+        Collider partCollider = part.GetComponent<Collider>();
+        if (partCollider != null)
+        {
+            partCollider.enabled = false;
+            Destroy(partCollider);
+        }
+
+        Renderer partRenderer = part.GetComponent<Renderer>();
+        if (partRenderer != null)
+        {
+            MaterialPropertyBlock block = new MaterialPropertyBlock();
+            block.SetColor("_Color", color);
+            block.SetColor("_BaseColor", color);
+            block.SetFloat("_Metallic", metallic ? 0.72f : 0.05f);
+            block.SetFloat("_Smoothness", metallic ? 0.68f : 0.28f);
+            partRenderer.SetPropertyBlock(block);
+        }
+
+        return part;
     }
 
     private IEnumerator MoveHandRoutine(Transform fromPose, Transform toPose, float duration)
@@ -1157,6 +1323,31 @@ public class VentHandIntroController : MonoBehaviour
         {
             dialogueText.text = fallbackDialogueText;
         }
+
+        if (runtimeDialogueText != null)
+        {
+            runtimeDialogueText.text = fallbackDialogueText;
+        }
+    }
+
+    [ContextMenu("Restore Default Dialogue Script")]
+    private void RestoreDefaultDialogueScript()
+    {
+        introLines = new[]
+        {
+            new VentHandDialogueLine { text = "Тише. Я не охрана.", blipInterval = 0.05f },
+            new VentHandDialogueLine { text = "Камеры ослепли ненадолго. Так что слушай.", blipInterval = 0.05f },
+            new VentHandDialogueLine { text = "Хочешь выбраться — собирай детали. Я сделаю из них кое-что полезное.", blipInterval = 0.045f },
+            new VentHandDialogueLine { text = "Но кради и разбирай только в темноте. При свете система бьёт без предупреждения.", blipInterval = 0.045f },
+            new VentHandDialogueLine { text = "Щиток перегреется — дёрни рычаг. Пока питание лежит, камера ничего не увидит.", blipInterval = 0.045f },
+            new VentHandDialogueLine { text = "Они ускоряют таймер с каждым предметом. Выжимают рабочих, пока те не сломаются.", blipInterval = 0.045f },
+            new VentHandDialogueLine
+            {
+                text = "Держи ключ. Инструменты в кейсе. И не заставляй меня жалеть об этом.",
+                blipInterval = 0.045f,
+                giveKeyAfterThisLine = true
+            }
+        };
     }
 
     private void MoveHandToPose(Transform pose)
@@ -1424,6 +1615,174 @@ public class VentHandIntroController : MonoBehaviour
         image.raycastTarget = true;
     }
 
+    private void EnsureRuntimeDialoguePanel()
+    {
+        if (!createRuntimeDialoguePanel || dialogueText != null || runtimeDialogueText != null || dialogueCanvasGroup != null)
+        {
+            return;
+        }
+
+        runtimeDialogueCanvas = new GameObject(
+            "VentHandDialogueCanvas",
+            typeof(RectTransform),
+            typeof(Canvas),
+            typeof(CanvasScaler));
+        runtimeDialogueCanvas.transform.SetParent(transform, false);
+
+        Canvas canvas = runtimeDialogueCanvas.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = runtimeUiInputBlockerSortingOrder + 2;
+
+        CanvasScaler scaler = runtimeDialogueCanvas.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+
+        GameObject panelObject = new GameObject(
+            "EncryptedContactPanel",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image),
+            typeof(CanvasGroup));
+        panelObject.transform.SetParent(runtimeDialogueCanvas.transform, false);
+
+        RectTransform panelRect = panelObject.GetComponent<RectTransform>();
+        panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0f);
+        panelRect.pivot = new Vector2(0.5f, 0f);
+        panelRect.anchoredPosition = new Vector2(0f, 24f);
+        panelRect.sizeDelta = new Vector2(940f, 184f);
+
+        Image panelImage = panelObject.GetComponent<Image>();
+        panelImage.color = dialoguePanelColor;
+        panelImage.raycastTarget = false;
+
+        Outline panelOutline = panelObject.AddComponent<Outline>();
+        panelOutline.effectColor = new Color(dialogueDangerColor.r, dialogueDangerColor.g, dialogueDangerColor.b, 0.48f);
+        panelOutline.effectDistance = new Vector2(1.5f, -1.5f);
+
+        dialogueCanvasGroup = panelObject.GetComponent<CanvasGroup>();
+        CreateDialogueCorners(panelRect);
+        CreateDialogueImage(
+            "AccentLine",
+            panelRect,
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f),
+            new Vector2(0.5f, 1f),
+            new Vector2(0f, -10f),
+            new Vector2(-30f, 2f),
+            dialogueAccentColor);
+
+        Text contactLabel = CreateDialogueText(
+            "ContactLabel",
+            panelRect,
+            new Vector2(24f, -18f),
+            new Vector2(570f, 28f),
+            dialogueContactLabel,
+            20,
+            FontStyle.Bold,
+            TextAnchor.MiddleLeft);
+        contactLabel.color = dialogueAccentColor;
+
+        Text channelLabel = CreateDialogueText(
+            "ChannelLabel",
+            panelRect,
+            new Vector2(650f, -21f),
+            new Vector2(264f, 22f),
+            dialogueChannelLabel,
+            10,
+            FontStyle.Normal,
+            TextAnchor.MiddleRight);
+        channelLabel.color = new Color(0.78f, 0.82f, 0.86f, 0.72f);
+
+        runtimeDialogueText = CreateDialogueText(
+            "DialogueText",
+            panelRect,
+            new Vector2(26f, -58f),
+            new Vector2(888f, 102f),
+            string.Empty,
+            24,
+            FontStyle.Normal,
+            TextAnchor.UpperLeft);
+        runtimeDialogueText.color = new Color(0.94f, 0.96f, 0.98f, 1f);
+        runtimeDialogueText.horizontalOverflow = HorizontalWrapMode.Wrap;
+        runtimeDialogueText.verticalOverflow = VerticalWrapMode.Truncate;
+
+        Text advanceLabel = CreateDialogueText(
+            "AdvanceHint",
+            panelRect,
+            new Vector2(650f, -156f),
+            new Vector2(264f, 18f),
+            dialogueAdvanceHint,
+            9,
+            FontStyle.Normal,
+            TextAnchor.MiddleRight);
+        advanceLabel.color = new Color(0.78f, 0.82f, 0.86f, 0.58f);
+    }
+
+    private void CreateDialogueCorners(RectTransform parent)
+    {
+        Color cornerColor = new Color(dialogueDangerColor.r, dialogueDangerColor.g, dialogueDangerColor.b, 0.92f);
+        CreateDialogueImage("CornerTopLeftH", parent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(72f, 3f), cornerColor);
+        CreateDialogueImage("CornerTopLeftV", parent, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(0f, 1f), Vector2.zero, new Vector2(3f, 34f), cornerColor);
+        CreateDialogueImage("CornerBottomRightH", parent, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(72f, 3f), cornerColor);
+        CreateDialogueImage("CornerBottomRightV", parent, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(1f, 0f), Vector2.zero, new Vector2(3f, 34f), cornerColor);
+    }
+
+    private static Image CreateDialogueImage(
+        string objectName,
+        Transform parent,
+        Vector2 anchorMin,
+        Vector2 anchorMax,
+        Vector2 pivot,
+        Vector2 position,
+        Vector2 size,
+        Color color)
+    {
+        GameObject imageObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        imageObject.transform.SetParent(parent, false);
+        RectTransform rect = imageObject.GetComponent<RectTransform>();
+        rect.anchorMin = anchorMin;
+        rect.anchorMax = anchorMax;
+        rect.pivot = pivot;
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+
+        Image image = imageObject.GetComponent<Image>();
+        image.color = color;
+        image.raycastTarget = false;
+        return image;
+    }
+
+    private static Text CreateDialogueText(
+        string objectName,
+        Transform parent,
+        Vector2 position,
+        Vector2 size,
+        string text,
+        int fontSize,
+        FontStyle fontStyle,
+        TextAnchor alignment)
+    {
+        GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+        textObject.transform.SetParent(parent, false);
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
+
+        Text label = textObject.GetComponent<Text>();
+        label.text = text;
+        label.fontSize = fontSize;
+        label.fontStyle = fontStyle;
+        label.alignment = alignment;
+        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        label.raycastTarget = false;
+        return label;
+    }
+
     private void ResolveReferences()
     {
         if (gameManager == null)
@@ -1517,7 +1876,7 @@ public class VentHandIntroController : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!useFallbackOnGuiDialogue || string.IsNullOrEmpty(fallbackDialogueText) || dialogueText != null)
+        if (!useFallbackOnGuiDialogue || string.IsNullOrEmpty(fallbackDialogueText) || dialogueText != null || runtimeDialogueText != null)
         {
             return;
         }

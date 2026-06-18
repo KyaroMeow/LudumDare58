@@ -40,8 +40,6 @@ public class Instrument : MonoBehaviour, IInteractable
             return;
         }
 
-        GameManager.Instance?.securitySystem?.ReportViolation($"Take tool {toolType}");
-
         if (transparentMaterial != null)
         {
             SetTransparent(true);

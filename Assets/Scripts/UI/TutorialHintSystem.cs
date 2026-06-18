@@ -45,6 +45,13 @@ public class TutorialHintSystem : MonoBehaviour
     private const string HintPressSortButton = "HINT_PRESS_SORT_BUTTON";
     private const string HintFirstMistake = "HINT_FIRST_MISTAKE";
     private const string HintPunishmentEnd = "HINT_PUNISHMENT_END";
+    private const string HintFindVentHand = "HINT_FIND_VENT_HAND";
+    private const string HintPickUpVentKey = "HINT_PICK_UP_VENT_KEY";
+    private const string HintFreeKeyInventorySlot = "HINT_FREE_KEY_INVENTORY_SLOT";
+    private const string HintOpenToolCaseSafely = "HINT_OPEN_TOOL_CASE_SAFELY";
+    private const string HintFindElectricLever = "HINT_FIND_ELECTRIC_LEVER";
+    private const string HintToolCaseInstruments = "HINT_TOOL_CASE_INSTRUMENTS";
+    private const string HintStealSafely = "HINT_STEAL_SAFELY";
     private const string PlayerPrefsPrefix = "Sorter.TutorialHint.";
     private const int SequenceWaitTabletClosed = 50;
     private const int SequenceWaitTabletReopened = 51;
@@ -69,7 +76,14 @@ public class TutorialHintSystem : MonoBehaviour
         HintMarkersOverview,
         HintPressSortButton,
         HintFirstMistake,
-        HintPunishmentEnd
+        HintPunishmentEnd,
+        HintFindVentHand,
+        HintPickUpVentKey,
+        HintFreeKeyInventorySlot,
+        HintOpenToolCaseSafely,
+        HintFindElectricLever,
+        HintToolCaseInstruments,
+        HintStealSafely
     };
 
     [Header("References")]
@@ -116,6 +130,10 @@ public class TutorialHintSystem : MonoBehaviour
     private ItemMarkerUI itemMarkerUI;
     private TableFlashlight tableFlashlight;
     private TableScaner tableScaner;
+    private VentHandIntroController ventHandIntroController;
+    private ToolCaseLock toolCaseLock;
+    private ElectricPanelController electricPanelController;
+    private TrashBinInteractable trashBinInteractable;
 
     private string currentHintId;
     private string currentHighlightToken;
@@ -183,6 +201,7 @@ public class TutorialHintSystem : MonoBehaviour
         TrackTabletProgress();
         TrackReactiveHints();
         UpdateTutorialItemTimerPause();
+        TryAdvancePostHandTutorial();
 
         if (ShouldSuppressHints())
         {
@@ -204,6 +223,142 @@ public class TutorialHintSystem : MonoBehaviour
         }
 
         TryAdvancePrimarySequence();
+    }
+
+    private void TryAdvancePostHandTutorial()
+    {
+        if (tutorialSkipped || ventHandIntroController == null)
+        {
+            return;
+        }
+
+        if (ventHandIntroController.CanStartIntroDialogue && !HasShown(HintFindVentHand))
+        {
+            ShowPostHandHintImmediately(
+                HintFindVentHand,
+                "Что-то произошло. Осмотритесь и найдите источник шума.",
+                TutorialHintIconType.Click,
+                -1f);
+            HighlightVentHand(false);
+            return;
+        }
+
+        if (ventHandIntroController.IsWaitingForKeyInventorySpace &&
+            !ventHandIntroController.HasKeyBeenPickedUp &&
+            !HasShown(HintFreeKeyInventorySlot))
+        {
+            ShowPostHandHintImmediately(
+                HintFreeKeyInventorySlot,
+                "Инвентарь заполнен. Освободите обычный слот у мусорного контейнера, затем подберите ключ.",
+                TutorialHintIconType.Tab,
+                -1f);
+            HighlightKeyInventoryRecovery(false);
+            return;
+        }
+
+        if (ventHandIntroController.HasKeyBeenDropped &&
+            !ventHandIntroController.HasKeyBeenPickedUp &&
+            !ventHandIntroController.IsIntroDialogueRunning &&
+            !HasShown(HintPickUpVentKey))
+        {
+            ShowPostHandHintImmediately(
+                HintPickUpVentKey,
+                "Подберите ключ. Он займёт обычный слот инвентаря.",
+                TutorialHintIconType.Click,
+                -1f);
+            HighlightVentKey(false);
+            return;
+        }
+
+        if (!ventHandIntroController.HasVentHandIntroCompleted)
+        {
+            return;
+        }
+
+        bool openedCase = toolCaseLock != null && toolCaseLock.IsOpen;
+        if (openedCase && !HasShown(HintToolCaseInstruments))
+        {
+            ShowPostHandHintImmediately(
+                HintToolCaseInstruments,
+                "В кейсе три инструмента. Каждый подходит к своим предметам; неверный выбор не гарантирует полезную деталь.",
+                TutorialHintIconType.Generic,
+                passiveHintDuration);
+            HighlightCaseInstruments(false);
+            return;
+        }
+
+        if (electricPanelController != null &&
+            electricPanelController.IsReady &&
+            !HasShown(HintFindElectricLever))
+        {
+            ShowPostHandHintImmediately(
+                HintFindElectricLever,
+                "Щиток перегружен. Наведите мышь на рычаг — здесь отключается электричество и камера.",
+                TutorialHintIconType.MouseLook,
+                -1f);
+            HighlightElectricPanelAndLever(false);
+            return;
+        }
+
+        RectTransform stealTarget = ConveyorItemInteractable.ActiveStealButtonTutorialTarget;
+        if (stealTarget != null && !HasShown(HintStealSafely))
+        {
+            ShowPostHandHintImmediately(
+                HintStealSafely,
+                "Теперь предметы можно красть. Делайте это при отключённой камере, иначе сработает система наказания.",
+                TutorialHintIconType.Click,
+                passiveHintDuration);
+            HighlightStealButton(false);
+            return;
+        }
+
+        if (!HasShown(HintOpenToolCaseSafely))
+        {
+            ShowPostHandHintImmediately(
+                HintOpenToolCaseSafely,
+                "Ключ открывает кейс с инструментами. Дождитесь перегрузки щитка, отключите электричество и открывайте кейс, пока камера не работает.",
+                TutorialHintIconType.Eye,
+                passiveHintDuration);
+            HighlightToolCase(false);
+        }
+    }
+
+    private void ShowPostHandHintImmediately(
+        string id,
+        string text,
+        TutorialHintIconType iconType,
+        float duration)
+    {
+        if (currentHintId == id)
+        {
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(currentHintId))
+        {
+            if (currentHintId == HintFindElectricLever)
+            {
+                CancelCurrentHint();
+            }
+            else
+            {
+                CompleteHint(currentHintId);
+            }
+        }
+
+        ShowHint(id, text, iconType, duration);
+    }
+
+    private void CancelCurrentHint()
+    {
+        currentHintId = null;
+        currentHighlightToken = null;
+        currentHintEndTime = -1f;
+        ClearCurrentHighlight();
+        if (view != null)
+        {
+            view.Hide();
+        }
     }
 
     public void NotifyItemInspectionStarted(GameObject inspectedItem)
@@ -665,6 +820,7 @@ public class TutorialHintSystem : MonoBehaviour
         {
             pendingFirstMistakeHint = false;
             ShowHint(HintFirstMistake, "Следите за счетчиком ошибок. Если он заполнится, ничего хорошего не будет", TutorialHintIconType.MistakeCounter);
+            HighlightMistakeCounter();
         }
     }
 
@@ -724,6 +880,16 @@ public class TutorialHintSystem : MonoBehaviour
                 return markerClickedOnce;
             case HintPressSortButton:
                 return sortPressedOnce || gameManager == null || gameManager.currentItem == null;
+            case HintFindVentHand:
+                return ventHandIntroController == null ||
+                       ventHandIntroController.IsIntroDialogueRunning ||
+                       ventHandIntroController.HasKeyBeenDropped;
+            case HintPickUpVentKey:
+                return ventHandIntroController == null || ventHandIntroController.HasKeyBeenPickedUp;
+            case HintFreeKeyInventorySlot:
+                return ventHandIntroController == null || ventHandIntroController.HasKeyBeenPickedUp;
+            case HintFindElectricLever:
+                return IsMouseHoveringElectricLever();
             default:
                 return IsPassiveHint(currentHintId) && currentHintEndTime > 0f && Time.unscaledTime >= currentHintEndTime;
         }
@@ -744,7 +910,10 @@ public class TutorialHintSystem : MonoBehaviour
         return id == HintInspectionOverview ||
                id == HintInspectionZoom ||
                id == HintFirstMistake ||
-               id == HintPunishmentEnd;
+               id == HintPunishmentEnd ||
+               id == HintOpenToolCaseSafely ||
+               id == HintToolCaseInstruments ||
+               id == HintStealSafely;
     }
 
     private bool IsInspectionHint(string id)
@@ -833,7 +1002,10 @@ public class TutorialHintSystem : MonoBehaviour
 
         if (gameManager != null && (gameManager.IsStoryInteractionLocked || gameManager.IsGameOverStarted))
         {
-            return true;
+            if (gameManager.IsGameOverStarted || !IsVentHandStoryActionHint(currentHintId))
+            {
+                return true;
+            }
         }
 
         if (cutscenePlaybackManager != null && cutscenePlaybackManager.IsPlaying)
@@ -883,6 +1055,195 @@ public class TutorialHintSystem : MonoBehaviour
         else if (currentHintId == HintPressSortButton)
         {
             HighlightSortTargets(false);
+        }
+        else if (currentHintId == HintFindVentHand)
+        {
+            HighlightVentHand(false);
+        }
+        else if (currentHintId == HintPickUpVentKey)
+        {
+            HighlightVentKey(false);
+        }
+        else if (currentHintId == HintFreeKeyInventorySlot)
+        {
+            HighlightKeyInventoryRecovery(false);
+        }
+        else if (currentHintId == HintOpenToolCaseSafely)
+        {
+            HighlightToolCase(false);
+        }
+        else if (currentHintId == HintFindElectricLever)
+        {
+            HighlightElectricPanelAndLever(false);
+        }
+        else if (currentHintId == HintToolCaseInstruments)
+        {
+            HighlightCaseInstruments(false);
+        }
+        else if (currentHintId == HintStealSafely)
+        {
+            HighlightStealButton(false);
+        }
+    }
+
+    private static bool IsVentHandStoryActionHint(string id)
+    {
+        return id == HintFindVentHand ||
+               id == HintPickUpVentKey ||
+               id == HintFreeKeyInventorySlot;
+    }
+
+    private void HighlightVentHand(bool force)
+    {
+        HighlightPostHandWorldTargets(
+            HintFindVentHand,
+            "vent-hand",
+            force,
+            ventHandIntroController != null ? ventHandIntroController.HandTransform : null);
+    }
+
+    private void HighlightVentKey(bool force)
+    {
+        HighlightPostHandWorldTargets(
+            HintPickUpVentKey,
+            "vent-key",
+            force,
+            ventHandIntroController != null ? ventHandIntroController.SpawnedKeyTransform : null);
+    }
+
+    private void HighlightKeyInventoryRecovery(bool force)
+    {
+        HighlightPostHandWorldTargets(
+            HintFreeKeyInventorySlot,
+            "key-inventory-recovery",
+            force,
+            ventHandIntroController != null ? ventHandIntroController.SpawnedKeyTransform : null,
+            trashBinInteractable != null ? trashBinInteractable.transform : null);
+    }
+
+    private void HighlightToolCase(bool force)
+    {
+        HighlightPostHandWorldTargets(
+            HintOpenToolCaseSafely,
+            "tool-case",
+            force,
+            toolCaseLock != null ? toolCaseLock.transform : null);
+    }
+
+    private void HighlightElectricPanelAndLever(bool force)
+    {
+        HighlightPostHandWorldTargets(
+            HintFindElectricLever,
+            "electric-panel-and-lever",
+            force,
+            electricPanelController != null ? electricPanelController.transform : null,
+            electricPanelController != null ? electricPanelController.LeverTransform : null);
+    }
+
+    private bool IsMouseHoveringElectricLever()
+    {
+        Transform lever = electricPanelController != null ? electricPanelController.LeverTransform : null;
+        PlayerInteraction interaction = PlayerInteraction.Instance;
+        Camera camera = interaction != null && interaction.playerCamera != null
+            ? interaction.playerCamera
+            : Camera.main;
+        if (lever == null || camera == null)
+        {
+            return false;
+        }
+
+        float distance = interaction != null ? interaction.interactionDistance : 20f;
+        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] hits = Physics.RaycastAll(ray, distance);
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Transform hitTransform = hits[i].collider != null ? hits[i].collider.transform : null;
+            if (hitTransform != null &&
+                (hitTransform == lever || hitTransform.IsChildOf(lever) || lever.IsChildOf(hitTransform)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void HighlightCaseInstruments(bool force)
+    {
+        if (!force && currentHighlightToken == "case-instruments")
+        {
+            return;
+        }
+
+        List<Transform> targets = new List<Transform>(3);
+        Instrument[] instruments = toolCaseLock != null ? toolCaseLock.ControlledInstruments : null;
+        if (instruments != null)
+        {
+            for (int i = 0; i < instruments.Length; i++)
+            {
+                Instrument instrument = instruments[i];
+                if (instrument != null && instrument.toolType != ToolType.Steal)
+                {
+                    targets.Add(instrument.transform);
+                }
+            }
+        }
+
+        if (targets.Count == 0)
+        {
+            WarnOnce(HintToolCaseInstruments, "Tool case instruments were not found. Showing hint without highlight.");
+            return;
+        }
+
+        if (highlighter != null)
+        {
+            highlighter.HighlightWorldTargets(targets.ToArray(), accentColor, outlineWidth);
+            currentHighlightToken = "case-instruments";
+        }
+    }
+
+    private void HighlightStealButton(bool force)
+    {
+        RectTransform target = ConveyorItemInteractable.ActiveStealButtonTutorialTarget;
+        if (!force && currentHighlightToken == "steal-button" && target != null)
+        {
+            return;
+        }
+
+        if (target == null)
+        {
+            return;
+        }
+
+        if (highlighter != null)
+        {
+            highlighter.HighlightUiTarget(target, accentColor);
+            currentHighlightToken = "steal-button";
+        }
+    }
+
+    private void HighlightPostHandWorldTargets(
+        string warningKey,
+        string token,
+        bool force,
+        params Transform[] targets)
+    {
+        if (!force && currentHighlightToken == token)
+        {
+            return;
+        }
+
+        Transform[] validTargets = FilterValidTransforms(targets);
+        if (validTargets.Length == 0)
+        {
+            WarnOnce(warningKey, $"Tutorial world targets for '{warningKey}' were not found. Showing hint without highlight.");
+            return;
+        }
+
+        if (highlighter != null)
+        {
+            highlighter.HighlightWorldTargets(validTargets, accentColor, outlineWidth);
+            currentHighlightToken = token;
         }
     }
 
@@ -1006,6 +1367,20 @@ public class TutorialHintSystem : MonoBehaviour
         }
 
         HighlightUiTargets(targets, HintMarkersOverview, "marker-panel");
+    }
+
+    private void HighlightMistakeCounter()
+    {
+        RectTransform target = HUDManager.Instance != null
+            ? HUDManager.Instance.MistakeCounterTutorialTarget
+            : null;
+        if (target == null)
+        {
+            WarnOnce(HintFirstMistake, "Mistake counter target was not found. Showing hint without highlight.");
+            return;
+        }
+
+        HighlightUiTargets(new Component[] { target }, HintFirstMistake, "mistake-counter");
     }
 
     private void HighlightSortTargets(bool force)
@@ -1181,6 +1556,14 @@ public class TutorialHintSystem : MonoBehaviour
         itemMarkerUI = FindFirstObjectByType<ItemMarkerUI>();
         tableFlashlight = FindFirstObjectByType<TableFlashlight>();
         tableScaner = FindFirstObjectByType<TableScaner>();
+        ventHandIntroController = VentHandIntroController.Instance != null
+            ? VentHandIntroController.Instance
+            : FindFirstObjectByType<VentHandIntroController>();
+        toolCaseLock = FindFirstObjectByType<ToolCaseLock>();
+        electricPanelController = ElectricPanelController.Instance != null
+            ? ElectricPanelController.Instance
+            : FindFirstObjectByType<ElectricPanelController>();
+        trashBinInteractable = FindFirstObjectByType<TrashBinInteractable>();
 
         Transform[] transforms = FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         if (targetCanvas == null)

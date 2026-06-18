@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class SecuritySystem : MonoBehaviour
 {
+    public event System.Action<bool> CameraStateChanged;
+
     [Header("State")]
     [SerializeField] private bool cameraStartsEnabled = true;
     [SerializeField] private float currentLoadNormalized;
@@ -26,6 +28,7 @@ public class SecuritySystem : MonoBehaviour
     [SerializeField] private SfxEmitter sfxEmitter;
     [SerializeField] private SfxCue cameraCaptureSfx;
     [SerializeField] private float duplicateViolationSuppressSeconds = 0.75f;
+    [SerializeField] private int violationCounterPoints = 10;
 
     private Coroutine autoShutdownRoutine;
     private Coroutine shutdownRoutine;
@@ -81,7 +84,7 @@ public class SecuritySystem : MonoBehaviour
             return;
         }
 
-        int penalty = GetViolationPenalty();
+        int penalty = Mathf.Max(1, violationCounterPoints);
         Debug.Log($"Protocol violation detected: {actionName}. Penalty: {penalty}");
         lastViolationActionName = actionName;
         lastViolationTime = Time.time;
@@ -95,7 +98,7 @@ public class SecuritySystem : MonoBehaviour
             return;
         }
 
-        gameManager.ApplyPenalty(penalty);
+        gameManager.ApplySecurityPenalty(penalty);
     }
 
     public bool TryManualShutdown()
@@ -188,6 +191,7 @@ public class SecuritySystem : MonoBehaviour
 
     private void SetCameraState(bool isEnabled)
     {
+        bool changed = IsCameraActive != isEnabled;
         IsCameraActive = isEnabled;
 
         if (GameManager.Instance != null)
@@ -204,21 +208,11 @@ public class SecuritySystem : MonoBehaviour
         {
             cameraDisabledIndicator.SetActive(!isEnabled);
         }
-    }
 
-    private int GetViolationPenalty()
-    {
-        SettingManager settings = SettingManager.EnsureInstance();
-        Difficult difficulty = settings != null ? settings.currentDifficulty : null;
-        if (difficulty == null)
+        if (changed)
         {
-            Debug.LogWarning("Using default protocol violation penalty because current difficulty is not assigned.");
-            return 5;
+            CameraStateChanged?.Invoke(isEnabled);
         }
-
-        return difficulty.difficultyName.ToUpperInvariant() == "HARD"
-            ? difficulty.protocolViolationPenaltyHard
-            : difficulty.protocolViolationPenaltyDefault;
     }
 
     private bool IsDuplicateViolation(string actionName)

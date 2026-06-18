@@ -29,25 +29,36 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
     [SerializeField] private bool disableControlledToolsWhileClosed = true;
     [SerializeField] private Instrument[] controlledInstruments;
     [SerializeField] private Collider[] controlledToolColliders;
+    [SerializeField] private InventoryItemDefinition keyToConsume;
+
+    [Header("Security")]
+    [SerializeField] private SecuritySystem securitySystem;
 
     [Header("SFX")]
     [SerializeField] private SfxEmitter sfxEmitter;
     [SerializeField] private SfxCue lockedSfx;
     [SerializeField] private SfxCue unlockSfx;
     [SerializeField] private SfxCue openSfx;
+    [SerializeField] private SfxCue closeSfx;
     [SerializeField] private AudioClip lockedAudioClip;
     [SerializeField] private AudioClip unlockAudioClip;
     [SerializeField] private AudioClip openAudioClip;
+    [SerializeField] private AudioClip closeAudioClip;
 
     private AudioSource fallbackAudioSource;
     private readonly HashSet<string> missingSfxWarnings = new HashSet<string>();
     private Coroutine lidAnimationRoutine;
     private Vector3 fallbackClosedLocalPosition;
     private Quaternion fallbackClosedLocalRotation;
+    private SecuritySystem subscribedSecurity;
+    private bool keyConsumed;
+    private bool exposureReportedForCurrentOpen;
+    private int exposureSequence;
 
     public bool IsUnlocked => isUnlocked;
     public bool IsOpen => isOpen;
     public bool KeepCaseBaseAlwaysVisible => keepCaseBaseAlwaysVisible;
+    public Instrument[] ControlledInstruments => controlledInstruments;
 
     private void Awake()
     {
@@ -62,6 +73,8 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
         }
 
         CollectControlledToolsIfNeeded();
+        ResolveSecuritySystem();
+        SubscribeSecurityEvents();
         CaptureFallbackClosedPose();
         if (startsLocked && !isUnlocked)
         {
@@ -85,13 +98,13 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
             return;
         }
 
-        if (!isOpen)
+        if (isOpen)
         {
-            OpenCase();
+            CloseCase();
             return;
         }
 
-        Debug.Log("Tool case is already open.");
+        OpenCase();
     }
 
     public void StopInteract()
@@ -105,6 +118,8 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
         if (locked)
         {
             isOpen = false;
+            keyConsumed = false;
+            exposureReportedForCurrentOpen = false;
         }
 
         ApplyOpenState(isOpen, true);
@@ -114,6 +129,16 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
 
     public void UnlockCase()
     {
+        UnlockCase(null);
+    }
+
+    public void UnlockCase(InventoryItemDefinition inventoryKey)
+    {
+        if (inventoryKey != null)
+        {
+            keyToConsume = inventoryKey;
+        }
+
         if (isUnlocked)
         {
             return;
@@ -141,7 +166,16 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
             return;
         }
 
+        if (!ConsumeKeyForFirstOpen())
+        {
+            Debug.LogWarning("Tool case cannot open because its key is not in the inventory.", this);
+            PlaySfx(lockedSfx, lockedAudioClip, nameof(lockedSfx));
+            return;
+        }
+
         isOpen = true;
+        exposureReportedForCurrentOpen = false;
+        exposureSequence++;
         ApplyOpenState(true, false);
         SetControlledToolsEnabled(true);
         ApplyInteractionColliderState();
@@ -151,12 +185,20 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
         }
 
         PlaySfx(openSfx, openAudioClip, nameof(openSfx));
+        ReportCaseExposureIfNeeded();
         Debug.Log("Tool case opened.");
     }
 
     public void CloseCase()
     {
+        if (!isOpen)
+        {
+            return;
+        }
+
         isOpen = false;
+        exposureReportedForCurrentOpen = false;
+        ClearHeldCaseTool();
         ApplyOpenState(false, false);
         SetControlledToolsEnabled(false);
         ApplyInteractionColliderState();
@@ -164,6 +206,9 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
         {
             caseAnimator.SetTrigger(closeTrigger);
         }
+
+        PlaySfx(closeSfx, closeAudioClip, nameof(closeSfx));
+        Debug.Log("Tool case closed.");
     }
 
     public void SetControlledInstruments(Instrument[] instruments)
@@ -180,15 +225,19 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
 
     private void ApplyInteractionColliderState()
     {
+        if (interactCollider != null)
+        {
+            interactCollider.enabled = true;
+        }
+
         if (!disableCaseColliderWhenOpen)
         {
             return;
         }
 
-        Collider targetCollider = caseClosedCollider != null ? caseClosedCollider : interactCollider;
-        if (targetCollider != null)
+        if (caseClosedCollider != null && caseClosedCollider != interactCollider)
         {
-            targetCollider.enabled = !isOpen;
+            caseClosedCollider.enabled = !isOpen;
         }
     }
 
@@ -297,8 +346,9 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
             {
                 if (controlledInstruments[i] != null)
                 {
-                    controlledInstruments[i].enabled = enabled;
-                    if (!enabled)
+                    bool instrumentEnabled = enabled && controlledInstruments[i].toolType != ToolType.Steal;
+                    controlledInstruments[i].enabled = instrumentEnabled;
+                    if (!instrumentEnabled)
                     {
                         controlledInstruments[i].StopInteract();
                     }
@@ -312,7 +362,8 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
             {
                 if (controlledToolColliders[i] != null)
                 {
-                    controlledToolColliders[i].enabled = enabled;
+                    Instrument owner = controlledToolColliders[i].GetComponentInParent<Instrument>();
+                    controlledToolColliders[i].enabled = enabled && (owner == null || owner.toolType != ToolType.Steal);
                 }
             }
         }
@@ -356,6 +407,105 @@ public class ToolCaseLock : MonoBehaviour, IInteractable, IOneShotInteractable
         }
 
         controlledToolColliders = colliders.ToArray();
+    }
+
+    private bool ConsumeKeyForFirstOpen()
+    {
+        if (keyConsumed || keyToConsume == null)
+        {
+            return true;
+        }
+
+        if (InventorySystem.Instance == null || !InventorySystem.Instance.TryRemoveItem(keyToConsume))
+        {
+            return false;
+        }
+
+        keyConsumed = true;
+        return true;
+    }
+
+    private void ResolveSecuritySystem()
+    {
+        if (securitySystem == null)
+        {
+            securitySystem = GameManager.Instance != null
+                ? GameManager.Instance.securitySystem
+                : FindFirstObjectByType<SecuritySystem>();
+        }
+    }
+
+    private void SubscribeSecurityEvents()
+    {
+        ResolveSecuritySystem();
+        if (subscribedSecurity == securitySystem)
+        {
+            return;
+        }
+
+        if (subscribedSecurity != null)
+        {
+            subscribedSecurity.CameraStateChanged -= HandleCameraStateChanged;
+        }
+
+        subscribedSecurity = securitySystem;
+        if (subscribedSecurity != null)
+        {
+            subscribedSecurity.CameraStateChanged += HandleCameraStateChanged;
+        }
+    }
+
+    private void HandleCameraStateChanged(bool cameraActive)
+    {
+        if (cameraActive)
+        {
+            ReportCaseExposureIfNeeded();
+        }
+    }
+
+    private void ReportCaseExposureIfNeeded()
+    {
+        ResolveSecuritySystem();
+        if (!isOpen || exposureReportedForCurrentOpen || securitySystem == null || !securitySystem.IsCameraActive)
+        {
+            return;
+        }
+
+        exposureReportedForCurrentOpen = true;
+        securitySystem.ReportViolation($"Open tool case #{exposureSequence}");
+    }
+
+    private void ClearHeldCaseTool()
+    {
+        PlayerHeldItem heldItem = PlayerHeldItem.Instance;
+        Instrument heldTool = heldItem != null ? heldItem.CurrentTool : null;
+        if (heldTool == null || controlledInstruments == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < controlledInstruments.Length; i++)
+        {
+            if (controlledInstruments[i] == heldTool)
+            {
+                heldItem.ClearTool();
+                return;
+            }
+        }
+    }
+
+    private void OnEnable()
+    {
+        SubscribeSecurityEvents();
+    }
+
+    private void OnDisable()
+    {
+        if (subscribedSecurity != null)
+        {
+            subscribedSecurity.CameraStateChanged -= HandleCameraStateChanged;
+            subscribedSecurity = null;
+        }
     }
 
     private void PlaySfx(SfxCue cue, AudioClip fallbackClip, string fieldName)

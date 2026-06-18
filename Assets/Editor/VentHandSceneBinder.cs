@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 public static class VentHandSceneBinder
 {
     private const string MenuPath = "Tools/Sorter/Bind Vent Hand Intro Scene References";
+    private const string KeyIconPath = "Assets/Icons/vent_hand_key.png";
+    private const string KeyItemPath = "Assets/inventoryObejcts/tool case key.asset";
 
     [MenuItem(MenuPath)]
     public static void BindSceneReferences()
@@ -36,6 +38,7 @@ public static class VentHandSceneBinder
         GameObject conveyorObject = FindSceneObject("Conveyor");
         GameObject itemSpawnerObject = FindSceneObject("ItemSpawner");
         GameObject panelObject = FindByPath("\u0423\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u0438\u0435/ElectricPanelController") ?? FindSceneObject("ElectricPanelController");
+        InventoryItemDefinition keyItem = EnsureKeyInventoryItem(warnings);
 
         ToolCaseLock caseLock = null;
         if (caseObject != null)
@@ -73,6 +76,7 @@ public static class VentHandSceneBinder
             conveyorObject,
             itemSpawnerObject,
             panelObject,
+            keyItem,
             warnings);
 
         ConfigureHandInteractable(handInteractable, introController);
@@ -135,6 +139,7 @@ public static class VentHandSceneBinder
         GameObject conveyorObject,
         GameObject itemSpawnerObject,
         GameObject panelObject,
+        InventoryItemDefinition keyItem,
         List<string> warnings)
     {
         if (controller == null)
@@ -154,13 +159,16 @@ public static class VentHandSceneBinder
         SetObjectIfNull(so, "introPose", introPose);
         SetObjectIfNull(so, "idlePose", idlePose);
         SetObjectIfNull(so, "keyDropPoint", keyDropPoint);
+        SetObject(so, "keyInventoryItem", keyItem);
         SetObjectIfNull(so, "ventAnimator", ceilingVent != null ? ceilingVent.GetComponent<Animator>() : null);
         SetObjectIfNull(so, "handAnimator", hand != null ? hand.GetComponentInChildren<Animator>(true) : null);
         SetObjectArrayIfEmpty(so, "handInteractionColliders", hand != null ? hand.GetComponentsInChildren<Collider>(true) : null);
         SetFloat(so, "minIntroDelay", 15f);
         SetFloat(so, "maxIntroDelay", 30f);
+        SetBool(so, "usePolishedDialogueScript", true);
         SetBool(so, "enableCraftInteractionAfterIntro", false);
         SetBool(so, "appearDuringRegularBlackout", true);
+        SetBool(so, "createRuntimeDialoguePanel", true);
         so.ApplyModifiedProperties();
         EditorUtility.SetDirty(controller);
 
@@ -263,7 +271,7 @@ public static class VentHandSceneBinder
         SetBool(so, "isUnlocked", false);
         SetBool(so, "isOpen", false);
         SetBool(so, "keepCaseBaseAlwaysVisible", true);
-        SetBool(so, "disableCaseColliderWhenOpen", true);
+        SetBool(so, "disableCaseColliderWhenOpen", false);
         SetObjectIfNull(so, "lidTransform", lidTransform);
         SetObjectIfNull(so, "closedPose", closedPose);
         SetObjectIfNull(so, "openPose", openPose);
@@ -272,6 +280,7 @@ public static class VentHandSceneBinder
         SetObject(so, "openVisual", null);
         SetObjectIfNull(so, "caseClosedCollider", caseObject.GetComponent<Collider>());
         SetObjectIfNull(so, "interactCollider", caseObject.GetComponent<Collider>());
+        SetObjectIfNull(so, "securitySystem", FindFirstObject<SecuritySystem>());
         SetObjectArrayIfEmpty(so, "controlledInstruments", instruments);
         so.ApplyModifiedProperties();
         EditorUtility.SetDirty(caseLock);
@@ -312,6 +321,47 @@ public static class VentHandSceneBinder
             visual.gameObject.SetActive(true);
             EditorUtility.SetDirty(visual.gameObject);
         }
+    }
+
+    private static InventoryItemDefinition EnsureKeyInventoryItem(List<string> warnings)
+    {
+        AssetDatabase.ImportAsset(KeyIconPath, ImportAssetOptions.ForceUpdate);
+        TextureImporter importer = AssetImporter.GetAtPath(KeyIconPath) as TextureImporter;
+        if (importer != null)
+        {
+            bool changed = importer.textureType != TextureImporterType.Sprite ||
+                           importer.spriteImportMode != SpriteImportMode.Single ||
+                           !importer.alphaIsTransparency;
+            importer.textureType = TextureImporterType.Sprite;
+            importer.spriteImportMode = SpriteImportMode.Single;
+            importer.alphaIsTransparency = true;
+            importer.mipmapEnabled = false;
+            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            if (changed)
+            {
+                importer.SaveAndReimport();
+            }
+        }
+
+        Sprite icon = AssetDatabase.LoadAssetAtPath<Sprite>(KeyIconPath);
+        if (icon == null)
+        {
+            warnings.Add($"Key icon '{KeyIconPath}' could not be imported as a Sprite.");
+        }
+
+        InventoryItemDefinition item = AssetDatabase.LoadAssetAtPath<InventoryItemDefinition>(KeyItemPath);
+        if (item == null)
+        {
+            item = ScriptableObject.CreateInstance<InventoryItemDefinition>();
+            AssetDatabase.CreateAsset(item, KeyItemPath);
+        }
+
+        item.itemId = "tool-case-key";
+        item.displayName = "Ключ от кейса";
+        item.icon = icon;
+        EditorUtility.SetDirty(item);
+        AssetDatabase.SaveAssets();
+        return item;
     }
 
     private static Transform EnsureToolCasePose(Transform caseTransform, string poseName, Transform lidTransform, bool openPose)

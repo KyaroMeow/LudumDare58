@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,31 +9,46 @@ public class HUDManager : MonoBehaviour
     public GameObject itemScanHUD;
     public ItemMarkerUI itemMarkerUI;
 
-    [Header("Mistake Counter HUD")]
+    [Header("Mistake Meter")]
     [SerializeField] private bool createRuntimeMistakeCounter = true;
-    [SerializeField] private Vector2 mistakeCounterOffset = new Vector2(34f, -30f);
-    [SerializeField] private Vector2 mistakeCounterSize = new Vector2(330f, 96f);
-    [SerializeField] private Color mistakePanelColor = new Color(0.015f, 0.018f, 0.025f, 0.9f);
-    [SerializeField] private Color mistakeAccentColor = new Color(1f, 0.18f, 0.12f, 1f);
-    [SerializeField] private Color mistakeSafeColor = new Color(0.18f, 0.92f, 0.82f, 1f);
-    [SerializeField] private Color mistakeEmptyColor = new Color(0.13f, 0.145f, 0.17f, 0.95f);
-    [SerializeField] private Color mistakeTextColor = new Color(0.94f, 0.96f, 0.98f, 1f);
-    [SerializeField] private Color mistakeGlowColor = new Color(1f, 0.08f, 0.04f, 0.24f);
+    [SerializeField] private Vector2 mistakeCounterOffset = new Vector2(28f, -24f);
+    [SerializeField] private Vector2 mistakeMeterSize = new Vector2(286f, 70f);
+    [SerializeField] private Color meterPanelColor = new Color(0.012f, 0.014f, 0.02f, 0.6f);
+    [SerializeField] private Color meterSafeColor = new Color(0.16f, 0.88f, 0.78f, 1f);
+    [SerializeField] private Color meterWarningColor = new Color(0.95f, 0.63f, 0.25f, 1f);
+    [SerializeField] private Color meterDangerColor = new Color(1f, 0.12f, 0.08f, 1f);
+    [SerializeField] private Color meterEmptyColor = new Color(0.11f, 0.125f, 0.145f, 1f);
+    [SerializeField] private int mistakeCounterSortingOrder = 32000;
+    [SerializeField] private float pointerRiseTime = 0.14f;
+    [SerializeField] private float pointerFallTime = 0.75f;
 
-    private RectTransform mistakeCounterRoot;
-    private Image mistakePanelImage;
-    private Image mistakeGlowImage;
-    private TextMeshProUGUI mistakeTitleText;
-    private TextMeshProUGUI mistakeCaptionText;
-    private TextMeshProUGUI mistakeValueText;
-    private TextMeshProUGUI mistakeIconText;
-    private RectTransform mistakeIconTransform;
-    private Image[] mistakeSegments = Array.Empty<Image>();
-    private int lastMistakes = -1;
-    private int lastMaxMistakes = -1;
-    private bool lastGameStarted;
+    private const float TickStartX = 17f;
+    private const float TickEndPadding = 17f;
 
-    public void Awake()
+    private Canvas mistakeCounterCanvas;
+    private RectTransform meterRoot;
+    private RectTransform panelTransform;
+    private RectTransform pointerTransform;
+    private Image panelImage;
+    private Image[] meterTicks;
+    private Color[] tickColors;
+    private TextMeshProUGUI pointerText;
+    private TextMeshProUGUI valueText;
+    private TextMeshProUGUI titleText;
+    private int meterTickCount = 10;
+    private int lastCounter = -1;
+    private int lastThreshold = -1;
+    private int lastPunishments = -1;
+    private float targetMeterValue;
+    private float displayedMeterValue;
+    private float pointerVelocity;
+    private float impactPulse;
+    private float punishmentFlashUntil;
+    private bool pointerInitialized;
+
+    public RectTransform MistakeCounterTutorialTarget => meterRoot;
+
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -44,339 +58,319 @@ public class HUDManager : MonoBehaviour
 
     private void Start()
     {
-        EnsureMistakeCounterHud();
-        RefreshMistakeCounter(force: true);
+        EnsureMistakeMeter();
+        RefreshMistakeMeter(true);
     }
 
     private void Update()
     {
-        RefreshMistakeCounter(force: false);
-        AnimateMistakeCounter();
+        EnsureMistakeMeter();
+        RefreshMistakeMeter(false);
+        AnimateMistakeMeter();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
 
     public void showItemScanHUD(Item currentItem = null)
     {
-        itemScanHUD.SetActive(true);
+        if (itemScanHUD != null)
+        {
+            itemScanHUD.SetActive(true);
+        }
+
         itemMarkerUI?.BeginItem(currentItem);
     }
 
     public void hideItemScanHUD()
     {
         itemMarkerUI?.EndItem();
-        itemScanHUD.SetActive(false);
+        if (itemScanHUD != null)
+        {
+            itemScanHUD.SetActive(false);
+        }
     }
 
-    private void EnsureMistakeCounterHud()
+    private void EnsureMistakeMeter()
     {
-        if (!createRuntimeMistakeCounter || mistakeCounterRoot != null)
+        if (!createRuntimeMistakeCounter || meterRoot != null)
         {
             return;
         }
 
         Canvas canvas = ResolveMistakeCounterCanvas();
-        if (canvas == null)
-        {
-            Debug.LogWarning("Mistake counter HUD skipped because no Canvas was found.", this);
-            return;
-        }
+        GameObject rootObject = CreateRectObject("RuntimeMistakeMeter", canvas.transform);
+        meterRoot = rootObject.GetComponent<RectTransform>();
+        ConfigureTopLeft(meterRoot, mistakeCounterOffset, mistakeMeterSize);
 
-        GameObject glowObject = CreateImageObject("RuntimeMistakeCounterGlow", canvas.transform, mistakeGlowColor);
-        RectTransform glowTransform = glowObject.GetComponent<RectTransform>();
-        ConfigureTopLeftRect(glowTransform, mistakeCounterOffset + new Vector2(-9f, 9f), mistakeCounterSize + new Vector2(18f, 18f));
-        mistakeGlowImage = glowObject.GetComponent<Image>();
+        CreateScannerCorners(meterRoot);
 
-        GameObject rootObject = CreateImageObject("RuntimeMistakeCounter", canvas.transform, mistakePanelColor);
-        mistakeCounterRoot = rootObject.GetComponent<RectTransform>();
-        ConfigureTopLeftRect(mistakeCounterRoot, mistakeCounterOffset, mistakeCounterSize);
+        GameObject panelObject = CreateImageObject("MeterPanel", meterRoot, meterPanelColor);
+        panelTransform = panelObject.GetComponent<RectTransform>();
+        panelTransform.anchorMin = Vector2.zero;
+        panelTransform.anchorMax = Vector2.one;
+        panelTransform.offsetMin = new Vector2(5f, 5f);
+        panelTransform.offsetMax = new Vector2(-5f, -5f);
+        panelImage = panelObject.GetComponent<Image>();
 
-        mistakePanelImage = rootObject.GetComponent<Image>();
-        AddUiOutline(rootObject, new Color(1f, 0.18f, 0.1f, 0.55f), new Vector2(2f, -2f));
+        Outline panelOutline = panelObject.AddComponent<Outline>();
+        panelOutline.effectColor = new Color(meterDangerColor.r, meterDangerColor.g, meterDangerColor.b, 0.64f);
+        panelOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
-        CreateCounterFrame(rootObject.transform);
-        CreateCounterAccent(rootObject.transform);
-        CreateCounterIcon(rootObject.transform);
-        mistakeTitleText = CreateCounterText("Title", rootObject.transform, new Vector2(86f, -13f), new Vector2(150f, 24f), "\u041e\u0428\u0418\u0411\u041a\u0418", 15, FontStyles.Bold, TextAlignmentOptions.Left);
-        mistakeCaptionText = CreateCounterText("Caption", rootObject.transform, new Vector2(86f, -36f), new Vector2(170f, 18f), "\u041f\u0420\u041e\u0422\u041e\u041a\u041e\u041b \u041a\u041e\u041d\u0422\u0420\u041e\u041b\u042f", 9, FontStyles.Bold, TextAlignmentOptions.Left);
-        mistakeValueText = CreateCounterText("Value", rootObject.transform, new Vector2(238f, -9f), new Vector2(72f, 36f), "0/0", 24, FontStyles.Bold, TextAlignmentOptions.Right);
-        CreateCounterSegments(rootObject.transform);
+        titleText = CreateTopLeftText("Title", panelTransform, new Vector2(17f, -4f), new Vector2(150f, 18f), "\u0420\u0418\u0421\u041a \u041d\u0410\u041a\u0410\u0417\u0410\u041d\u0418\u042f", 10f, TextAlignmentOptions.Left);
+        titleText.color = new Color(0.78f, 0.82f, 0.86f, 0.82f);
+        valueText = CreateTopLeftText("Value", panelTransform, new Vector2(216f, -3f), new Vector2(50f, 18f), "0/10", 13f, TextAlignmentOptions.Right);
+        valueText.color = Color.white;
 
-        glowObject.transform.SetAsLastSibling();
-        rootObject.transform.SetAsLastSibling();
+        CreateTicks(panelTransform);
+        CreatePointer(panelTransform);
     }
 
     private Canvas ResolveMistakeCounterCanvas()
     {
-        Canvas fallback = null;
-        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-        Canvas timeCanvas = null;
-        Canvas hudCanvas = null;
-        for (int i = 0; i < canvases.Length; i++)
+        if (mistakeCounterCanvas != null)
         {
-            Canvas canvas = canvases[i];
-            if (canvas == null || !canvas.gameObject.activeInHierarchy)
-            {
-                continue;
-            }
-
-            if (canvas.name == "TimeCanvas")
-            {
-                timeCanvas = canvas;
-            }
-            else if (canvas.name == "HudCanvas")
-            {
-                hudCanvas = canvas;
-            }
-
-            if (fallback == null && canvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            {
-                fallback = canvas;
-            }
+            return mistakeCounterCanvas;
         }
 
-        if (timeCanvas != null)
+        GameObject canvasObject = new GameObject("RuntimeMistakeCounterCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        canvasObject.layer = LayerMask.NameToLayer("UI");
+        canvasObject.transform.SetParent(null, false);
+
+        mistakeCounterCanvas = canvasObject.GetComponent<Canvas>();
+        mistakeCounterCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        mistakeCounterCanvas.overrideSorting = true;
+        mistakeCounterCanvas.sortingOrder = mistakeCounterSortingOrder;
+
+        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        scaler.matchWidthOrHeight = 0.5f;
+        return mistakeCounterCanvas;
+    }
+
+    private void CreateScannerCorners(Transform parent)
+    {
+        Color color = new Color(meterDangerColor.r, meterDangerColor.g, meterDangerColor.b, 0.88f);
+        CreateImageRect("CornerTop", parent, Vector2.zero, new Vector2(58f, 2f), color);
+        CreateImageRect("CornerLeft", parent, Vector2.zero, new Vector2(2f, 22f), color);
+        CreateBottomRightLine(parent, "CornerBottom", new Vector2(-42f, 0f), new Vector2(42f, 2f), color);
+        CreateBottomRightLine(parent, "CornerRight", Vector2.zero, new Vector2(2f, 22f), color);
+    }
+
+    private void CreateTicks(Transform parent)
+    {
+        meterTickCount = Mathf.Clamp(GameManager.Instance != null ? GameManager.Instance.CurrentHandDamageThreshold : 10, 1, 20);
+        meterTicks = new Image[meterTickCount];
+        tickColors = new Color[meterTickCount];
+        float availableWidth = mistakeMeterSize.x - 20f - TickStartX - TickEndPadding;
+        float tickStep = meterTickCount > 1 ? availableWidth / (meterTickCount - 1) : 0f;
+        float baseTickWidth = Mathf.Clamp(tickStep * 0.55f, 8f, 15f);
+
+        for (int i = 0; i < meterTickCount; i++)
         {
-            return timeCanvas;
+            float normalized = meterTickCount > 1 ? i / (float)(meterTickCount - 1) : 1f;
+            Color activeColor = normalized < 0.55f
+                ? Color.Lerp(meterSafeColor, meterWarningColor, normalized / 0.55f)
+                : Color.Lerp(meterWarningColor, meterDangerColor, (normalized - 0.55f) / 0.45f);
+            tickColors[i] = activeColor;
+
+            GameObject tickObject = CreateImageObject($"MeterTick_{i + 1:00}", parent, meterEmptyColor);
+            RectTransform tick = tickObject.GetComponent<RectTransform>();
+            tick.anchorMin = tick.anchorMax = new Vector2(0f, 0f);
+            tick.pivot = new Vector2(0.5f, 0f);
+            tick.anchoredPosition = new Vector2(TickStartX + i * tickStep, 12f);
+            float height = i % 3 == 0 ? 25f : i % 2 == 0 ? 21f : 17f;
+            float width = i % 3 == 0 ? baseTickWidth + 2f : baseTickWidth;
+            tick.sizeDelta = new Vector2(width, height);
+
+            Outline outline = tickObject.AddComponent<Outline>();
+            outline.effectColor = new Color(activeColor.r, activeColor.g, activeColor.b, 0.35f);
+            outline.effectDistance = new Vector2(1f, -1f);
+            meterTicks[i] = tickObject.GetComponent<Image>();
+        }
+    }
+
+    private void CreatePointer(Transform parent)
+    {
+        pointerText = CreateTopLeftText("MeterPointer", parent, Vector2.zero, new Vector2(18f, 18f), "\u25B2", 15f, TextAlignmentOptions.Center);
+        pointerText.color = meterSafeColor;
+        pointerTransform = pointerText.rectTransform;
+        pointerTransform.anchorMin = pointerTransform.anchorMax = new Vector2(0f, 0f);
+        pointerTransform.pivot = new Vector2(0.5f, 0f);
+        pointerTransform.anchoredPosition = new Vector2(TickStartX, 0f);
+    }
+
+    private void RefreshMistakeMeter(bool force)
+    {
+        if (meterRoot == null)
+        {
+            return;
         }
 
-        if (hudCanvas != null)
+        int counter = GameManager.Instance != null ? Mathf.Max(0, GameManager.Instance.CurrentHandDamageCounter) : 0;
+        int threshold = GameManager.Instance != null ? Mathf.Max(1, GameManager.Instance.CurrentHandDamageThreshold) : 10;
+        int punishments = GameManager.Instance != null ? GameManager.Instance.HandPunishmentsApplied : 0;
+        if (!force && counter == lastCounter && threshold == lastThreshold && punishments == lastPunishments)
         {
-            return hudCanvas;
+            return;
         }
 
-        Canvas parentCanvas = GetComponentInParent<Canvas>();
-        if (parentCanvas != null && parentCanvas.gameObject.activeInHierarchy)
+        bool increased = lastCounter >= 0 && counter > lastCounter;
+        bool punishmentTriggered = lastPunishments >= 0 && punishments > lastPunishments;
+        lastCounter = counter;
+        lastThreshold = threshold;
+        lastPunishments = punishments;
+        targetMeterValue = Mathf.Clamp01(counter / (float)threshold);
+
+        if (!pointerInitialized)
         {
-            return parentCanvas;
+            displayedMeterValue = targetMeterValue;
+            pointerInitialized = true;
         }
 
-        return fallback != null ? fallback : FindFirstObjectByType<Canvas>();
+        if (punishmentTriggered)
+        {
+            displayedMeterValue = 1f;
+            pointerVelocity = 0f;
+            impactPulse = 1f;
+            punishmentFlashUntil = Time.unscaledTime + 0.55f;
+        }
+        else if (increased)
+        {
+            impactPulse = 1f;
+        }
+
+        valueText.text = $"{counter}/{threshold}";
+        valueText.color = EvaluateMeterColor(targetMeterValue);
+    }
+
+    private void AnimateMistakeMeter()
+    {
+        if (meterRoot == null || pointerTransform == null)
+        {
+            return;
+        }
+
+        float smoothTime = targetMeterValue >= displayedMeterValue ? pointerRiseTime : pointerFallTime;
+        displayedMeterValue = Mathf.SmoothDamp(displayedMeterValue, targetMeterValue, ref pointerVelocity, Mathf.Max(0.01f, smoothTime), Mathf.Infinity, Time.unscaledDeltaTime);
+        displayedMeterValue = Mathf.Clamp01(displayedMeterValue);
+
+        float availableWidth = mistakeMeterSize.x - 20f - TickStartX - TickEndPadding;
+        float pointerX = TickStartX + displayedMeterValue * availableWidth;
+        pointerTransform.anchoredPosition = new Vector2(pointerX, 0f);
+        Color currentColor = EvaluateMeterColor(displayedMeterValue);
+        pointerText.color = currentColor;
+
+        float fill = displayedMeterValue * meterTickCount;
+        for (int i = 0; i < meterTicks.Length; i++)
+        {
+            float amount = Mathf.Clamp01(fill - i);
+            Color empty = meterEmptyColor;
+            empty.a = 0.46f;
+            meterTicks[i].color = Color.Lerp(empty, tickColors[i], amount);
+        }
+
+        if (Time.unscaledTime < punishmentFlashUntil)
+        {
+            valueText.text = "10/10";
+            valueText.color = meterDangerColor;
+            titleText.text = "\u041d\u0410\u041a\u0410\u0417\u0410\u041d\u0418\u0415";
+            titleText.color = meterDangerColor;
+        }
+        else
+        {
+            valueText.text = $"{Mathf.RoundToInt(displayedMeterValue * Mathf.Max(1, lastThreshold))}/{Mathf.Max(1, lastThreshold)}";
+            valueText.color = currentColor;
+            titleText.text = "\u0420\u0418\u0421\u041a \u041d\u0410\u041a\u0410\u0417\u0410\u041d\u0418\u042f";
+            titleText.color = new Color(0.78f, 0.82f, 0.86f, 0.82f);
+        }
+
+        impactPulse = Mathf.MoveTowards(impactPulse, 0f, Time.unscaledDeltaTime * 3.1f);
+        float dangerPulse = ((Mathf.Sin(Time.unscaledTime * 4.4f) + 1f) * 0.5f) * displayedMeterValue;
+        float pulse = Mathf.Max(impactPulse, dangerPulse * 0.2f);
+        float scale = 1f + pulse * 0.025f;
+        panelTransform.localScale = new Vector3(scale, scale, 1f);
+        panelImage.color = Color.Lerp(meterPanelColor, new Color(0.075f, 0.012f, 0.009f, 0.7f), displayedMeterValue * 0.52f);
+    }
+
+    private Color EvaluateMeterColor(float normalized)
+    {
+        return normalized < 0.55f
+            ? Color.Lerp(meterSafeColor, meterWarningColor, normalized / 0.55f)
+            : Color.Lerp(meterWarningColor, meterDangerColor, (normalized - 0.55f) / 0.45f);
+    }
+
+    private GameObject CreateRectObject(string objectName, Transform parent)
+    {
+        GameObject result = new GameObject(objectName, typeof(RectTransform));
+        result.layer = LayerMask.NameToLayer("UI");
+        result.transform.SetParent(parent, false);
+        return result;
     }
 
     private GameObject CreateImageObject(string objectName, Transform parent, Color color)
     {
-        GameObject imageObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        imageObject.transform.SetParent(parent, false);
-        Image image = imageObject.GetComponent<Image>();
+        GameObject result = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        result.layer = LayerMask.NameToLayer("UI");
+        result.transform.SetParent(parent, false);
+        Image image = result.GetComponent<Image>();
         image.color = color;
         image.raycastTarget = false;
-        return imageObject;
+        return result;
     }
 
-    private void ConfigureTopLeftRect(RectTransform rectTransform, Vector2 anchoredPosition, Vector2 size)
+    private void CreateImageRect(string objectName, Transform parent, Vector2 position, Vector2 size, Color color)
     {
-        rectTransform.anchorMin = new Vector2(0f, 1f);
-        rectTransform.anchorMax = new Vector2(0f, 1f);
-        rectTransform.pivot = new Vector2(0f, 1f);
-        rectTransform.anchoredPosition = anchoredPosition;
-        rectTransform.sizeDelta = size;
+        GameObject result = CreateImageObject(objectName, parent, color);
+        RectTransform rect = result.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
     }
 
-    private void CreateCounterAccent(Transform parent)
+    private void CreateBottomRightLine(Transform parent, string objectName, Vector2 position, Vector2 size, Color color)
     {
-        GameObject accentObject = CreateImageObject("Accent", parent, mistakeAccentColor);
-        RectTransform accentTransform = accentObject.GetComponent<RectTransform>();
-        accentTransform.anchorMin = new Vector2(0f, 0f);
-        accentTransform.anchorMax = new Vector2(0f, 1f);
-        accentTransform.pivot = new Vector2(0f, 0.5f);
-        accentTransform.anchoredPosition = Vector2.zero;
-        accentTransform.sizeDelta = new Vector2(6f, 0f);
+        GameObject result = CreateImageObject(objectName, parent, color);
+        RectTransform rect = result.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+        rect.pivot = new Vector2(1f, 0f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
     }
 
-    private void CreateCounterFrame(Transform parent)
+    private TextMeshProUGUI CreateTopLeftText(string objectName, Transform parent, Vector2 position, Vector2 size, string text, float fontSize, TextAlignmentOptions alignment)
     {
-        CreateFrameLine(parent, "TopLine", new Vector2(20f, -8f), new Vector2(290f, 2f), mistakeAccentColor);
-        CreateFrameLine(parent, "BottomLine", new Vector2(20f, 9f), new Vector2(290f, 2f), new Color(0.18f, 0.92f, 0.82f, 0.55f));
-        CreateFrameLine(parent, "RightTick", new Vector2(314f, -18f), new Vector2(3f, 54f), new Color(1f, 0.18f, 0.1f, 0.42f));
-    }
+        GameObject result = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+        result.layer = LayerMask.NameToLayer("UI");
+        result.transform.SetParent(parent, false);
+        RectTransform rect = result.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
 
-    private void CreateFrameLine(Transform parent, string objectName, Vector2 anchoredPosition, Vector2 size, Color color)
-    {
-        GameObject lineObject = CreateImageObject(objectName, parent, color);
-        RectTransform lineTransform = lineObject.GetComponent<RectTransform>();
-        ConfigureTopLeftRect(lineTransform, anchoredPosition, size);
-    }
-
-    private void CreateCounterIcon(Transform parent)
-    {
-        GameObject iconBackObject = CreateImageObject("IconBack", parent, new Color(0.09f, 0.015f, 0.012f, 0.94f));
-        RectTransform iconBackTransform = iconBackObject.GetComponent<RectTransform>();
-        ConfigureTopLeftRect(iconBackTransform, new Vector2(22f, -17f), new Vector2(48f, 48f));
-        AddUiOutline(iconBackObject, new Color(1f, 0.1f, 0.06f, 0.82f), new Vector2(1.5f, -1.5f));
-
-        mistakeIconText = CreateCounterText("Icon", parent, new Vector2(22f, -12f), new Vector2(48f, 50f), "!", 34, FontStyles.Bold, TextAlignmentOptions.Center);
-        mistakeIconText.color = mistakeAccentColor;
-        mistakeIconTransform = mistakeIconText.rectTransform;
-    }
-
-    private void CreateCounterSegments(Transform parent)
-    {
-        const int maxSegments = 10;
-        const float width = 21f;
-        const float gap = 6f;
-
-        mistakeSegments = new Image[maxSegments];
-        for (int i = 0; i < maxSegments; i++)
-        {
-            GameObject segmentObject = CreateImageObject($"MistakeSegment_{i + 1}", parent, mistakeEmptyColor);
-            RectTransform segmentTransform = segmentObject.GetComponent<RectTransform>();
-            segmentTransform.anchorMin = new Vector2(0f, 0f);
-            segmentTransform.anchorMax = new Vector2(0f, 0f);
-            segmentTransform.pivot = new Vector2(0f, 0f);
-            segmentTransform.anchoredPosition = new Vector2(86f + i * (width + gap), 16f);
-            segmentTransform.sizeDelta = new Vector2(width, 12f);
-            AddUiOutline(segmentObject, new Color(0f, 0f, 0f, 0.5f), new Vector2(1f, -1f));
-            mistakeSegments[i] = segmentObject.GetComponent<Image>();
-        }
-    }
-
-    private TextMeshProUGUI CreateCounterText(
-        string objectName,
-        Transform parent,
-        Vector2 anchoredPosition,
-        Vector2 size,
-        string text,
-        int fontSize,
-        FontStyles style,
-        TextAlignmentOptions alignment)
-    {
-        GameObject textObject = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-        textObject.transform.SetParent(parent, false);
-        RectTransform rectTransform = textObject.GetComponent<RectTransform>();
-        ConfigureTopLeftRect(rectTransform, anchoredPosition, size);
-
-        TextMeshProUGUI label = textObject.GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI label = result.GetComponent<TextMeshProUGUI>();
         label.text = text;
         label.fontSize = fontSize;
-        label.fontStyle = style;
+        label.fontStyle = FontStyles.Bold;
         label.alignment = alignment;
-        label.color = mistakeTextColor;
         label.raycastTarget = false;
-        AddTextShadow(textObject, new Color(0f, 0f, 0f, 0.8f), new Vector2(1.5f, -1.5f));
         return label;
     }
 
-    private void RefreshMistakeCounter(bool force)
+    private static void ConfigureTopLeft(RectTransform rect, Vector2 position, Vector2 size)
     {
-        if (GameManager.Instance == null)
-        {
-            return;
-        }
-
-        EnsureMistakeCounterHud();
-        if (mistakeCounterRoot == null)
-        {
-            return;
-        }
-
-        bool gameStarted = GameManager.Instance.isGameStarted;
-        int mistakes = Mathf.Max(0, GameManager.Instance.currentMistakes);
-        int maxMistakes = Mathf.Max(1, ResolveMaxMistakes());
-        if (!force && mistakes == lastMistakes && maxMistakes == lastMaxMistakes && gameStarted == lastGameStarted)
-        {
-            return;
-        }
-
-        lastMistakes = mistakes;
-        lastMaxMistakes = maxMistakes;
-        lastGameStarted = gameStarted;
-
-        mistakeCounterRoot.gameObject.SetActive(gameStarted);
-        if (mistakeGlowImage != null)
-        {
-            mistakeGlowImage.gameObject.SetActive(gameStarted);
-        }
-
-        float normalizedMistakes = Mathf.Clamp01((float)mistakes / maxMistakes);
-        if (mistakeValueText != null)
-        {
-            mistakeValueText.text = $"{mistakes}/{maxMistakes}";
-            mistakeValueText.color = mistakes >= maxMistakes ? mistakeAccentColor : mistakeTextColor;
-        }
-
-        if (mistakeTitleText != null)
-        {
-            mistakeTitleText.color = mistakes > 0 ? mistakeAccentColor : mistakeTextColor;
-        }
-
-        if (mistakeCaptionText != null)
-        {
-            mistakeCaptionText.color = new Color(mistakeTextColor.r, mistakeTextColor.g, mistakeTextColor.b, mistakes > 0 ? 0.86f : 0.58f);
-        }
-
-        if (mistakeIconText != null)
-        {
-            mistakeIconText.color = mistakes > 0 ? mistakeAccentColor : mistakeSafeColor;
-        }
-
-        if (mistakePanelImage != null)
-        {
-            mistakePanelImage.color = Color.Lerp(mistakePanelColor, new Color(0.12f, 0.025f, 0.02f, 0.94f), normalizedMistakes);
-        }
-
-        if (mistakeGlowImage != null)
-        {
-            mistakeGlowImage.color = Color.Lerp(new Color(0.18f, 0.9f, 0.8f, 0.12f), mistakeGlowColor, Mathf.Max(0.15f, normalizedMistakes));
-        }
-
-        for (int i = 0; i < mistakeSegments.Length; i++)
-        {
-            Image segment = mistakeSegments[i];
-            if (segment == null)
-            {
-                continue;
-            }
-
-            float segmentThreshold = (i + 1f) / mistakeSegments.Length;
-            bool filled = normalizedMistakes >= segmentThreshold || i < mistakes && maxMistakes <= mistakeSegments.Length;
-            segment.color = filled ? Color.Lerp(mistakeSafeColor, mistakeAccentColor, normalizedMistakes) : mistakeEmptyColor;
-        }
-    }
-
-    private void AnimateMistakeCounter()
-    {
-        if (mistakeCounterRoot == null || !mistakeCounterRoot.gameObject.activeSelf)
-        {
-            return;
-        }
-
-        float normalizedMistakes = lastMaxMistakes > 0 ? Mathf.Clamp01((float)Mathf.Max(0, lastMistakes) / lastMaxMistakes) : 0f;
-        float pulse = (Mathf.Sin(Time.unscaledTime * Mathf.Lerp(2.1f, 5.5f, normalizedMistakes)) + 1f) * 0.5f;
-
-        if (mistakeGlowImage != null)
-        {
-            Color baseGlow = Color.Lerp(new Color(0.18f, 0.9f, 0.8f, 0.13f), mistakeGlowColor, Mathf.Max(0.18f, normalizedMistakes));
-            baseGlow.a *= Mathf.Lerp(0.76f, 1.24f, pulse);
-            mistakeGlowImage.color = baseGlow;
-        }
-
-        if (mistakeIconTransform != null)
-        {
-            float scale = 1f + Mathf.Lerp(0.012f, 0.045f, normalizedMistakes) * pulse;
-            mistakeIconTransform.localScale = new Vector3(scale, scale, 1f);
-        }
-    }
-
-    private int ResolveMaxMistakes()
-    {
-        SettingManager settings = SettingManager.EnsureInstance();
-        Difficult difficulty = settings != null ? settings.currentDifficulty : null;
-        return difficulty != null ? difficulty.maxMistakes : 10;
-    }
-
-    private void AddUiOutline(GameObject target, Color color, Vector2 distance)
-    {
-        Outline outline = target.AddComponent<Outline>();
-        outline.effectColor = color;
-        outline.effectDistance = distance;
-        outline.useGraphicAlpha = true;
-    }
-
-    private void AddTextShadow(GameObject target, Color color, Vector2 distance)
-    {
-        Shadow shadow = target.AddComponent<Shadow>();
-        shadow.effectColor = color;
-        shadow.effectDistance = distance;
-        shadow.useGraphicAlpha = true;
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = position;
+        rect.sizeDelta = size;
     }
 }
