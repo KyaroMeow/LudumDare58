@@ -5140,6 +5140,7 @@ MonoBehaviour:
   itemScanHUD: {fileID: 1115873528}
   itemMarkerUI: {fileID: 1075652592}
   createRuntimeMistakeCounter: 1
+  showMistakeMeterOnlyAfterShiftStarted: 1
   mistakeCounterOffset: {x: 28, y: -28}
   mistakeMeterSize: {x: 286, y: 70}
   meterPanelColor: {r: 0.012, g: 0.014, b: 0.02, a: 0.6}
@@ -7327,6 +7328,13 @@ MonoBehaviour:
     subtitleDuration: 0
     fadeDuration: 1
   skipCutscene: 0
+  configureCanvasScaler: 1
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  forceFullscreenRoot: 1
+  forceFullscreenFade: 1
+  imageFitMode: 0
+  preserveFullImage: 0
 --- !u!114 &511699232
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10237,6 +10245,20 @@ MonoBehaviour:
   craftActionText: "\u0421\u041E\u0411\u0420\u0410\u0422\u042C"
   readyText: "\u0414\u041E\u0421\u0422\u0423\u041F\u041D\u041E"
   unavailableText: "\u041D\u0415\u0422 \u041A\u041E\u041C\u041F\u041E\u041D\u0415\u041D\u0422\u041E\u0412"
+  groupSize: {x: 554, y: 168}
+  firstGroupY: 92
+  groupVerticalStep: 188
+  input1Position: {x: -188, y: -20}
+  input2Position: {x: -56, y: -20}
+  resultPosition: {x: 90, y: -20}
+  actionPosition: {x: 224, y: -26}
+  actionSize: {x: 92, y: 34}
+  statusPosition: {x: 224, y: -66}
+  statusSize: {x: 118, y: 18}
+  titlePosition: {x: 14, y: -10}
+  titleSize: {x: 290, y: 24}
+  codePosition: {x: -14, y: -10}
+  codeSize: {x: 190, y: 20}
 --- !u!1 &713654969
 GameObject:
   m_ObjectHideFlags: 0
@@ -10905,6 +10927,13 @@ MonoBehaviour:
     subtitleDuration: 0
     fadeDuration: 0
   skipCutscene: 0
+  configureCanvasScaler: 1
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  forceFullscreenRoot: 1
+  forceFullscreenFade: 1
+  imageFitMode: 0
+  preserveFullImage: 0
 --- !u!114 &751715224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11566,6 +11595,18 @@ MonoBehaviour:
   segmentNamePrefix: VoltageSegment_
   preserveAuthoredSegments: 1
   showInactiveSegmentsDim: 1
+  hideUntilShiftStarted: 1
+  showWhenGameManagerMissing: 0
+  visibilityRoot: {fileID: 1389652206}
+  autoResolveVisibilityRoot: 1
+  includeSourceRenderersInVisibility: 1
+  includeThisObjectRenderersInVisibility: 1
+  includeSceneFallbackRenderers: 1
+  visibilityRootNameKeywords:
+  - ElectricPanel_VoltageIndicator
+  - VoltageIndicator
+  - indicator_line
+  - VoltageSegment
   overrideSegmentColors: 1
   lowColor: {r: 0, g: 1, b: 0, a: 1}
   mediumColor: {r: 1, g: 0.65, b: 0, a: 1}
@@ -12901,6 +12942,13 @@ MonoBehaviour:
     subtitleDuration: 0
     fadeDuration: 0
   skipCutscene: 0
+  configureCanvasScaler: 1
+  referenceResolution: {x: 1920, y: 1080}
+  matchWidthOrHeight: 0.5
+  forceFullscreenRoot: 1
+  forceFullscreenFade: 1
+  imageFitMode: 0
+  preserveFullImage: 0
 --- !u!114 &895437702
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18958,7 +19006,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1272766440
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19061,6 +19109,10 @@ MonoBehaviour:
   startCutscene: {fileID: 511699231}
   beglecCutscene: {fileID: 751715223}
   looseCutscene: {fileID: 895437701}
+  delayTutorialUntilStartCutsceneEnds: 1
+  tutorialDelayAfterStartCutscene: 2
+  autoFindTutorialSystems: 1
+  tutorialSystemsToDelay: []
 --- !u!1 &1276918929
 GameObject:
   m_ObjectHideFlags: 0
@@ -30133,6 +30185,20 @@ MonoBehaviour:
   craftActionText: "\u0421\u041E\u0411\u0420\u0410\u0422\u042C"
   readyText: "\u0414\u041E\u0421\u0422\u0423\u041F\u041D\u041E"
   unavailableText: "\u041D\u0415\u0422 \u041A\u041E\u041C\u041F\u041E\u041D\u0415\u041D\u0422\u041E\u0412"
+  groupSize: {x: 554, y: 168}
+  firstGroupY: 92
+  groupVerticalStep: 188
+  input1Position: {x: -188, y: -20}
+  input2Position: {x: -56, y: -20}
+  resultPosition: {x: 90, y: -20}
+  actionPosition: {x: 224, y: -26}
+  actionSize: {x: 92, y: 34}
+  statusPosition: {x: 224, y: -66}
+  statusSize: {x: 118, y: 18}
+  titlePosition: {x: 14, y: -10}
+  titleSize: {x: 290, y: 24}
+  codePosition: {x: -14, y: -10}
+  codeSize: {x: 190, y: 20}
 --- !u!1 &2101000010
 GameObject:
   m_ObjectHideFlags: 0

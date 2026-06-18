@@ -6,18 +6,43 @@ namespace CraftSystem
 {
     public class CraftGroupView : MonoBehaviour, IPointerClickHandler
     {
+        [Header("Recipe References")]
         [SerializeField] private CraftCell input1;
         [SerializeField] private CraftCell input2;
         [SerializeField] private CraftCell result;
+
+        [Header("Recipe Symbols")]
         [SerializeField] private bool showRecipeSymbols = true;
         [SerializeField] private Color symbolColor = new Color(0.9f, 0.9f, 0.9f, 0.92f);
         [SerializeField] private int symbolFontSize = 34;
+
         [Header("Recipe UI Text")]
         [SerializeField] private string recipeTitle;
         [SerializeField] private string recipeCode;
         [SerializeField] private string craftActionText = "СОБРАТЬ";
         [SerializeField] private string readyText = "ДОСТУПНО";
         [SerializeField] private string unavailableText = "НЕТ КОМПОНЕНТОВ";
+
+        [Header("Terminal Layout")]
+        [SerializeField] private Vector2 groupSize = new Vector2(554f, 168f);
+        [SerializeField] private float firstGroupY = 92f;
+        [SerializeField] private float groupVerticalStep = 188f;
+
+        [SerializeField] private Vector2 input1Position = new Vector2(-188f, -20f);
+        [SerializeField] private Vector2 input2Position = new Vector2(-56f, -20f);
+        [SerializeField] private Vector2 resultPosition = new Vector2(90f, -20f);
+
+        [SerializeField] private Vector2 actionPosition = new Vector2(224f, -26f);
+        [SerializeField] private Vector2 actionSize = new Vector2(92f, 34f);
+
+        [SerializeField] private Vector2 statusPosition = new Vector2(224f, -66f);
+        [SerializeField] private Vector2 statusSize = new Vector2(118f, 18f);
+
+        [SerializeField] private Vector2 titlePosition = new Vector2(14f, -10f);
+        [SerializeField] private Vector2 titleSize = new Vector2(290f, 24f);
+
+        [SerializeField] private Vector2 codePosition = new Vector2(-14f, -10f);
+        [SerializeField] private Vector2 codeSize = new Vector2(190f, 20f);
 
         private RectTransform rectTransform;
         private Text plusSymbol;
@@ -26,6 +51,7 @@ namespace CraftSystem
         private Text recipeCodeText;
         private Text statusText;
         private Text actionText;
+        private Image actionBackground;
         private Image panelImage;
         private CutsceneHintPulse readyPulse;
 
@@ -38,9 +64,9 @@ namespace CraftSystem
 
         private void OnEnable()
         {
+            EnsureTerminalVisual();
             EnsureRecipeSymbols();
             PositionRecipeSymbols();
-            EnsureTerminalVisual();
             RefreshTerminalState();
         }
 
@@ -59,6 +85,7 @@ namespace CraftSystem
             input1?.Refresh();
             input2?.Refresh();
             result?.Refresh();
+
             EnsureTerminalVisual();
             EnsureRecipeSymbols();
             PositionRecipeSymbols();
@@ -68,16 +95,19 @@ namespace CraftSystem
         public void ConfigureTerminalLayout(int index)
         {
             EnsureTerminalVisual();
+
             TechUiTheme.SetRect(
                 rectTransform,
                 new Vector2(0.5f, 0.5f),
                 new Vector2(0.5f, 0.5f),
-                new Vector2(0f, 92f - index * 188f),
-                new Vector2(554f, 168f));
+                new Vector2(0f, firstGroupY - index * groupVerticalStep),
+                groupSize);
 
-            input1?.ConfigureTerminalLayout(new Vector2(-178f, -20f), "INPUT A");
-            input2?.ConfigureTerminalLayout(new Vector2(-42f, -20f), "INPUT B");
-            result?.ConfigureTerminalLayout(new Vector2(126f, -20f), "RESULT");
+            input1?.ConfigureTerminalLayout(input1Position, "INPUT A");
+            input2?.ConfigureTerminalLayout(input2Position, "INPUT B");
+            result?.ConfigureTerminalLayout(resultPosition, "RESULT");
+
+            ApplyTerminalTextLayout();
             PositionRecipeSymbols();
             RefreshTerminalState();
         }
@@ -104,6 +134,7 @@ namespace CraftSystem
 
             InventoryItemDefinition firstInput = inventory.RemoveItemAt(0);
             InventoryItemDefinition secondInput = inventory.RemoveItemAt(1);
+
             if (firstInput == null || secondInput == null)
             {
                 TryRestoreInput(inventory, firstInput);
@@ -137,6 +168,7 @@ namespace CraftSystem
                 {
                     Debug.LogWarning("Cannot craft because InventorySystem is missing.");
                 }
+
                 return false;
             }
 
@@ -146,17 +178,20 @@ namespace CraftSystem
                 {
                     Debug.LogWarning($"Cannot craft from '{name}' because one or more CraftCell references are missing.");
                 }
+
                 return false;
             }
 
             InventoryItemDefinition inputItem1 = input1.Item;
             InventoryItemDefinition inputItem2 = input2.Item;
+
             if (inputItem1 == null || inputItem2 == null)
             {
                 if (logWarnings)
                 {
                     Debug.LogWarning($"Cannot craft from '{name}' because one or more input items are not assigned.");
                 }
+
                 return false;
             }
 
@@ -183,6 +218,7 @@ namespace CraftSystem
         private static void RefreshAllGroups()
         {
             CraftGroupView[] groups = FindObjectsByType<CraftGroupView>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+
             for (int i = 0; i < groups.Length; i++)
             {
                 groups[i]?.Refresh();
@@ -225,32 +261,157 @@ namespace CraftSystem
             panelImage.sprite = null;
             panelImage.color = TechUiTheme.PanelSoft;
             panelImage.raycastTarget = true;
-            TechUiTheme.AddOutline(gameObject, new Color(TechUiTheme.Danger.r, TechUiTheme.Danger.g, TechUiTheme.Danger.b, 0.34f), new Vector2(1f, -1f));
 
-            if (recipeTitleText != null)
+            TechUiTheme.AddOutline(
+                gameObject,
+                new Color(TechUiTheme.Danger.r, TechUiTheme.Danger.g, TechUiTheme.Danger.b, 0.34f),
+                new Vector2(1f, -1f));
+
+            if (recipeTitleText == null)
             {
-                return;
+                recipeTitleText = TechUiTheme.CreateText(
+                    "RecipeTitle",
+                    transform,
+                    string.Empty,
+                    14,
+                    TechUiTheme.Accent,
+                    TextAnchor.MiddleLeft,
+                    FontStyle.Bold);
             }
 
-            recipeTitleText = TechUiTheme.CreateText("RecipeTitle", transform, string.Empty, 14, TechUiTheme.Accent, TextAnchor.MiddleLeft, FontStyle.Bold);
-            TechUiTheme.SetRect(recipeTitleText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(14f, -10f), new Vector2(290f, 24f));
+            if (recipeCodeText == null)
+            {
+                recipeCodeText = TechUiTheme.CreateText(
+                    "RecipeCode",
+                    transform,
+                    string.Empty,
+                    9,
+                    TechUiTheme.Muted,
+                    TextAnchor.MiddleRight);
+            }
 
-            recipeCodeText = TechUiTheme.CreateText("RecipeCode", transform, string.Empty, 9, TechUiTheme.Muted, TextAnchor.MiddleRight);
-            TechUiTheme.SetRect(recipeCodeText.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-14f, -10f), new Vector2(190f, 20f));
+            if (statusText == null)
+            {
+                statusText = TechUiTheme.CreateText(
+                    "RecipeStatus",
+                    transform,
+                    unavailableText,
+                    9,
+                    TechUiTheme.Muted,
+                    TextAnchor.MiddleCenter,
+                    FontStyle.Bold);
+            }
 
-            statusText = TechUiTheme.CreateText("RecipeStatus", transform, unavailableText, 10, TechUiTheme.Muted, TextAnchor.MiddleRight, FontStyle.Bold);
-            TechUiTheme.SetRect(statusText.rectTransform, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-18f, 14f), new Vector2(190f, 22f));
+            if (actionText == null)
+            {
+                actionText = TechUiTheme.CreateText(
+                    "CraftAction",
+                    transform,
+                    craftActionText,
+                    11,
+                    TechUiTheme.Accent,
+                    TextAnchor.MiddleCenter,
+                    FontStyle.Bold);
+            }
 
-            actionText = TechUiTheme.CreateText("CraftAction", transform, craftActionText, 12, TechUiTheme.Accent, TextAnchor.MiddleCenter, FontStyle.Bold);
-            TechUiTheme.SetRect(actionText.rectTransform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-66f, -14f), new Vector2(116f, 42f));
-            Image actionBackground = TechUiTheme.CreateImage("ActionBackground", actionText.transform, new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.12f));
-            TechUiTheme.Stretch(actionBackground.rectTransform, Vector2.zero, Vector2.zero);
-            actionBackground.transform.SetAsFirstSibling();
-            TechUiTheme.AddOutline(actionBackground.gameObject, new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.5f), new Vector2(1f, -1f));
+            if (actionBackground == null)
+            {
+                Transform existingBackground = actionText.transform.Find("ActionBackground");
 
-            readyPulse = actionText.gameObject.AddComponent<CutsceneHintPulse>();
-            readyPulse.Configure(TechUiTheme.Safe, 3.6f, 0.035f, CutsceneHintPulse.PulseStyle.Glow);
-            readyPulse.enabled = false;
+                if (existingBackground != null)
+                {
+                    actionBackground = existingBackground.GetComponent<Image>();
+                }
+
+                if (actionBackground == null)
+                {
+                    actionBackground = TechUiTheme.CreateImage(
+                        "ActionBackground",
+                        actionText.transform,
+                        new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.12f));
+                }
+
+                actionBackground.transform.SetAsFirstSibling();
+
+                TechUiTheme.AddOutline(
+                    actionBackground.gameObject,
+                    new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.5f),
+                    new Vector2(1f, -1f));
+            }
+
+            if (readyPulse == null)
+            {
+                readyPulse = actionText.gameObject.GetComponent<CutsceneHintPulse>();
+
+                if (readyPulse == null)
+                {
+                    readyPulse = actionText.gameObject.AddComponent<CutsceneHintPulse>();
+                }
+
+                readyPulse.Configure(TechUiTheme.Safe, 3.6f, 0.035f, CutsceneHintPulse.PulseStyle.Glow);
+                readyPulse.enabled = false;
+            }
+
+            ApplyTerminalTextLayout();
+        }
+
+        private void ApplyTerminalTextLayout()
+        {
+            if (recipeTitleText != null)
+            {
+                TechUiTheme.SetRect(
+                    recipeTitleText.rectTransform,
+                    new Vector2(0f, 1f),
+                    new Vector2(0f, 1f),
+                    titlePosition,
+                    titleSize);
+            }
+
+            if (recipeCodeText != null)
+            {
+                TechUiTheme.SetRect(
+                    recipeCodeText.rectTransform,
+                    new Vector2(1f, 1f),
+                    new Vector2(1f, 1f),
+                    codePosition,
+                    codeSize);
+            }
+
+            if (statusText != null)
+            {
+                TechUiTheme.SetRect(
+                    statusText.rectTransform,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    statusPosition,
+                    statusSize);
+
+                statusText.fontSize = 9;
+                statusText.alignment = TextAnchor.MiddleCenter;
+                statusText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                statusText.verticalOverflow = VerticalWrapMode.Overflow;
+            }
+
+            if (actionText != null)
+            {
+                TechUiTheme.SetRect(
+                    actionText.rectTransform,
+                    new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    actionPosition,
+                    actionSize);
+
+                actionText.fontSize = 11;
+                actionText.alignment = TextAnchor.MiddleCenter;
+                actionText.horizontalOverflow = HorizontalWrapMode.Overflow;
+                actionText.verticalOverflow = VerticalWrapMode.Overflow;
+            }
+
+            if (actionBackground != null)
+            {
+                TechUiTheme.Stretch(actionBackground.rectTransform, Vector2.zero, Vector2.zero);
+                actionBackground.raycastTarget = false;
+            }
         }
 
         private void RefreshTerminalState()
@@ -263,15 +424,22 @@ namespace CraftSystem
             string fallbackTitle = result != null && result.Item != null && !string.IsNullOrWhiteSpace(result.Item.displayName)
                 ? result.Item.displayName.ToUpperInvariant()
                 : name.ToUpperInvariant();
-            recipeTitleText.text = string.IsNullOrWhiteSpace(recipeTitle) ? fallbackTitle : recipeTitle;
+
+            recipeTitleText.text = string.IsNullOrWhiteSpace(recipeTitle)
+                ? fallbackTitle
+                : recipeTitle;
+
             recipeCodeText.text = string.IsNullOrWhiteSpace(recipeCode)
                 ? name.ToUpperInvariant().Replace("CRAFTRECIPE_", "SCHEMA // ")
                 : recipeCode;
+
             actionText.text = craftActionText;
 
             bool ready = CanCraft(false);
+
             statusText.text = ready ? readyText : unavailableText;
             statusText.color = ready ? TechUiTheme.Safe : TechUiTheme.Muted;
+
             if (panelImage != null)
             {
                 panelImage.color = ready
@@ -285,6 +453,13 @@ namespace CraftSystem
             }
 
             actionText.color = ready ? TechUiTheme.Accent : TechUiTheme.Muted;
+
+            if (actionBackground != null)
+            {
+                actionBackground.color = ready
+                    ? new Color(TechUiTheme.Safe.r, TechUiTheme.Safe.g, TechUiTheme.Safe.b, 0.16f)
+                    : new Color(TechUiTheme.Accent.r, TechUiTheme.Accent.g, TechUiTheme.Accent.b, 0.12f);
+            }
         }
 
         private Text CreateSymbol(string symbolName, string value)
@@ -306,6 +481,7 @@ namespace CraftSystem
             symbolText.fontStyle = FontStyle.Bold;
             symbolText.raycastTarget = false;
             symbolText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
             return symbolText;
         }
 
@@ -328,6 +504,7 @@ namespace CraftSystem
             }
 
             RectTransform symbolTransform = symbol.transform as RectTransform;
+
             if (symbolTransform != null)
             {
                 symbolTransform.localPosition = (GetLocalCenter(left) + GetLocalCenter(right)) * 0.5f;
@@ -342,6 +519,7 @@ namespace CraftSystem
         {
             Vector3[] corners = new Vector3[4];
             target.GetWorldCorners(corners);
+
             Vector3 worldCenter = (corners[0] + corners[2]) * 0.5f;
             return rectTransform.InverseTransformPoint(worldCenter);
         }

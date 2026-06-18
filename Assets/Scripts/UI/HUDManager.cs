@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +11,7 @@ public class HUDManager : MonoBehaviour
 
     [Header("Mistake Meter")]
     [SerializeField] private bool createRuntimeMistakeCounter = true;
+    [SerializeField] private bool showMistakeMeterOnlyAfterShiftStarted = true;
     [SerializeField] private Vector2 mistakeCounterOffset = new Vector2(28f, -24f);
     [SerializeField] private Vector2 mistakeMeterSize = new Vector2(286f, 70f);
     [SerializeField] private Color meterPanelColor = new Color(0.012f, 0.014f, 0.02f, 0.6f);
@@ -45,8 +46,9 @@ public class HUDManager : MonoBehaviour
     private float impactPulse;
     private float punishmentFlashUntil;
     private bool pointerInitialized;
+    private bool mistakeMeterVisible;
 
-    public RectTransform MistakeCounterTutorialTarget => meterRoot;
+    public RectTransform MistakeCounterTutorialTarget => IsMistakeMeterVisibleNow() ? meterRoot : null;
 
     private void Awake()
     {
@@ -59,12 +61,24 @@ public class HUDManager : MonoBehaviour
     private void Start()
     {
         EnsureMistakeMeter();
-        RefreshMistakeMeter(true);
+        ApplyMistakeMeterVisibility(true);
+
+        if (IsMistakeMeterVisibleNow())
+        {
+            RefreshMistakeMeter(true);
+        }
     }
 
     private void Update()
     {
         EnsureMistakeMeter();
+        ApplyMistakeMeterVisibility(false);
+
+        if (!IsMistakeMeterVisibleNow())
+        {
+            return;
+        }
+
         RefreshMistakeMeter(false);
         AnimateMistakeMeter();
     }
@@ -90,10 +104,71 @@ public class HUDManager : MonoBehaviour
     public void hideItemScanHUD()
     {
         itemMarkerUI?.EndItem();
+
         if (itemScanHUD != null)
         {
             itemScanHUD.SetActive(false);
         }
+    }
+
+    private bool ShouldShowMistakeMeter()
+    {
+        if (!createRuntimeMistakeCounter)
+        {
+            return false;
+        }
+
+        if (!showMistakeMeterOnlyAfterShiftStarted)
+        {
+            return true;
+        }
+
+        return GameManager.Instance != null && GameManager.Instance.isGameStarted;
+    }
+
+    private bool IsMistakeMeterVisibleNow()
+    {
+        return meterRoot != null && meterRoot.gameObject.activeSelf;
+    }
+
+    private void ApplyMistakeMeterVisibility(bool force)
+    {
+        if (meterRoot == null)
+        {
+            return;
+        }
+
+        bool shouldShow = ShouldShowMistakeMeter();
+
+        if (!force && mistakeMeterVisible == shouldShow)
+        {
+            return;
+        }
+
+        mistakeMeterVisible = shouldShow;
+        meterRoot.gameObject.SetActive(shouldShow);
+
+        if (mistakeCounterCanvas != null)
+        {
+            mistakeCounterCanvas.enabled = shouldShow;
+        }
+
+        if (shouldShow)
+        {
+            ForceRefreshMistakeMeterState();
+            RefreshMistakeMeter(true);
+        }
+    }
+
+    private void ForceRefreshMistakeMeterState()
+    {
+        lastCounter = -1;
+        lastThreshold = -1;
+        lastPunishments = -1;
+        pointerInitialized = false;
+        pointerVelocity = 0f;
+        impactPulse = 0f;
+        punishmentFlashUntil = -1f;
     }
 
     private void EnsureMistakeMeter()
@@ -104,6 +179,7 @@ public class HUDManager : MonoBehaviour
         }
 
         Canvas canvas = ResolveMistakeCounterCanvas();
+
         GameObject rootObject = CreateRectObject("RuntimeMistakeMeter", canvas.transform);
         meterRoot = rootObject.GetComponent<RectTransform>();
         ConfigureTopLeft(meterRoot, mistakeCounterOffset, mistakeMeterSize);
@@ -122,13 +198,16 @@ public class HUDManager : MonoBehaviour
         panelOutline.effectColor = new Color(meterDangerColor.r, meterDangerColor.g, meterDangerColor.b, 0.64f);
         panelOutline.effectDistance = new Vector2(1.5f, -1.5f);
 
-        titleText = CreateTopLeftText("Title", panelTransform, new Vector2(17f, -4f), new Vector2(150f, 18f), "\u0420\u0418\u0421\u041a \u041d\u0410\u041a\u0410\u0417\u0410\u041d\u0418\u042f", 10f, TextAlignmentOptions.Left);
+        titleText = CreateTopLeftText("Title", panelTransform, new Vector2(17f, -4f), new Vector2(150f, 18f), "РИСК НАКАЗАНИЯ", 10f, TextAlignmentOptions.Left);
         titleText.color = new Color(0.78f, 0.82f, 0.86f, 0.82f);
+
         valueText = CreateTopLeftText("Value", panelTransform, new Vector2(216f, -3f), new Vector2(50f, 18f), "0/10", 13f, TextAlignmentOptions.Right);
         valueText.color = Color.white;
 
         CreateTicks(panelTransform);
         CreatePointer(panelTransform);
+
+        ApplyMistakeMeterVisibility(true);
     }
 
     private Canvas ResolveMistakeCounterCanvas()
@@ -152,6 +231,7 @@ public class HUDManager : MonoBehaviour
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
         scaler.matchWidthOrHeight = 0.5f;
+
         return mistakeCounterCanvas;
     }
 
@@ -169,6 +249,7 @@ public class HUDManager : MonoBehaviour
         meterTickCount = Mathf.Clamp(GameManager.Instance != null ? GameManager.Instance.CurrentHandDamageThreshold : 10, 1, 20);
         meterTicks = new Image[meterTickCount];
         tickColors = new Color[meterTickCount];
+
         float availableWidth = mistakeMeterSize.x - 20f - TickStartX - TickEndPadding;
         float tickStep = meterTickCount > 1 ? availableWidth / (meterTickCount - 1) : 0f;
         float baseTickWidth = Mathf.Clamp(tickStep * 0.55f, 8f, 15f);
@@ -179,6 +260,7 @@ public class HUDManager : MonoBehaviour
             Color activeColor = normalized < 0.55f
                 ? Color.Lerp(meterSafeColor, meterWarningColor, normalized / 0.55f)
                 : Color.Lerp(meterWarningColor, meterDangerColor, (normalized - 0.55f) / 0.45f);
+
             tickColors[i] = activeColor;
 
             GameObject tickObject = CreateImageObject($"MeterTick_{i + 1:00}", parent, meterEmptyColor);
@@ -186,6 +268,7 @@ public class HUDManager : MonoBehaviour
             tick.anchorMin = tick.anchorMax = new Vector2(0f, 0f);
             tick.pivot = new Vector2(0.5f, 0f);
             tick.anchoredPosition = new Vector2(TickStartX + i * tickStep, 12f);
+
             float height = i % 3 == 0 ? 25f : i % 2 == 0 ? 21f : 17f;
             float width = i % 3 == 0 ? baseTickWidth + 2f : baseTickWidth;
             tick.sizeDelta = new Vector2(width, height);
@@ -193,13 +276,14 @@ public class HUDManager : MonoBehaviour
             Outline outline = tickObject.AddComponent<Outline>();
             outline.effectColor = new Color(activeColor.r, activeColor.g, activeColor.b, 0.35f);
             outline.effectDistance = new Vector2(1f, -1f);
+
             meterTicks[i] = tickObject.GetComponent<Image>();
         }
     }
 
     private void CreatePointer(Transform parent)
     {
-        pointerText = CreateTopLeftText("MeterPointer", parent, Vector2.zero, new Vector2(18f, 18f), "\u25B2", 15f, TextAlignmentOptions.Center);
+        pointerText = CreateTopLeftText("MeterPointer", parent, Vector2.zero, new Vector2(18f, 18f), "▲", 15f, TextAlignmentOptions.Center);
         pointerText.color = meterSafeColor;
         pointerTransform = pointerText.rectTransform;
         pointerTransform.anchorMin = pointerTransform.anchorMax = new Vector2(0f, 0f);
@@ -217,6 +301,7 @@ public class HUDManager : MonoBehaviour
         int counter = GameManager.Instance != null ? Mathf.Max(0, GameManager.Instance.CurrentHandDamageCounter) : 0;
         int threshold = GameManager.Instance != null ? Mathf.Max(1, GameManager.Instance.CurrentHandDamageThreshold) : 10;
         int punishments = GameManager.Instance != null ? GameManager.Instance.HandPunishmentsApplied : 0;
+
         if (!force && counter == lastCounter && threshold == lastThreshold && punishments == lastPunishments)
         {
             return;
@@ -224,6 +309,7 @@ public class HUDManager : MonoBehaviour
 
         bool increased = lastCounter >= 0 && counter > lastCounter;
         bool punishmentTriggered = lastPunishments >= 0 && punishments > lastPunishments;
+
         lastCounter = counter;
         lastThreshold = threshold;
         lastPunishments = punishments;
@@ -247,13 +333,16 @@ public class HUDManager : MonoBehaviour
             impactPulse = 1f;
         }
 
-        valueText.text = $"{counter}/{threshold}";
-        valueText.color = EvaluateMeterColor(targetMeterValue);
+        if (valueText != null)
+        {
+            valueText.text = $"{counter}/{threshold}";
+            valueText.color = EvaluateMeterColor(targetMeterValue);
+        }
     }
 
     private void AnimateMistakeMeter()
     {
-        if (meterRoot == null || pointerTransform == null)
+        if (meterRoot == null || pointerTransform == null || meterTicks == null)
         {
             return;
         }
@@ -264,13 +353,25 @@ public class HUDManager : MonoBehaviour
 
         float availableWidth = mistakeMeterSize.x - 20f - TickStartX - TickEndPadding;
         float pointerX = TickStartX + displayedMeterValue * availableWidth;
+
         pointerTransform.anchoredPosition = new Vector2(pointerX, 0f);
+
         Color currentColor = EvaluateMeterColor(displayedMeterValue);
-        pointerText.color = currentColor;
+
+        if (pointerText != null)
+        {
+            pointerText.color = currentColor;
+        }
 
         float fill = displayedMeterValue * meterTickCount;
+
         for (int i = 0; i < meterTicks.Length; i++)
         {
+            if (meterTicks[i] == null)
+            {
+                continue;
+            }
+
             float amount = Mathf.Clamp01(fill - i);
             Color empty = meterEmptyColor;
             empty.a = 0.46f;
@@ -279,25 +380,48 @@ public class HUDManager : MonoBehaviour
 
         if (Time.unscaledTime < punishmentFlashUntil)
         {
-            valueText.text = "10/10";
-            valueText.color = meterDangerColor;
-            titleText.text = "\u041d\u0410\u041a\u0410\u0417\u0410\u041d\u0418\u0415";
-            titleText.color = meterDangerColor;
+            if (valueText != null)
+            {
+                valueText.text = "10/10";
+                valueText.color = meterDangerColor;
+            }
+
+            if (titleText != null)
+            {
+                titleText.text = "НАКАЗАНИЕ";
+                titleText.color = meterDangerColor;
+            }
         }
         else
         {
-            valueText.text = $"{Mathf.RoundToInt(displayedMeterValue * Mathf.Max(1, lastThreshold))}/{Mathf.Max(1, lastThreshold)}";
-            valueText.color = currentColor;
-            titleText.text = "\u0420\u0418\u0421\u041a \u041d\u0410\u041a\u0410\u0417\u0410\u041d\u0418\u042f";
-            titleText.color = new Color(0.78f, 0.82f, 0.86f, 0.82f);
+            if (valueText != null)
+            {
+                valueText.text = $"{Mathf.RoundToInt(displayedMeterValue * Mathf.Max(1, lastThreshold))}/{Mathf.Max(1, lastThreshold)}";
+                valueText.color = currentColor;
+            }
+
+            if (titleText != null)
+            {
+                titleText.text = "РИСК НАКАЗАНИЯ";
+                titleText.color = new Color(0.78f, 0.82f, 0.86f, 0.82f);
+            }
         }
 
         impactPulse = Mathf.MoveTowards(impactPulse, 0f, Time.unscaledDeltaTime * 3.1f);
+
         float dangerPulse = ((Mathf.Sin(Time.unscaledTime * 4.4f) + 1f) * 0.5f) * displayedMeterValue;
         float pulse = Mathf.Max(impactPulse, dangerPulse * 0.2f);
         float scale = 1f + pulse * 0.025f;
-        panelTransform.localScale = new Vector3(scale, scale, 1f);
-        panelImage.color = Color.Lerp(meterPanelColor, new Color(0.075f, 0.012f, 0.009f, 0.7f), displayedMeterValue * 0.52f);
+
+        if (panelTransform != null)
+        {
+            panelTransform.localScale = new Vector3(scale, scale, 1f);
+        }
+
+        if (panelImage != null)
+        {
+            panelImage.color = Color.Lerp(meterPanelColor, new Color(0.075f, 0.012f, 0.009f, 0.7f), displayedMeterValue * 0.52f);
+        }
     }
 
     private Color EvaluateMeterColor(float normalized)
@@ -320,9 +444,11 @@ public class HUDManager : MonoBehaviour
         GameObject result = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         result.layer = LayerMask.NameToLayer("UI");
         result.transform.SetParent(parent, false);
+
         Image image = result.GetComponent<Image>();
         image.color = color;
         image.raycastTarget = false;
+
         return result;
     }
 
@@ -351,6 +477,7 @@ public class HUDManager : MonoBehaviour
         GameObject result = new GameObject(objectName, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
         result.layer = LayerMask.NameToLayer("UI");
         result.transform.SetParent(parent, false);
+
         RectTransform rect = result.GetComponent<RectTransform>();
         rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
@@ -363,6 +490,7 @@ public class HUDManager : MonoBehaviour
         label.fontStyle = FontStyles.Bold;
         label.alignment = alignment;
         label.raycastTarget = false;
+
         return label;
     }
 

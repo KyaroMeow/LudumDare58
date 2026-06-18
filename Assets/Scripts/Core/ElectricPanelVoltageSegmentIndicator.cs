@@ -19,6 +19,27 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
     [Tooltip("If true, inactive segments stay visible but dark. If false, inactive segments are disabled.")]
     [SerializeField] private bool showInactiveSegmentsDim = true;
 
+    [Header("Shift Visibility")]
+    [SerializeField] private bool hideUntilShiftStarted = true;
+    [SerializeField] private bool showWhenGameManagerMissing = false;
+
+    [Tooltip("Optional root of the whole indicator visual. If empty, script tries to find indicator_line / voltage root automatically.")]
+    [SerializeField] private Transform visibilityRoot;
+
+    [SerializeField] private bool autoResolveVisibilityRoot = true;
+    [SerializeField] private bool includeSourceRenderersInVisibility = true;
+    [SerializeField] private bool includeThisObjectRenderersInVisibility = true;
+    [SerializeField] private bool includeSceneFallbackRenderers = true;
+
+    [SerializeField]
+    private string[] visibilityRootNameKeywords =
+    {
+        "ElectricPanel_VoltageIndicator",
+        "VoltageIndicator",
+        "indicator_line",
+        "VoltageSegment"
+    };
+
     [Header("Color Control")]
     [SerializeField] private bool overrideSegmentColors = true;
 
@@ -56,7 +77,14 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool logMissingSegmentsOnce = true;
 
+    private struct VisibilityRendererState
+    {
+        public Renderer Renderer;
+        public bool InitiallyEnabled;
+    }
+
     private readonly List<Renderer> segmentRenderers = new List<Renderer>();
+    private readonly List<VisibilityRendererState> visibilityRendererStates = new List<VisibilityRendererState>();
 
     private MaterialPropertyBlock propertyBlock;
 
@@ -72,20 +100,44 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
     private bool isLockedOrCooldown;
 
     private bool missingSegmentsWarningPrinted;
+    private bool visibilityRenderersCached;
+    private bool indicatorVisible = true;
 
     private void Awake()
     {
         InitShaderIds();
         EnsurePropertyBlock();
         CollectSegments();
-        ApplySourceVisibility();
+        ResolveVisibilityRoot();
+        CacheVisibilityRenderers();
+        ApplyVisual();
     }
 
     private void Start()
     {
         CollectSegments();
-        ApplySourceVisibility();
+        ResolveVisibilityRoot();
+        CacheVisibilityRenderers();
         ApplyVisual();
+    }
+
+    private void Update()
+    {
+        if (!Application.isPlaying || !hideUntilShiftStarted)
+        {
+            return;
+        }
+
+        if (!ShouldIndicatorBeVisible())
+        {
+            SetIndicatorRenderersVisible(false, true);
+            return;
+        }
+
+        if (!indicatorVisible)
+        {
+            ApplyVisual();
+        }
     }
 
     private void OnValidate()
@@ -99,10 +151,13 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
             highThreshold = mediumThreshold;
         }
 
+        visibilityRenderersCached = false;
+
         if (!Application.isPlaying)
         {
             CollectSegments();
-            ApplySourceVisibility();
+            ResolveVisibilityRoot();
+            CacheVisibilityRenderers();
             ApplyVisual();
         }
     }
@@ -134,7 +189,10 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
     [ContextMenu("Refresh Existing Segments")]
     public void RefreshExistingSegments()
     {
+        visibilityRenderersCached = false;
         CollectSegments(force: true);
+        ResolveVisibilityRoot();
+        CacheVisibilityRenderers();
         ApplyVisual();
     }
 
@@ -154,6 +212,233 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
     private void PreviewVoltage100()
     {
         SetVoltage(1f, true, false, false, false);
+    }
+
+    private bool ShouldIndicatorBeVisible()
+    {
+        if (!hideUntilShiftStarted)
+        {
+            return true;
+        }
+
+        if (!Application.isPlaying)
+        {
+            return true;
+        }
+
+        GameManager gameManager = GameManager.Instance;
+
+        if (gameManager == null)
+        {
+            return showWhenGameManagerMissing;
+        }
+
+        return gameManager.isGameStarted;
+    }
+
+    private void SetIndicatorRenderersVisible(bool visible, bool force = false)
+    {
+        if (!force && indicatorVisible == visible)
+        {
+            return;
+        }
+
+        ResolveVisibilityRoot();
+        CacheVisibilityRenderers();
+
+        indicatorVisible = visible;
+
+        for (int i = 0; i < visibilityRendererStates.Count; i++)
+        {
+            Renderer rendererItem = visibilityRendererStates[i].Renderer;
+
+            if (rendererItem == null)
+            {
+                continue;
+            }
+
+            rendererItem.enabled = visible && visibilityRendererStates[i].InitiallyEnabled;
+        }
+    }
+
+    private void ResolveVisibilityRoot()
+    {
+        if (visibilityRoot != null)
+        {
+            return;
+        }
+
+        if (!autoResolveVisibilityRoot)
+        {
+            return;
+        }
+
+        Transform resolvedRoot = FindIndicatorRoot(sourceFillRenderer != null ? sourceFillRenderer.transform : null);
+
+        if (resolvedRoot == null)
+        {
+            resolvedRoot = FindIndicatorRoot(sourceBackgroundRenderer != null ? sourceBackgroundRenderer.transform : null);
+        }
+
+        if (resolvedRoot == null)
+        {
+            resolvedRoot = FindIndicatorRoot(segmentParent);
+        }
+
+        if (resolvedRoot == null)
+        {
+            resolvedRoot = FindIndicatorRoot(transform);
+        }
+
+        if (resolvedRoot != null)
+        {
+            visibilityRoot = resolvedRoot;
+        }
+    }
+
+    private Transform FindIndicatorRoot(Transform start)
+    {
+        Transform current = start;
+
+        while (current != null)
+        {
+            if (NameContainsKeyword(current.name, visibilityRootNameKeywords))
+            {
+                return current;
+            }
+
+            current = current.parent;
+        }
+
+        return null;
+    }
+
+    private void CacheVisibilityRenderers()
+    {
+        if (visibilityRenderersCached && !HasNullVisibilityRenderer())
+        {
+            return;
+        }
+
+        visibilityRendererStates.Clear();
+
+        if (includeSourceRenderersInVisibility)
+        {
+            AddVisibilityRenderer(sourceFillRenderer);
+            AddVisibilityRenderer(sourceBackgroundRenderer);
+        }
+
+        if (visibilityRoot != null)
+        {
+            AddVisibilityRenderers(visibilityRoot.GetComponentsInChildren<Renderer>(true));
+        }
+
+        if (segmentParent != null)
+        {
+            AddVisibilityRenderers(segmentParent.GetComponentsInChildren<Renderer>(true));
+        }
+
+        if (includeThisObjectRenderersInVisibility)
+        {
+            AddVisibilityRenderers(GetComponentsInChildren<Renderer>(true));
+        }
+
+        if (includeSceneFallbackRenderers)
+        {
+            AddSceneFallbackVisibilityRenderers();
+        }
+
+        visibilityRenderersCached = true;
+    }
+
+    private void AddSceneFallbackVisibilityRenderers()
+    {
+        Renderer[] sceneRenderers = FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+
+        for (int i = 0; i < sceneRenderers.Length; i++)
+        {
+            Renderer rendererItem = sceneRenderers[i];
+
+            if (rendererItem == null)
+            {
+                continue;
+            }
+
+            if (TransformChainContainsKeyword(rendererItem.transform, visibilityRootNameKeywords))
+            {
+                AddVisibilityRenderer(rendererItem);
+            }
+        }
+    }
+
+    private bool TransformChainContainsKeyword(Transform start, string[] keywords)
+    {
+        Transform current = start;
+
+        while (current != null)
+        {
+            if (NameContainsKeyword(current.name, keywords))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
+    private void AddVisibilityRenderers(Renderer[] renderers)
+    {
+        if (renderers == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            AddVisibilityRenderer(renderers[i]);
+        }
+    }
+
+    private void AddVisibilityRenderer(Renderer rendererItem)
+    {
+        if (rendererItem == null || HasVisibilityRenderer(rendererItem))
+        {
+            return;
+        }
+
+        visibilityRendererStates.Add(new VisibilityRendererState
+        {
+            Renderer = rendererItem,
+            InitiallyEnabled = rendererItem.enabled
+        });
+    }
+
+    private bool HasVisibilityRenderer(Renderer rendererItem)
+    {
+        for (int i = 0; i < visibilityRendererStates.Count; i++)
+        {
+            if (visibilityRendererStates[i].Renderer == rendererItem)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool HasNullVisibilityRenderer()
+    {
+        for (int i = 0; i < visibilityRendererStates.Count; i++)
+        {
+            if (visibilityRendererStates[i].Renderer == null)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void CollectSegments(bool force = false)
@@ -184,12 +469,14 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
         for (int i = 0; i < segmentCount; i++)
         {
             Transform segment = segmentParent.Find($"{segmentNamePrefix}{i:00}");
+
             if (segment == null)
             {
                 continue;
             }
 
             Renderer renderer = segment.GetComponent<Renderer>();
+
             if (renderer != null)
             {
                 segmentRenderers.Add(renderer);
@@ -201,6 +488,7 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
             for (int i = 0; i < segmentParent.childCount; i++)
             {
                 Transform child = segmentParent.GetChild(i);
+
                 if (child == null)
                 {
                     continue;
@@ -212,6 +500,7 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
                 }
 
                 Renderer renderer = child.GetComponent<Renderer>();
+
                 if (renderer != null)
                 {
                     segmentRenderers.Add(renderer);
@@ -230,6 +519,14 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
 
     private void ApplyVisual()
     {
+        if (!ShouldIndicatorBeVisible())
+        {
+            SetIndicatorRenderersVisible(false, true);
+            return;
+        }
+
+        SetIndicatorRenderersVisible(true);
+
         if (segmentRenderers.Count == 0 || HasNullRenderer())
         {
             CollectSegments();
@@ -248,6 +545,7 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
         for (int i = 0; i < segmentRenderers.Count; i++)
         {
             Renderer renderer = segmentRenderers[i];
+
             if (renderer == null)
             {
                 continue;
@@ -259,6 +557,7 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
             if (isRestoreWarning && blinkOnRestoreWarning)
             {
                 bool blinkOn = Mathf.FloorToInt(Time.time * edgeFlickerSpeed) % 2 == 0;
+
                 if (!blinkOn)
                 {
                     active = false;
@@ -384,7 +683,7 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
 
     private void ApplySourceVisibility()
     {
-        bool sourceVisible = !hideOriginalOsnovaLight && keepOriginalOsnovaLightAsBackgroundGlow;
+        bool sourceVisible = indicatorVisible && !hideOriginalOsnovaLight && keepOriginalOsnovaLightAsBackgroundGlow;
 
         if (sourceFillRenderer != null)
         {
@@ -448,6 +747,27 @@ public class ElectricPanelVoltageSegmentIndicator : MonoBehaviour
         for (int i = 0; i < segmentRenderers.Count; i++)
         {
             if (segmentRenderers[i] == null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool NameContainsKeyword(string objectName, string[] keywords)
+    {
+        if (string.IsNullOrEmpty(objectName) || keywords == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < keywords.Length; i++)
+        {
+            string keyword = keywords[i];
+
+            if (!string.IsNullOrEmpty(keyword) &&
+                objectName.IndexOf(keyword, System.StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return true;
             }
